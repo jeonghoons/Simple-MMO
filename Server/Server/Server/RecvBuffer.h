@@ -10,7 +10,7 @@ public:
 	
 	BYTE* ReadPos() { return &_buffer[_readPos]; }
 	BYTE* WritePos() { return &_buffer[_writePos]; }
-	int BufferSize() { return _buffer.size(); }
+	int BufferSize() { return static_cast<int>(_buffer.size()); }
 	int DataSize() { return _writePos - _readPos; }
 	int FreeSize() { return _bufferSize - _writePos; }
 

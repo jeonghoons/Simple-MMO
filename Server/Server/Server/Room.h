@@ -1,7 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "IocpCore.h"
-
+#include "JobQueue.h"
 
 class Session;
 class SendBuffer;
@@ -9,14 +8,13 @@ class GameObject;
 class Player;
 class Monster;
 
-class Room : public IocpObject
+class Room : public JobQueue
 {
 public:
 	Room() = default;
 	~Room() = default;
-	virtual HANDLE GetHandle() override;
-	virtual void Dispatch(class IocpEvent* iocpEvent, int numBytes = 0) override;
 
+	virtual void FlushJob() override;
 
 	void InitRoom();
 	
@@ -43,7 +41,7 @@ public:
 
 	pair<int, int> RandomPos();
 
-	int NumPlayers() { return _players.size(); }
+	int NumPlayers() { return static_cast<int>(_players.size()); }
 
 	RWLock		_lock;
 

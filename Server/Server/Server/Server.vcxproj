@@ -142,6 +142,8 @@
   <ItemGroup>
     <ClInclude Include="IocpCore.h" />
     <ClInclude Include="IocpEvent.h" />
+    <ClInclude Include="Job.h" />
+    <ClInclude Include="JobQueue.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="NetAddress.h" />
@@ -149,6 +151,7 @@
     <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="ProtocolSturct.h" />
     <ClInclude Include="RecvBuffer.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="RWLock.h" />
@@ -162,6 +165,8 @@
     <ClCompile Include="gameserver.cpp" />
     <ClCompile Include="IocpCore.cpp" />
     <ClCompile Include="IocpEvent.h.cpp" />
+    <ClCompile Include="Job.cpp" />
+    <ClCompile Include="JobQueue.cpp" />
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Monster.cpp" />
     <ClCompile Include="NetAddress.cpp" />

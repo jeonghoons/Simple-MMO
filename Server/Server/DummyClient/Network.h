@@ -89,6 +89,7 @@ public:
 			myPlayer.SetPosition(posX, posY);
 			g_left_x = posX - SCREEN_WIDTH / 2;
 			g_top_y = posY - SCREEN_HEIGHT / 2;
+
 		}
 			break;
 		case SC_PACKET_LIST::SC_ADD_PLAYER:

@@ -9,7 +9,9 @@ void worker_thread(shared_ptr<ServerService>& service)
 {
 	while (true)
 	{
-		service->GetIocpInstance()->Dispatch();
+		service->GetIocpInstance()->Dispatch(10);
+
+		
 	}
 }
 
@@ -38,12 +40,18 @@ int main()
 	// GTimerQueue->GetInstance(service);
 
 	vector<thread> threads;
-	int num_threads = 8;
+	int num_threads = thread::hardware_concurrency();
 	for (int i = 0; i < num_threads; ++i) {
 		threads.emplace_back(worker_thread, std::ref(service));
 	}
 	
 	// thread timerThread{ timer_Thread, std::ref(service) };
+
+	while (true) {
+		for (auto& room : GRoomManager->_rooms) {
+			room.second->FlushJob();
+		}
+	}
 	
 	// timerThread.join();
 	for (thread& t : threads) {

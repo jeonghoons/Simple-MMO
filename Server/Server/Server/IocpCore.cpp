@@ -44,5 +44,5 @@ bool IocpCore::Dispatch(int timeouts)
 		}
 	}
 
-	return false;
+	return true;
 }

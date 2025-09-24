@@ -8,8 +8,7 @@ bool Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
 	// DB ¶Ç´Â ·£´ý
 	int playerId = session->GetId();
-	/*shared_ptr<Player> player = make_shared<Player>(session);
-	session->_currPlayer = player;*/
+	
 
 	shared_ptr<Player> player = make_shared<Player>();
 	player->SetId(playerId);
@@ -17,8 +16,7 @@ bool Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 	player->SetOwnerSession(session);
 	session->_currPlayer = player;
 	
-	// GRoom->EnterRoom(player);
-
+	
 	GRoomManager->EnterPlayer(player);
 
 	return true;

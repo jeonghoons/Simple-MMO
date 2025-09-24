@@ -10,37 +10,23 @@ shared_ptr<RoomManager> GRoomManager = make_shared<RoomManager>();
 
 #include "TimerQueue.h"
 
-HANDLE Room::GetHandle()
+
+void Room::FlushJob()
 {
-	return HANDLE();
-}
-
-void Room::Dispatch(IocpEvent* iocpEvent, int numBytes)
-{
-	switch (iocpEvent->type)
-	{
-	case EventType::RoomUpdate:
-		cout << "RoomUpdate - " << endl;
-		Update();
-		break;
-
-	case EventType::NPC_MOVE:
-		cout << "NPC_MOVE" << endl;
-
-		break;
+	if (_jobQueue.empty()) return;
 	
+	RWLock::WriteGuard lock(_lock);
 
-	default:
-		cout << "Undefined Event" << endl;
-		break;
-	}
+	shared_ptr<Job> job = _jobQueue.front();
+	_jobQueue.pop();
+	job->Execute();
 
-	delete iocpEvent;
+	
 }
 
 void Room::InitRoom()
 {
-		
+	Update();
 	/*for (int i = 0; i < 40; ++i) {
 		shared_ptr<Monster> monster = make_shared<Monster>();
 		monster->SetId(MonsterIdGenerator());
@@ -150,9 +136,11 @@ bool Room::RemoveObject(int objectId)
 
 void Room::Update()
 {
-	TimerEvent ev{ std::chrono::system_clock::now() + std::chrono::milliseconds(1000), EV_UPDATE_ROOM, static_pointer_cast<Room>(shared_from_this())};
-	GTimerQueue->_timerQueue.push(ev);
-	NPCMove();
+	cout << "Update Room" << endl;
+
+	PushJob(&Room::Update);
+
+	// NPCMove();
 }
 
 void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time)

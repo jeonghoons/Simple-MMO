@@ -7,6 +7,7 @@ enum class EventType : unsigned char
 	Send,
 	RoomUpdate, 
 	NPC_MOVE,
+	Timer,
 };
 
 class IocpEvent : public OVERLAPPED
@@ -48,18 +49,10 @@ public:
 	vector<shared_ptr<SendBuffer>> sendBuffers;
 };
 
-class RoomUpdateEvent : public IocpEvent
+class TimerEvent : public IocpEvent
 {
 public:
-	RoomUpdateEvent() : IocpEvent(EventType::RoomUpdate) {}
-
-
-};
-
-class NpcMoveEvent : public IocpEvent
-{
-public:
-	NpcMoveEvent() : IocpEvent(EventType::NPC_MOVE) {}
+	TimerEvent() : IocpEvent(EventType::NPC_MOVE) {}
 
 
 };

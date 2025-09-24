@@ -16,6 +16,9 @@
     <Filter Include="Contents">
       <UniqueIdentifier>{3e81e933-df1e-4e82-bad6-758204284830}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Job">
+      <UniqueIdentifier>{db8f291c-1af4-4e0f-a604-f52dbfd43685}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -69,6 +72,10 @@
     <ClCompile Include="TimerQueue.cpp">
       <Filter>Contents</Filter>
     </ClCompile>
+    <ClCompile Include="Job.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="JobQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -122,5 +129,12 @@
     <ClInclude Include="TimerQueue.h">
       <Filter>Contents</Filter>
     </ClInclude>
+    <ClInclude Include="ProtocolSturct.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Job.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="JobQueue.h" />
   </ItemGroup>
 </Project>
