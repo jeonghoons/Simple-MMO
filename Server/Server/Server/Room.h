@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "JobQueue.h"
+#include "ServerService.h"
 
 class Session;
 class SendBuffer;
@@ -8,17 +9,37 @@ class GameObject;
 class Player;
 class Monster;
 
-class Room : public JobQueue
+class Room : public IocpObject
 {
 public:
 	Room() = default;
+	Room(HANDLE iocpHandle) : _jobQueue(std::make_shared<JobQueue>(iocpHandle)) {}
+
 	~Room() = default;
 
-	virtual void FlushJob() override;
+	virtual HANDLE GetHandle() override;
+	virtual void Dispatch(class IocpEvent* iocpEvent, int numBytes = 0) override;
+
 
 	void InitRoom();
+
+	/*template<typename... Arguments>
+	void PushJob(void(Room::* memFunc)(Arguments...), Arguments... args)
+	{
+		shared_ptr<Job> job = make_shared<Job>(static_pointer_cast<Room>(shared_from_this()), memFunc, std::forward<Arguments>(args)...);
+		_jobQueue->Push(job);
+	}*/
+
+	template<typename... Arguments>
+	void PushJob(void(Room::* memFunc)(Arguments...), Arguments... args)
+	{
+		_jobQueue->Push(static_pointer_cast<Room>(shared_from_this()), memFunc, std::forward<Arguments>(args)...);
+	}
+	
+	JobQueue* GetJobQueueKey() { return _jobQueue.get(); }
 	
 	void EnterRoom(shared_ptr<Player> player);
+	void SendEnteredPlayer(shared_ptr<Player> player);
 	void LeaveRoom(shared_ptr<Player> player);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
 
@@ -30,6 +51,7 @@ public:
 	void NPCMove();
 
 	bool canSee(int from, int to);
+	bool canSee(pair<int, int> from, pair<int, int> to);
 
 	int MonsterIdGenerator()
 	{
@@ -49,16 +71,19 @@ private:
 	/// <vector<bool>> _tileMap;
 	// map<int, shared_ptr<GameObject>> _objects;
 	RWLock			_vlLock;
-	map<int, shared_ptr<Player>> _players;
+	unordered_map<int, shared_ptr<Player>> _players;
 	map<int, shared_ptr<Monster>> _monsters;
+
+	shared_ptr<JobQueue>			_jobQueue;
 	
 };
-
-// extern shared_ptr<Room> GRoom;
 
 class RoomManager
 {
 public:
+	void PushJobQueue(shared_ptr<JobQueue> jobQueue);
+	void Pop();
+
 	void CreateRoom();
 	void Remove(int roomId);
 	void Remove(shared_ptr<Room> room);
@@ -67,10 +92,17 @@ public:
 
 	int IdGenerator();
 
+	void SetIocpHandle(shared_ptr<ServerService> service) { 
+		_iocpHandle = service->GetIocpInstance()->GetHandle();
+	}
+
 public:
 	
 	RWLock				_lock;
 	unordered_map<int, shared_ptr<Room>> _rooms;
+
+	HANDLE _iocpHandle;
+
+	queue<shared_ptr<JobQueue>>	_globalQueue;
 };
 
-extern shared_ptr<RoomManager> GRoomManager;

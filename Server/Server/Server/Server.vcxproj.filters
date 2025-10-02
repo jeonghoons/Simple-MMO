@@ -69,13 +69,15 @@
     <ClCompile Include="Monster.cpp">
       <Filter>Contents</Filter>
     </ClCompile>
-    <ClCompile Include="TimerQueue.cpp">
-      <Filter>Contents</Filter>
-    </ClCompile>
     <ClCompile Include="Job.cpp">
       <Filter>Job</Filter>
     </ClCompile>
-    <ClCompile Include="JobQueue.cpp" />
+    <ClCompile Include="JobQueue.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="ConcurrentQueue.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -126,15 +128,17 @@
     <ClInclude Include="Monster.h">
       <Filter>Contents</Filter>
     </ClInclude>
-    <ClInclude Include="TimerQueue.h">
-      <Filter>Contents</Filter>
-    </ClInclude>
     <ClInclude Include="ProtocolSturct.h">
       <Filter>Protocol</Filter>
     </ClInclude>
     <ClInclude Include="Job.h">
       <Filter>Job</Filter>
     </ClInclude>
-    <ClInclude Include="JobQueue.h" />
+    <ClInclude Include="JobQueue.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="ConcurrentQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

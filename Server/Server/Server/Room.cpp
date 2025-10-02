@@ -5,76 +5,41 @@
 #include "Player.h"
 #include "Monster.h"
 
-// shared_ptr<Room> GRoom = make_shared<Room>();
-shared_ptr<RoomManager> GRoomManager = make_shared<RoomManager>();
-
-#include "TimerQueue.h"
 
 
-void Room::FlushJob()
+HANDLE Room::GetHandle()
 {
-	if (_jobQueue.empty()) return;
-	
-	RWLock::WriteGuard lock(_lock);
+	return HANDLE();
+}
 
-	shared_ptr<Job> job = _jobQueue.front();
-	_jobQueue.pop();
-	job->Execute();
+void Room::Dispatch(IocpEvent* iocpEvent, int numBytes)
+{
+	if (iocpEvent->_type == EventType::Job)
+		_jobQueue->ExecuteJobs();
 
 	
+	delete iocpEvent;
 }
 
 void Room::InitRoom()
 {
 	Update();
-	/*for (int i = 0; i < 40; ++i) {
-		shared_ptr<Monster> monster = make_shared<Monster>();
-		monster->SetId(MonsterIdGenerator());
-		AddObject(monster);
-	}
-
-	Update();*/
 }
 
 
 
 void Room::EnterRoom(shared_ptr<Player> player)
 {
-	
 
-	player->SetOwnerRoom(static_pointer_cast<Room>(shared_from_this()));
+	/*player->SetOwnerRoom(static_pointer_cast<Room>(shared_from_this()));
 	player->SetPosition(RandomPos());
 	_players[player->GetId()] = player;
 
 
-	SC_LOGIN_INFO_PACKET logInPacket;
-	logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
-	logInPacket.player.id = player->GetId();
-	logInPacket.player.position = player->GetPosition();
-
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
-	sendBuffer->CopyData(&logInPacket, sizeof(logInPacket));
-	player->GetSession()->Send(sendBuffer);
+	PushJob(&Room::SendEnteredPlayer, player->GetId());*/
+	//SendEnteredPlayer(player->GetId());
 
 
-	{ // 들어온 플레이어 시야처리
-		// RWLock::ReadGuard vlock(_lock);
-		// auto players = _players;
-		for (auto& [id, oldplayer] : _players) {
-			if (player->GetId() == id) continue;
-			if (false == canSee(player->GetId(), id)) continue;
-
-			{
-				RWLock::WriteGuard lock(_lock);
-				_players[id]->_viewList.insert(player->GetId());
-				oldplayer->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
-				
-				player->_viewList.insert(id);
-				player->GetSession()->Send(PacketHandler::MakePacket(oldplayer, SC_PACKET_LIST::SC_ADD_PLAYER));
-			}
-
-		}
-	}
 
 
 	/*int dataSize = sizeof(SC_ADD_OBJECT_PACKET) * _monsters.size();
@@ -98,9 +63,42 @@ void Room::EnterRoom(shared_ptr<Player> player)
 	
 }
 
+void Room::SendEnteredPlayer(shared_ptr<Player> player)
+{
+	
+	_players.insert({ player->GetId(), player });
+	
+	SC_LOGIN_INFO_PACKET logInPacket;
+	logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
+	logInPacket.player.id = player->GetId();
+	logInPacket.player.position = player->GetPosition();
+
+	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
+	sendBuffer->CopyData(&logInPacket, sizeof(logInPacket));
+
+	if (auto pl = player->GetSession()) {
+		pl->Send(sendBuffer);
+	}
+
+	{ // 들어온 플레이어 시야처리
+		for (auto& [id, oldplayer] : _players) {
+			if (player->GetId() == id) continue;
+			if (false == canSee(player->GetId(), id)) continue;
+			
+
+			_players[id]->_viewList.insert(player->GetId());
+			oldplayer->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
+
+			player->_viewList.insert(id);
+			player->GetSession()->Send(PacketHandler::MakePacket(oldplayer, SC_PACKET_LIST::SC_ADD_PLAYER));
+
+		}
+	}
+}
+
 void Room::LeaveRoom(shared_ptr<Player> player)
 {
-
+	// cout << "PLayer[" << player->GetId() << "] Leave" << endl;
 	shared_ptr<SendBuffer> sendBuffer = PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_REMOVE_PLAYER);
 	Broadcast(sendBuffer);
 
@@ -111,10 +109,12 @@ void Room::LeaveRoom(shared_ptr<Player> player)
 
 void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 {
-	RWLock::ReadGuard lock(_lock);
+	// RWLock::ReadGuard lock(_lock);
 	for (const auto& p : _players)
 	{
-		p.second->GetSession()->Send(sendBuffer);
+		
+		if(auto session = p.second->GetSession())
+			session->Send(sendBuffer);
 	}
 }
 
@@ -138,13 +138,12 @@ void Room::Update()
 {
 	cout << "Update Room" << endl;
 
-	PushJob(&Room::Update);
-
-	// NPCMove();
 }
 
 void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time)
 {
+	if (_players.find(player->GetId()) == _players.end())
+		return;
 	pair<int, int> pos = player->GetPosition();
 	player->_last_moveTime = move_time;
 
@@ -170,54 +169,67 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 
 	player->SetPosition(pos);
 
-
 	unordered_set<int> near_list;
-	unordered_set<int> old_list;
-	map<int, shared_ptr<Player>> players;
-	
-	{
-		RWLock::ReadGuard copylock(_lock);
-		old_list = player->_viewList;
-		players = _players;
-	}
+	unordered_set<int> old_list = player->_viewList;
+	unordered_map<int, shared_ptr<Player>> players = _players;
 
-	for (auto& [id, pl] : players) { // 현재의 시야 생성
+	//{
+	//	// RWLock::ReadGuard copylock(_lock);
+	//	old_list = player->_viewList;
+	//	players = _players;
+	//}
+
+	for (auto& [id, pl] : _players) { // 현재의 시야 생성
 		if (id == player->GetId()) continue;
 		if (canSee(player->GetId(), id))
 			near_list.insert(id);
 	}
-
-	player->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
-
+	if (auto p = player->GetSession()) {
+		p->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
+	}
 	for (int id : near_list) {
-		if (_players[id]->_viewList.count(player->GetId())) // 상대에 내가있으면 move
-			_players[id]->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
+		if (_players[id]->_viewList.count(player->GetId())) {// 상대에 내가있으면 move
+			if (auto session = _players[id]->GetSession()) {
+				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
+			}
+		}
 		else {// 없으면 add
 			{
 				RWLock::WriteGuard lock(_lock);
 				_players[id]->_viewList.insert(player->GetId());
 			}
-			_players[id]->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
+			if(auto session = _players[id]->GetSession())
+				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
 		}
 		if (old_list.count(id) == 0) {// 전 시야엔 없지만 지금은 있으면 move
 			{
 				RWLock::WriteGuard lock(_lock);
 				player->_viewList.insert(id);
 			}
-			player->GetSession()->Send(PacketHandler::MakePacket(_players[id], SC_PACKET_LIST::SC_ADD_PLAYER));
+			if (auto p = player->GetSession()) {
+				p->Send(PacketHandler::MakePacket(_players[id], SC_PACKET_LIST::SC_ADD_PLAYER));
+			}
 		}
 	}
 
 	for (int id : old_list) {
 		if (near_list.count(id) == 0) { // 현재시야에도 전시야사람이 없으면 서로 remove
+
+			// RWLock::WriteGuard lock(_lock);
 			
-			RWLock::WriteGuard lock(_lock);
-			player->_viewList.erase(id);
-			player->GetSession()->Send(PacketHandler::MakePacket(_players[id], SC_PACKET_LIST::SC_REMOVE_PLAYER));
 
-			_players[id]->_viewList.erase(player->GetId());
-			_players[id]->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_REMOVE_PLAYER));
+			if (auto p = player->GetSession()) {
+				player->_viewList.erase(id);
+				p->Send(MAKE_SC_REMOVE_PLAYER(id));
+			}
 
+			auto it = _players.find(id);
+			if (it != _players.end()) {
+				if (auto p = _players[id]->GetSession()) {
+					_players[id]->_viewList.erase(player->GetId());
+					p->Send(MAKE_SC_REMOVE_PLAYER(player->GetId()));
+				}
+			}
 		}
 	}
 
@@ -272,6 +284,12 @@ bool Room::canSee(int from, int to)
 	return abs(_players[from]->GetPosition().second - _players[to]->GetPosition().second) <= 5;
 }
 
+bool Room::canSee(pair<int, int> from, pair<int, int> to)
+{
+	if (abs(from.first - to.first) > 5) return false;
+	return abs(from.second - to.second) <= 5;
+}
+
 pair<int, int> Room::RandomPos()
 {
 	static std::random_device rd;
@@ -284,11 +302,29 @@ pair<int, int> Room::RandomPos()
 	return { x, y };
 }
 
+void RoomManager::PushJobQueue(shared_ptr<JobQueue> jobQueue)
+{
+	RWLock::WriteGuard lock(_lock);
+	_globalQueue.push(jobQueue);
+}
+
+void RoomManager::Pop()
+{
+	RWLock::WriteGuard lock(_lock);
+
+	if (_globalQueue.empty())
+		return;
+
+	shared_ptr<JobQueue> jobQueue = _globalQueue.front();
+	_globalQueue.pop();
+
+}
+
 void RoomManager::CreateRoom()
 {
 	int id = IdGenerator();
 
-	shared_ptr<Room> room = make_shared<Room>();
+	shared_ptr<Room> room = make_shared<Room>(_iocpHandle);
 	_rooms.insert({ id, room });
 	room->InitRoom();
 }
@@ -312,7 +348,10 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 
 			for (auto& [id, room] : _rooms) {
 				if (room->NumPlayers() < MAX_ROOM_CAPACITY) {
-					room->EnterRoom(player);
+					player->SetOwnerRoom(room);
+					player->SetPosition(room->RandomPos());
+
+					room->PushJob(&Room::SendEnteredPlayer, player);
 					return; // 성공 시 바로 종료
 				}
 			}

@@ -1,7 +1,12 @@
 #include "pch.h"
 #include "IocpEvent.h"
 
-IocpEvent::IocpEvent(EventType _type) : type(_type)
+IocpEvent::IocpEvent(EventType type) : _type(type)
+{
+	Init();
+}
+
+IocpEvent::IocpEvent(EventType type, shared_ptr<IocpObject> owner) : _type(type), _owner(owner)
 {
 	Init();
 }

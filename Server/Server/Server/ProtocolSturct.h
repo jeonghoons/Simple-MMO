@@ -2,7 +2,7 @@
 
 #define PORT_NUM 8888
 
-constexpr int MAX_ROOM_CAPACITY = 60;
+constexpr int MAX_ROOM_CAPACITY = 6000;
 
 // Packet Key
 enum SC_PACKET_LIST : unsigned char

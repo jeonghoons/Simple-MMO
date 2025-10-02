@@ -27,7 +27,7 @@ bool IocpCore::Dispatch(int timeouts)
 	if (::GetQueuedCompletionStatus(iocpHandle, &num_bytes, &key,
 		reinterpret_cast<LPOVERLAPPED*>(&over), timeouts))
 	{
-		shared_ptr<IocpObject> iocpObject = over->owner;
+		shared_ptr<IocpObject> iocpObject = over->_owner;
 		iocpObject->Dispatch(over, num_bytes);
 	}
 	else
@@ -38,7 +38,7 @@ bool IocpCore::Dispatch(int timeouts)
 		case WAIT_TIMEOUT:
 			return false;
 		default:
-			shared_ptr<IocpObject> iocpObject = over->owner;
+			shared_ptr<IocpObject> iocpObject = over->_owner;
 			iocpObject->Dispatch(over, num_bytes);
 			break;
 		}

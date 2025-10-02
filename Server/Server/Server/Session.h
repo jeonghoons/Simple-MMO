@@ -49,8 +49,9 @@ public:
 	RecvBuffer	_recvBuffer;
 	
 
-	queue<shared_ptr<SendBuffer>> _sendQueue;
-	atomic<bool>		_sendRegistered = false;
+	// queue<shared_ptr<SendBuffer>> _sendQueue;
+	SendBufferQueue		_sendQueue;
+	atomic<bool>			_sendRegistered = false;
 
 	shared_ptr<Player>	_currPlayer;
 

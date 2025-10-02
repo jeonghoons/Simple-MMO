@@ -27,7 +27,7 @@ HANDLE Session::GetHandle()
 
 void Session::Dispatch(IocpEvent* iocpEvent, int numBytes)
 {
-	switch (iocpEvent->type)
+	switch (iocpEvent->_type)
 	{
 	case EventType::Recv:
 		ProcessRecv(numBytes);
@@ -57,8 +57,10 @@ void Session::Disconnect(const WCHAR* cause)
 	if (_connected.exchange(false) == false)
 		return;
 
-	_currPlayer->GetCurrentRoom()->LeaveRoom(_currPlayer);
+	// _currPlayer->GetCurrentRoom()->LeaveRoom(_currPlayer);
 
+
+	_currPlayer->GetCurrentRoom()->PushJob(&Room::LeaveRoom, _currPlayer);
 	GetService()->ReleaseSession(static_pointer_cast<Session>(shared_from_this()));
 
 	
@@ -72,16 +74,29 @@ void Session::Send(shared_ptr<SendBuffer> sendBuffer)
 	if (false == IsConnected())
 		return;
 
+	//bool registerSend = false;
 
-	{
-		RWLock::WriteGuard lock(_lock);
-		_sendQueue.push(sendBuffer);
+	//{//=======================수정
+	//	// RWLock::WriteGuard lock(_lock);
+	//	// _sendQueue.push(sendBuffer);
+	//	_sendQueue.Push(sendBuffer);
 
-		if (_sendRegistered == false) {
-			_sendRegistered = true;
-			RegisterSend();
-		}
-	}
+	//	/*if (_sendRegistered == false) {
+	//		_sendRegistered = true;
+	//		RegisterSend();
+	//	}*/
+
+	//	if (_sendRegistered.exchange(true) == false)
+	//		registerSend = true;
+
+	//	if (registerSend)
+	//		RegisterSend();
+	//}
+
+	_sendQueue.Push(sendBuffer);
+
+	if (_sendRegistered.exchange(true) == false) // 첫 번째 쓰레드만 실행
+		RegisterSend();
 
 }
 
@@ -123,7 +138,7 @@ void Session::RegisterRecv()
 		return;
 
 	_recvEvent.Init();
-	_recvEvent.owner = shared_from_this();
+	_recvEvent._owner = shared_from_this();
 
 	WSABUF wsaBuf;
 	wsaBuf.buf = reinterpret_cast<char*>(_recvBuffer.WritePos());
@@ -136,7 +151,7 @@ void Session::RegisterRecv()
 		int errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
-			_recvEvent.owner = nullptr; // RELEASE_REF
+			_recvEvent._owner = nullptr; // RELEASE_REF
 		}
 	}
 
@@ -145,7 +160,7 @@ void Session::RegisterRecv()
 
 void Session::ProcessRecv(int numOfBytes)
 {
-	_recvEvent.owner = nullptr;
+	_recvEvent._owner = nullptr;
 
 	// cout << "Recv " << numOfBytes << " Bytes" << endl;
 	if (numOfBytes == 0) {
@@ -178,18 +193,18 @@ void Session::RegisterSend()
 	}
 
 	_sendEvent.Init();
-	_sendEvent.owner = shared_from_this();
+	_sendEvent._owner = shared_from_this();
 
 	int writeSize = 0;
-	while (_sendQueue.empty() == false)
+	while (_sendQueue.Empty() == false)
 	{
-		shared_ptr<SendBuffer> sendBuffer = _sendQueue.front();
+		shared_ptr<SendBuffer> sendBuffer = _sendQueue.TryPop();
 		writeSize += sendBuffer->WritePos();
 
-		_sendQueue.pop();
+		RWLock::WriteGuard lock(_lock);
 		_sendEvent.sendBuffers.push_back(sendBuffer);
 	}
-	
+
 
 	vector<WSABUF> wsaBufs;
 	wsaBufs.reserve(_sendEvent.sendBuffers.size());
@@ -208,7 +223,7 @@ void Session::RegisterSend()
 		int errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
-			_sendEvent.owner = nullptr; // Release REF
+			_sendEvent._owner = nullptr; // Release REF
 			_sendEvent.sendBuffers.clear();
 			_sendRegistered.store(false);
 		}
@@ -217,7 +232,7 @@ void Session::RegisterSend()
 
 void Session::ProcessSend(int numOfBytes)
 {
-	_sendEvent.owner = nullptr;
+	_sendEvent._owner = nullptr;
 	_sendEvent.sendBuffers.clear();
 	
 
@@ -227,13 +242,10 @@ void Session::ProcessSend(int numOfBytes)
 		return;
 	}
 
-	{
-		RWLock::WriteGuard lock(_lock);
-		if (_sendQueue.empty())
-			_sendRegistered.store(false);
-		else
-			RegisterSend();
-	}
+	if (_sendQueue.Empty())
+		_sendRegistered.store(false);
+	else 
+		RegisterSend();
 }
 
 

@@ -28,6 +28,10 @@ extern thread_local unsigned int Lthreadid;
 
 #include "TestProtocol.h"
 #include "RWLock.h"
+#include "Room.h"
+
+
+extern RoomManager* GRoomManager;
 
 
 

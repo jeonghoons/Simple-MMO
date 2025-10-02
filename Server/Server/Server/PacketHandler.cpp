@@ -49,11 +49,13 @@ bool Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* packet)
 bool Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* packet)
 {
 	
-	// GRoom->PlayerMove(GRoom->Id2Player(session->GetId()), packet->direction, packet->move_time);
-	
-	// shared_ptr<Player> player = session->_currPlayer;
-	if(auto room = session->_currPlayer->GetCurrentRoom())
-		room->PlayerMove(session->_currPlayer, packet->direction, packet->move_time);
+
+	/*if(auto room = session->_currPlayer->GetCurrentRoom())
+		room->PlayerMove(session->_currPlayer, packet->direction, packet->move_time);*/
+
+	if (auto room = session->_currPlayer->GetCurrentRoom())
+		room->PushJob(&Room::PlayerMove, session->_currPlayer, packet->direction, packet->move_time);
+
 
 	return true;
 }
@@ -97,7 +99,7 @@ shared_ptr<SendBuffer> PacketHandler::MakePacket(shared_ptr<Player> player, SC_P
 		MAKE_SC_MOVE_OBJECT(player, sendBuffer);
 		break;
 	case SC_REMOVE_PLAYER:
-		MAKE_SC_REMOVE_PLAYER(player, sendBuffer);
+		// MAKE_SC_REMOVE_PLAYER(player, sendBuffer);
 		break;
 	case SC_CHAT:
 		break;
@@ -121,13 +123,15 @@ bool MAKE_SC_ADD_PLAYER(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer
 	return true;
 }
 
-bool MAKE_SC_REMOVE_PLAYER(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer)
+shared_ptr<SendBuffer> MAKE_SC_REMOVE_PLAYER(int playerId)
 {
+	
 	SC_REMOVE_PLAYER_PACKET packet;
 	packet.header = { sizeof(packet), SC_REMOVE_PLAYER };
-	packet.playerId = player->GetId();
-	buffer->CopyData(&packet, packet.header.size);
-	return true;
+	packet.playerId = playerId;
+	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(sizeof(packet));
+	sendBuffer->CopyData(&packet, packet.header.size);
+	return sendBuffer;
 }
 
 bool MAKE_SC_MOVE_OBJECT(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer)

@@ -19,7 +19,7 @@ public:
 
 // bool MAKE_SC_LOGIN(shared_ptr<Session> session, shared_ptr<SendBuffer> buffer);
 bool MAKE_SC_ADD_PLAYER(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer);
-bool MAKE_SC_REMOVE_PLAYER(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer);
+shared_ptr<SendBuffer> MAKE_SC_REMOVE_PLAYER(int playerId);
 bool MAKE_SC_MOVE_OBJECT(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer);
 
 

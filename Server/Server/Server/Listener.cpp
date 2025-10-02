@@ -18,7 +18,7 @@ HANDLE Listener::GetHandle()
 
 void Listener::Dispatch(class IocpEvent* iocpEvent, int numBytes)
 {
-	if (iocpEvent->type != EventType::Accept)
+	if (iocpEvent->_type != EventType::Accept)
 		exit(-1);
 
 	AcceptEvent* accpetEvent = static_cast<AcceptEvent*>(iocpEvent);
@@ -45,7 +45,7 @@ bool Listener::StartAccept(shared_ptr<ServerService> service)
 		return false;
 
 	_acceptOver = new AcceptEvent();
-	_acceptOver->owner = shared_from_this();
+	_acceptOver->_owner = shared_from_this();
 	RegisterAccept(_acceptOver);
 
 	return true;

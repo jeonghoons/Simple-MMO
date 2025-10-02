@@ -8,7 +8,7 @@ Player::Player(shared_ptr<Session> ownerSession) : _ownerSession(ownerSession)
 
 Player::~Player()
 {
-	cout << "~Player[" << GetId() << "]" << endl;
+	cout << "~Player[" << _oId << "]" << endl;
 	_ownerRoom.reset();
 	_ownerSession.reset();
 }

@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ConcurrentQueue.h" />
     <ClInclude Include="IocpCore.h" />
     <ClInclude Include="IocpEvent.h" />
     <ClInclude Include="Job.h" />
@@ -159,9 +160,9 @@
     <ClInclude Include="ServerService.h" />
     <ClInclude Include="Session.h" />
     <ClInclude Include="TestProtocol.h" />
-    <ClInclude Include="TimerQueue.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ConcurrentQueue.cpp" />
     <ClCompile Include="gameserver.cpp" />
     <ClCompile Include="IocpCore.cpp" />
     <ClCompile Include="IocpEvent.h.cpp" />
@@ -185,7 +186,6 @@
     <ClCompile Include="SendBuffer.cpp" />
     <ClCompile Include="ServerService.cpp" />
     <ClCompile Include="Session.cpp" />
-    <ClCompile Include="TimerQueue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -14,15 +14,16 @@ public:
 
 	shared_ptr<Session> GetSession()
 	{
-		auto s = _ownerSession.lock();
-		if (s) {
-			/*std::cout << "[Warning] Player::GetSession(): session expired!" << std::endl;
-			OutputDebugStringA("[Warning] Player::GetSession(): session expired!\n");
-			__debugbreak();*/
-			return s;
-		}
-		else
-			return nullptr;
+		//auto s = _ownerSession.lock();
+		//if (s) {
+		//	/*std::cout << "[Warning] Player::GetSession(): session expired!" << std::endl;
+		//	OutputDebugStringA("[Warning] Player::GetSession(): session expired!\n");
+		//	__debugbreak();*/
+		//	return s;
+		//}
+		//else
+		//	return nullptr;
+		return _ownerSession.lock();
 	}
 	void SetOwnerSession(shared_ptr<Session> session) { _ownerSession = session; }
 	

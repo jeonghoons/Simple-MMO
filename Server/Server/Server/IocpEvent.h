@@ -1,26 +1,27 @@
 #pragma once
+#include "IocpCore.h"
 
 enum class EventType : unsigned char
 {
 	Accept,
 	Recv,
 	Send,
-	RoomUpdate, 
-	NPC_MOVE,
-	Timer,
+	Job,
+
 };
 
 class IocpEvent : public OVERLAPPED
 {
 
 public:
-	IocpEvent(EventType _type);
+	IocpEvent(EventType type);
+	IocpEvent(EventType type, shared_ptr<IocpObject> owner);
 
 	void Init();
 
 public:
-	EventType	type;
-	shared_ptr<class IocpObject> owner;
+	EventType	_type;
+	shared_ptr<IocpObject> _owner;
 };
 
 class Session;
@@ -49,10 +50,9 @@ public:
 	vector<shared_ptr<SendBuffer>> sendBuffers;
 };
 
-class TimerEvent : public IocpEvent
+class JobEvent : public IocpEvent
 {
 public:
-	TimerEvent() : IocpEvent(EventType::NPC_MOVE) {}
-
-
+	JobEvent(shared_ptr<IocpObject> owner) : IocpEvent(EventType::Job, owner) {}
 };
+

@@ -3,21 +3,16 @@
 #include "ServerService.h"
 #include "IocpCore.h"
 #include "Room.h"
-#include "TimerQueue.h"
+
 
 void worker_thread(shared_ptr<ServerService>& service)
 {
 	while (true)
 	{
+		
 		service->GetIocpInstance()->Dispatch(10);
 
-		
 	}
-}
-
-void timer_Thread(shared_ptr<ServerService>& service)
-{
-	GTimerQueue->TimerRun(service);
 }
 
 int main()
@@ -35,6 +30,7 @@ int main()
 		cout << "Service Start" << endl;
 
 	
+	GRoomManager->SetIocpHandle(service);
 	GRoomManager->CreateRoom();
 
 	// GTimerQueue->GetInstance(service);
@@ -45,18 +41,14 @@ int main()
 		threads.emplace_back(worker_thread, std::ref(service));
 	}
 	
-	// thread timerThread{ timer_Thread, std::ref(service) };
-
-	while (true) {
-		for (auto& room : GRoomManager->_rooms) {
-			room.second->FlushJob();
-		}
-	}
+	
+	
+	// cout << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now().time_since_epoch()) << endl;
 	
 	// timerThread.join();
 	for (thread& t : threads) {
 		t.join();
 	}
 
-
+	delete GRoomManager;
 }
