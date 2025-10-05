@@ -88,7 +88,7 @@ bool PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int
 //===================================================================================
 shared_ptr<SendBuffer> PacketHandler::MakePacket(shared_ptr<Player> player, SC_PACKET_LIST type)
 {
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
+	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(1024);
 	
 	switch (type)
 	{
@@ -116,7 +116,6 @@ bool MAKE_SC_ADD_PLAYER(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer
 	SC_ADD_PLAYER_PACKET packet;
 	packet.header = { sizeof(packet), SC_ADD_PLAYER };
 	packet.player.id = player->GetId();
-	// packet.player.position = GRoom->Id2Player(session->GetId())->GetPosition();
 	packet.player.position = player->GetPosition();
 	buffer->CopyData(&packet, packet.header.size);
 

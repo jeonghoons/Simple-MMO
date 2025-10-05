@@ -93,7 +93,10 @@ void Session::Send(shared_ptr<SendBuffer> sendBuffer)
 	//		RegisterSend();
 	//}
 
-	_sendQueue.Push(sendBuffer);
+	{
+		RWLock::WriteGuard lock(_lock);
+		_sendQueue.push(sendBuffer);
+	}
 
 	if (_sendRegistered.exchange(true) == false) // 첫 번째 쓰레드만 실행
 		RegisterSend();
@@ -195,16 +198,44 @@ void Session::RegisterSend()
 	_sendEvent.Init();
 	_sendEvent._owner = shared_from_this();
 
-	int writeSize = 0;
-	while (_sendQueue.Empty() == false)
-	{
-		shared_ptr<SendBuffer> sendBuffer = _sendQueue.TryPop();
-		writeSize += sendBuffer->WritePos();
 
+	// vector<shared_ptr<SendBuffer>> temp = _sendQueue.PopAll();
+	vector<shared_ptr<SendBuffer>> temp;
+
+
+	{
 		RWLock::WriteGuard lock(_lock);
+
+		while (_sendQueue.empty() == false) {
+			auto sB = _sendQueue.front();
+			_sendQueue.pop();
+			temp.push_back(sB);
+		}
+	}
+
+	int writeSize = 0;
+	for (auto& sendBuffer : temp) {
+		writeSize += sendBuffer->WritePos();
 		_sendEvent.sendBuffers.push_back(sendBuffer);
 	}
 
+
+	/*{
+		RWLock::WriteGuard lock(_lock);
+
+		int writeSize = 0;
+		while (_sendQueue.Empty() == false)
+		{
+			shared_ptr<SendBuffer> sendBuffer = _sendQueue.TryPop();
+			writeSize += sendBuffer->WritePos();
+
+
+			_sendEvent.sendBuffers.push_back(sendBuffer);
+		}
+
+		
+	}*/
+	
 
 	vector<WSABUF> wsaBufs;
 	wsaBufs.reserve(_sendEvent.sendBuffers.size());
@@ -242,7 +273,9 @@ void Session::ProcessSend(int numOfBytes)
 		return;
 	}
 
-	if (_sendQueue.Empty())
+	RWLock::WriteGuard lock(_lock);
+	
+	if (_sendQueue.empty())
 		_sendRegistered.store(false);
 	else 
 		RegisterSend();

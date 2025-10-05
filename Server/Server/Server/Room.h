@@ -13,7 +13,7 @@ class Room : public IocpObject
 {
 public:
 	Room() = default;
-	Room(HANDLE iocpHandle) : _jobQueue(std::make_shared<JobQueue>(iocpHandle)) {}
+	Room(HANDLE iocpHandle) : _jobQueue(iocpHandle) {}
 
 	~Room() = default;
 
@@ -33,10 +33,10 @@ public:
 	template<typename... Arguments>
 	void PushJob(void(Room::* memFunc)(Arguments...), Arguments... args)
 	{
-		_jobQueue->Push(static_pointer_cast<Room>(shared_from_this()), memFunc, std::forward<Arguments>(args)...);
+		_jobQueue.Push(static_pointer_cast<Room>(shared_from_this()), memFunc, std::forward<Arguments>(args)...);
 	}
 	
-	JobQueue* GetJobQueueKey() { return _jobQueue.get(); }
+	// JobQueue* GetJobQueueKey() { return _jobQueue.get(); }
 	
 	void EnterRoom(shared_ptr<Player> player);
 	void SendEnteredPlayer(shared_ptr<Player> player);
@@ -66,6 +66,7 @@ public:
 	int NumPlayers() { return static_cast<int>(_players.size()); }
 
 	RWLock		_lock;
+	
 
 private:
 	/// <vector<bool>> _tileMap;
@@ -74,15 +75,13 @@ private:
 	unordered_map<int, shared_ptr<Player>> _players;
 	map<int, shared_ptr<Monster>> _monsters;
 
-	shared_ptr<JobQueue>			_jobQueue;
+	JobQueue			_jobQueue;
 	
 };
 
 class RoomManager
 {
 public:
-	void PushJobQueue(shared_ptr<JobQueue> jobQueue);
-	void Pop();
 
 	void CreateRoom();
 	void Remove(int roomId);
@@ -99,10 +98,9 @@ public:
 public:
 	
 	RWLock				_lock;
+	
 	unordered_map<int, shared_ptr<Room>> _rooms;
 
-	HANDLE _iocpHandle;
-
-	queue<shared_ptr<JobQueue>>	_globalQueue;
+	HANDLE _iocpHandle = nullptr;
 };
 

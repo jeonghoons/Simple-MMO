@@ -24,6 +24,7 @@ public:
     bool TryPop(T& item)
     {
         lock_guard<mutex> lock(_mutex);
+       
         if (_queue.empty())
             return false;
 
@@ -32,17 +33,30 @@ public:
         return true;
     }
 
+    vector<T> PopAll()
+    {
+        vector<T> ret;
+
+        lock_guard<mutex> lock(_mutex);
+        while (false == _queue.empty()) {
+            T item = _queue.front();
+            _queue.pop();
+            ret.push_back(item);
+        }
+
+        return ret;
+    }
+
 
     size_t Getsize() const {
-        lock_guard<std::mutex> lock(_mutex);
+        // lock_guard<std::mutex> lock(_mutex);
         return _queue.size(); }
-    bool Empty() { 
-        lock_guard<std::mutex> lock(_mutex);
-        return _queue.empty(); }
+    bool Empty() { return _queue.empty(); }
 
 
 private:
     queue<T> _queue;
     mutex _mutex;
+    
 };
 

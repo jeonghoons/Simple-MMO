@@ -21,10 +21,10 @@ public:
     class WriteGuard {
     public:
         WriteGuard(RWLock& lock) : _lock(lock) {
-            _lock._mutex.lock();  // 쓰기 락 획득
+            // _lock._mutex.lock();  // 쓰기 락 획득
         }
         ~WriteGuard() {
-            _lock._mutex.unlock(); // 쓰기 락 해제
+            // _lock._mutex.unlock(); // 쓰기 락 해제
         }
     private:
         RWLock& _lock;
@@ -33,4 +33,11 @@ public:
 private:
     std::shared_mutex _mutex; // 내부 mutex
 };
+
+
+/*----------------
+    LockGuards
+-----------------*/
+
+
 

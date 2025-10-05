@@ -22,6 +22,7 @@ public:
 
 private:
 	RWLock					_lock;
+	
 
 	shared_ptr<Listener>		_listener;
 	NetAddress				_netAddress;

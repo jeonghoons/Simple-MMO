@@ -46,11 +46,12 @@ private:
 
 public:
 	RWLock		_lock;
+	
 	RecvBuffer	_recvBuffer;
 	
 
-	// queue<shared_ptr<SendBuffer>> _sendQueue;
-	SendBufferQueue		_sendQueue;
+	queue<shared_ptr<SendBuffer>> _sendQueue;
+	// SendBufferQueue		_sendQueue;
 	atomic<bool>			_sendRegistered = false;
 
 	shared_ptr<Player>	_currPlayer;

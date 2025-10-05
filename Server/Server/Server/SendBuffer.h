@@ -31,9 +31,10 @@ public:
 		return _queue.TryPop();
 	}
 
+	vector<shared_ptr<SendBuffer>> PopAll() { return _queue.PopAll(); }
 
 
-	bool Empty() { return _queue.Empty(); }
+	// bool Empty() { return _queue.Empty(); }
 
 	
 public:

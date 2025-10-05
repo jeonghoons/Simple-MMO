@@ -78,6 +78,12 @@
     <ClCompile Include="ConcurrentQueue.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="FineGrainedQueue.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -138,6 +144,12 @@
       <Filter>Job</Filter>
     </ClInclude>
     <ClInclude Include="ConcurrentQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="FineGrainedQueue.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
