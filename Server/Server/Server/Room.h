@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "JobQueue.h"
 #include "ServerService.h"
+#include "Timer.h"
 
 class Session;
 class SendBuffer;
@@ -9,17 +10,15 @@ class GameObject;
 class Player;
 class Monster;
 
-class Room : public IocpObject
+class Room : public enable_shared_from_this<Room>
 {
 public:
 	Room() = default;
-	Room(HANDLE iocpHandle) : _jobQueue(iocpHandle) {}
+	Room(shared_ptr<Timer> timer, HANDLE iocpHandle) : _timer(timer), _jobQueue(make_shared<JobQueue>(iocpHandle)) {}
 
 	~Room() = default;
 
-	virtual HANDLE GetHandle() override;
-	virtual void Dispatch(class IocpEvent* iocpEvent, int numBytes = 0) override;
-
+	
 
 	void InitRoom();
 
@@ -33,10 +32,17 @@ public:
 	template<typename... Arguments>
 	void PushJob(void(Room::* memFunc)(Arguments...), Arguments... args)
 	{
-		_jobQueue.Push(static_pointer_cast<Room>(shared_from_this()), memFunc, std::forward<Arguments>(args)...);
+
+		_jobQueue->Push(shared_from_this(), memFunc, std::forward<Arguments>(args)...);
 	}
+
+	template<typename... Arguments>
+	void ReserveJob(DWORD ectime, void(Room::* memFunc)(Arguments...), Arguments... args)
+	{
+		_timer->Reserve(ectime, _jobQueue, shared_from_this(), memFunc, std::forward<Arguments>(args)...);
+	}
+
 	
-	// JobQueue* GetJobQueueKey() { return _jobQueue.get(); }
 	
 	void EnterRoom(shared_ptr<Player> player);
 	void SendEnteredPlayer(shared_ptr<Player> player);
@@ -75,7 +81,9 @@ private:
 	unordered_map<int, shared_ptr<Player>> _players;
 	map<int, shared_ptr<Monster>> _monsters;
 
-	JobQueue			_jobQueue;
+	shared_ptr<JobQueue> _jobQueue;
+
+	shared_ptr<Timer>		_timer;
 	
 };
 

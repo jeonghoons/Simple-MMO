@@ -6,23 +6,6 @@
 #include "Monster.h"
 
 
-
-HANDLE Room::GetHandle()
-{
-	return HANDLE();
-}
-
-void Room::Dispatch(IocpEvent* iocpEvent, int numBytes)
-{
-
-	if (iocpEvent->_type == EventType::Job)
-		_jobQueue.ExecuteJobs();
-
-	
-	iocpEvent->_owner = nullptr;
-	delete iocpEvent;
-}
-
 void Room::InitRoom()
 {
 	Update();
@@ -137,7 +120,8 @@ bool Room::RemoveObject(int objectId)
 void Room::Update()
 {
 	cout << "Update Room" << endl;
-
+	ReserveJob(1000, static_cast<void(Room::*)()>(&Room::Update));
+	
 }
 
 void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time)
@@ -313,7 +297,7 @@ void RoomManager::CreateRoom()
 {
 	int id = IdGenerator();
 
-	shared_ptr<Room> room = make_shared<Room>(_iocpHandle);
+	shared_ptr<Room> room = make_shared<Room>(GTimer, _iocpHandle);
 	_rooms.insert({ id, room });
 	room->InitRoom();
 }

@@ -29,9 +29,11 @@ extern thread_local unsigned int Lthreadid;
 #include "TestProtocol.h"
 #include "RWLock.h"
 #include "Room.h"
+#include "Timer.h"
 
 
 extern RoomManager* GRoomManager;
+extern shared_ptr<Timer> GTimer;
 
 
 

@@ -3,46 +3,52 @@
 #include "IocpEvent.h"
 #include "ConcurrentQueue.h"
 #include "FineGrainedQueue.h"
+#include <concurrent_queue.h>
 
-class JobQueue : public enable_shared_from_this<JobQueue>
+class JobQueue : public IocpObject
 {
 public:
-	JobQueue(HANDLE iocpHandle) : _iocpHandle(iocpHandle) {}
-	// JobQueue* GetCompletionKey() { return this; }
+	virtual HANDLE GetHandle() override;
 
-	/*void Push(function<void()>&& func)
+	virtual void Dispatch(class IocpEvent* iocpEvent, int numBytes = 0) override;
+
+	JobQueue(HANDLE iocpHandle) : _iocpHandle(iocpHandle) {}
+
+	void Push(shared_ptr<Job> job)
 	{
-		shared_ptr<Job> job = make_shared<Job>(move(func));
-		_jobQueue.Push(job);
+		_jobQueue.push(job);
 		RegisterJobs();
-	}*/
+	}
 
 	template<typename T, typename... Arguments>
 	void Push(shared_ptr<T> owner, void(T::* memFunc)(Arguments...), Arguments&&... args)
 	{
 		shared_ptr<Job> job = make_shared<Job>(owner, memFunc, std::forward<Arguments>(args)...);
-		_jobQueue.Push(job);
-		
-		RegisterJobs(owner);
-	}
-	
+		_jobQueue.push(job);
+		RegisterJobs();
+	}	
 
 	void ExecuteJobs()
 	{
+
+		while (true) {
+			shared_ptr<Job> job;
+			while (_jobQueue.try_pop(job)) {
+				job->Execute();
+			}
+			
+			bool expected = true;
+			if(_isProcessing.compare_exchange_strong(expected, false))
+				break;
+
+		}
 		
-		vector<shared_ptr<Job>> jobs;
-		jobs = _jobQueue.PopAll();
-		for (auto& job : jobs)
-			job->Execute();
-
-
-		_isProcessing.store(false);
 	}
 
 
 private:
-	template<typename T>
-	void RegisterJobs(shared_ptr<T> owner)
+	
+	void RegisterJobs()
 	{
 		bool expected = false;
 		if (_isProcessing.compare_exchange_strong(expected, true))
@@ -52,7 +58,7 @@ private:
 				_iocpHandle,
 				0,
 				0,
-				new JobEvent(owner)
+				new JobEvent(shared_from_this())
 			);
 			
 		}
@@ -64,9 +70,11 @@ private:
 private:
 	
 	HANDLE						_iocpHandle;
-	ConcurrentQueue<shared_ptr<Job>> _jobQueue;
+	// ConcurrentQueue<shared_ptr<Job>> _jobQueue;
 	// FineGrainedConcurrentQueue<shared_ptr<Job>> _jobQueue;
+	concurrency::concurrent_queue<shared_ptr<Job>> _jobQueue;
 
 	std::atomic<bool> _isProcessing = false;
 };
+
 

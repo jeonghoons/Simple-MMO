@@ -7,14 +7,12 @@
 
 void worker_thread(shared_ptr<ServerService>& service)
 {
-	
 	while (true)
 	{
 		
 		service->GetIocpInstance()->Dispatch();
 
 	}
-	
 }
 
 int main()
@@ -32,6 +30,7 @@ int main()
 		cout << "Service Start" << endl;
 
 	
+	
 	GRoomManager->SetIocpHandle(service);
 	GRoomManager->CreateRoom();
 
@@ -45,8 +44,10 @@ int main()
 		Lthreadid++;
 		threads.emplace_back(worker_thread, std::ref(service));
 	}
+
 	
 	
+	// thread timerThread{ timer_thread };
 	
 	// cout << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now().time_since_epoch()) << endl;
 	
