@@ -74,32 +74,19 @@ void Session::Send(shared_ptr<SendBuffer> sendBuffer)
 	if (false == IsConnected())
 		return;
 
-	//bool registerSend = false;
-
-	//{//=======================수정
-	//	// RWLock::WriteGuard lock(_lock);
-	//	// _sendQueue.push(sendBuffer);
-	//	_sendQueue.Push(sendBuffer);
-
-	//	/*if (_sendRegistered == false) {
-	//		_sendRegistered = true;
-	//		RegisterSend();
-	//	}*/
-
-	//	if (_sendRegistered.exchange(true) == false)
-	//		registerSend = true;
-
-	//	if (registerSend)
-	//		RegisterSend();
-	//}
+	bool expected = false;
 
 	{
 		RWLock::WriteGuard lock(_lock);
 		_sendQueue.push(sendBuffer);
 	}
 
-	if (_sendRegistered.exchange(true) == false) // 첫 번째 쓰레드만 실행
+	//if (_sendRegistered.exchange(true) == false) // 첫 번째 쓰레드만 실행
+	//	RegisterSend();
+
+	if (_sendRegistered.compare_exchange_strong(expected, true)) {
 		RegisterSend();
+	}
 
 }
 
@@ -219,22 +206,6 @@ void Session::RegisterSend()
 		_sendEvent.sendBuffers.push_back(sendBuffer);
 	}
 
-
-	/*{
-		RWLock::WriteGuard lock(_lock);
-
-		int writeSize = 0;
-		while (_sendQueue.Empty() == false)
-		{
-			shared_ptr<SendBuffer> sendBuffer = _sendQueue.TryPop();
-			writeSize += sendBuffer->WritePos();
-
-
-			_sendEvent.sendBuffers.push_back(sendBuffer);
-		}
-
-		
-	}*/
 	
 
 	vector<WSABUF> wsaBufs;
@@ -273,7 +244,7 @@ void Session::ProcessSend(int numOfBytes)
 		return;
 	}
 
-	RWLock::WriteGuard lock(_lock);
+	// RWLock::WriteGuard lock(_lock);
 	
 	if (_sendQueue.empty())
 		_sendRegistered.store(false);

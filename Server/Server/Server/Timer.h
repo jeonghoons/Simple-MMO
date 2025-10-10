@@ -52,6 +52,7 @@ public:
         shared_ptr<Job> job = std::make_shared<Job>(owner, memFunc, std::forward<Arguments>(args)...);
 
         TimerItem item = TimerItem(executeTime, std::move(job), jobQueue);
+        // lock_guard<mutex> lock(_lock);
         _timerQueue.push(item);
     }
 
@@ -61,8 +62,9 @@ private:
     void ProcessTimerQueue();
 
 private:
-    
-    priority_queue<TimerItem> _timerQueue;
+    mutex       _lock;
+    // priority_queue<TimerItem> _timerQueue;
+    concurrency::concurrent_priority_queue<TimerItem> _timerQueue;
     std::unique_ptr<std::thread> _thread;
     std::atomic<bool> _stopFlag;
 };

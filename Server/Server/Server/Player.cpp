@@ -3,12 +3,12 @@
 
 Player::Player(shared_ptr<Session> ownerSession) : _ownerSession(ownerSession)
 {
-
+	
 }
 
 Player::~Player()
 {
-	cout << "~Player[" << _oId << "]" << endl;
+	cout << "~Player[" << _objectInfo.id << "]" << endl;
 	_ownerRoom.reset();
 	_ownerSession.reset();
 }

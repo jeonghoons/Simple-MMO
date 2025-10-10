@@ -82,10 +82,10 @@ public:
 		{
 			cout << "LogIN " << io_byte << "Bytes " << endl;
 			SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(net_buf);
-			g_myid = packet->player.id;
+			g_myid = packet->objectInfo.id;
 			myPlayer.SetId(g_myid);
-			int posX = packet->player.position.first;
-			int posY = packet->player.position.second;
+			int posX = (int)packet->objectInfo.position.pos_x;
+			int posY = (int)packet->objectInfo.position.pos_y;
 			myPlayer.SetPosition(posX, posY);
 			g_left_x = posX - SCREEN_WIDTH / 2;
 			g_top_y = posY - SCREEN_HEIGHT / 2;
@@ -97,9 +97,9 @@ public:
 			cout << "ADD PLAYER " << io_byte << "Bytes " << endl;
 
 			SC_ADD_PLAYER_PACKET* packet = reinterpret_cast<SC_ADD_PLAYER_PACKET*>(net_buf);
-			int id = packet->player.id;
-			int posX = packet->player.position.first;
-			int posY = packet->player.position.second;
+			int id = packet->objectInfo.id;
+			int posX = packet->objectInfo.position.pos_x;
+			int posY = packet->objectInfo.position.pos_y;
 
 			if (id == g_myid) {
 				myPlayer.SetPosition(posX, posY);
@@ -118,9 +118,9 @@ public:
 			cout << "ADD MONSTER " << io_byte << "Bytes " << endl;
 
 			SC_ADD_OBJECT_PACKET* packet = reinterpret_cast<SC_ADD_OBJECT_PACKET*>(net_buf);
-			int id = packet->objectId;
-			int posX = packet->position.first;
-			int posY = packet->position.second;
+			int id = packet->objectInfo.id;
+			int posX = packet->objectInfo.position.pos_x;
+			int posY = packet->objectInfo.position.pos_y;
 
 			players[id] = Object{ *pieces, 88, 0,TILE_WIDTH - 1, TILE_WIDTH - 1 };
 			players[id].SetPosition(posX, posY);
@@ -151,12 +151,12 @@ public:
 
 		case SC_PACKET_LIST::SC_MOVE_OBJECT:
 		{
-			cout << "MOVE OBJECT " << io_byte << "Bytes " << endl;
+			// cout << "MOVE OBJECT " << io_byte << "Bytes " << endl;
 			SC_MOVE_PACKET* packet = reinterpret_cast<SC_MOVE_PACKET*>(net_buf);
-			int id = packet->id;
-			auto pos = packet->position;
-			int posX = pos.first;
-			int posY = pos.second;
+			int id = packet->objectInfo.id;
+			auto pos = packet->objectInfo.position;
+			int posX = pos.pos_x;
+			int posY = pos.pos_y;
 
 			if (id == g_myid) {
 				
@@ -167,6 +167,7 @@ public:
 			else {
 				players[id].SetPosition(posX, posY);
 			}
+			cout << "OBJECT [" << id << "] MOVE " << endl;
 		}
 		break;
 

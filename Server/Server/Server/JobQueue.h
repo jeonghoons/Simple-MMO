@@ -30,19 +30,19 @@ public:
 
 	void ExecuteJobs()
 	{
-
 		while (true) {
 			shared_ptr<Job> job;
 			while (_jobQueue.try_pop(job)) {
 				job->Execute();
 			}
-			
-			bool expected = true;
-			if(_isProcessing.compare_exchange_strong(expected, false))
-				break;
 
+
+			bool expected = true;
+			if (_isProcessing.compare_exchange_strong(expected, false))
+			{
+				break;
+			}
 		}
-		
 	}
 
 

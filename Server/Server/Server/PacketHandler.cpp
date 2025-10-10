@@ -10,10 +10,9 @@ bool Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 	int playerId = session->GetId();
 	
 
-	shared_ptr<Player> player = make_shared<Player>();
+	shared_ptr<Player> player = make_shared<Player>(session);
 	player->SetId(playerId);
-	
-	player->SetOwnerSession(session);
+	// player->SetOwnerSession(session);
 	session->_currPlayer = player;
 	
 	
@@ -54,7 +53,7 @@ bool Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* packet)
 		room->PlayerMove(session->_currPlayer, packet->direction, packet->move_time);*/
 
 	if (auto room = session->_currPlayer->GetCurrentRoom())
-		room->PushJob(&Room::PlayerMove, session->_currPlayer, packet->direction, packet->move_time);
+		room->PushJob(&Room::PlayerMoven, session->_currPlayer, packet->direction, packet->move_time);
 
 
 	return true;
@@ -78,6 +77,7 @@ bool PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int
 		Handle_CS_MOVE(session, reinterpret_cast<CS_MOVE_PACKET*>(buffer));
 		break;
 	default:
+		cout << "Unknown Packet [" << header->size<<"]bytes"  << endl;
 		return false;
 	}
 
@@ -115,8 +115,7 @@ bool MAKE_SC_ADD_PLAYER(shared_ptr<Player> player, shared_ptr<SendBuffer> buffer
 {
 	SC_ADD_PLAYER_PACKET packet;
 	packet.header = { sizeof(packet), SC_ADD_PLAYER };
-	packet.player.id = player->GetId();
-	packet.player.position = player->GetPosition();
+	packet.objectInfo = player->GetInfo();
 	buffer->CopyData(&packet, packet.header.size);
 
 	return true;
@@ -137,8 +136,7 @@ bool MAKE_SC_MOVE_OBJECT(shared_ptr<Player> player, shared_ptr<SendBuffer> buffe
 {
 	SC_MOVE_PACKET packet;
 	packet.header = { sizeof(packet), SC_MOVE_OBJECT };
-	packet.id = player->GetId();
-	packet.position = player->GetPosition();
+	packet.objectInfo = player->GetInfo();
 	packet.move_time = player->_last_moveTime;
 	buffer->CopyData(&packet, packet.header.size);
 	return true;

@@ -23,15 +23,30 @@ struct PacketHeader
 	unsigned short type{};
 };
 
-struct PlayerInfo
+struct PositionInfo
 {
-	enum PLAYER_TYPE : unsigned char
+	float pos_x{};
+	float pos_y{};
+	float pos_z{};
+	float yaw{};
+};
+
+struct ObjectInfo
+{
+	enum Object_Type : unsigned char
 	{
 
 	};
 
-	int id;
-	std::pair<int, int> position;
+	enum Object_State : unsigned char
+	{
+		NONE, IDLE, RUN, JUMP
+	};
+
+	int id{};
+	// std::pair<int, int> position;
+	Object_State state = Object_State::NONE;
+	PositionInfo			position{};
 
 };
 

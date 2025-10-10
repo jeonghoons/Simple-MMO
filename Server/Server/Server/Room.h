@@ -3,6 +3,7 @@
 #include "JobQueue.h"
 #include "ServerService.h"
 #include "Timer.h"
+#include "GameMap.h"
 
 class Session;
 class SendBuffer;
@@ -45,7 +46,6 @@ public:
 	
 	
 	void EnterRoom(shared_ptr<Player> player);
-	void SendEnteredPlayer(shared_ptr<Player> player);
 	void LeaveRoom(shared_ptr<Player> player);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
 
@@ -54,11 +54,11 @@ public:
 
 	void Update();
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
+	void PlayerMoven(shared_ptr<Player> player, int direction, unsigned move_time);
 	void NPCMove();
 
 	bool canSee(int from, int to);
-	bool canSee(pair<int, int> from, pair<int, int> to);
-
+	
 	int MonsterIdGenerator()
 	{
 		static atomic<int> _midGenerator = 10000;
@@ -67,7 +67,7 @@ public:
 
 	shared_ptr<Player> Id2Player(int pId) { return _players[pId]; }
 
-	pair<int, int> RandomPos();
+	PositionInfo RandomPos();
 
 	int NumPlayers() { return static_cast<int>(_players.size()); }
 
@@ -80,6 +80,8 @@ private:
 	RWLock			_vlLock;
 	unordered_map<int, shared_ptr<Player>> _players;
 	map<int, shared_ptr<Monster>> _monsters;
+
+	GameMap				_gameMap;
 
 	shared_ptr<JobQueue> _jobQueue;
 

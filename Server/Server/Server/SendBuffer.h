@@ -1,6 +1,6 @@
 #pragma once
 #include "ConcurrentQueue.h"
-
+#include <concurrent_queue.h>
 class SendBuffer
 {
 public:
@@ -26,18 +26,18 @@ public:
 		_queue.Push(sendBuffer);
 	}
 
-	shared_ptr<SendBuffer> TryPop()
+	/*shared_ptr<SendBuffer> TryPop()
 	{
 		return _queue.TryPop();
-	}
+	}*/
+
+	
 
 	vector<shared_ptr<SendBuffer>> PopAll() { return _queue.PopAll(); }
-
-
-	// bool Empty() { return _queue.Empty(); }
 
 	
 public:
 	ConcurrentQueue<shared_ptr<SendBuffer>> _queue;
+	// concurrency::concurrent_queue<shared_ptr<SendBuffer>> _queue;
 };
 
