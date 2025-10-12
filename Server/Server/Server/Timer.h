@@ -29,7 +29,7 @@ public:
             return a._executeTime > b._executeTime;
         }
     };*/
-    Timer() : _stopFlag(false)
+    Timer()
     {
         // 타이머 스레드를 시작합니다.
         _thread = std::make_unique<std::thread>(&Timer::Run, this);
@@ -37,7 +37,6 @@ public:
 
     ~Timer()
     {
-        _stopFlag.store(true);
         if (_thread && _thread->joinable())
         {
             _thread->join();
@@ -66,7 +65,6 @@ private:
     // priority_queue<TimerItem> _timerQueue;
     concurrency::concurrent_priority_queue<TimerItem> _timerQueue;
     std::unique_ptr<std::thread> _thread;
-    std::atomic<bool> _stopFlag;
 };
 
 

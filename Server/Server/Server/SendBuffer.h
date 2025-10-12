@@ -15,7 +15,7 @@ public:
 
 private:
 	vector<BYTE> _buffer;
-	int		_writePos = 0;
+	int		_writePos{};
 };
 
 class SendBufferQueue
@@ -23,21 +23,18 @@ class SendBufferQueue
 public:
 	void Push(shared_ptr<SendBuffer> sendBuffer)
 	{
-		_queue.Push(sendBuffer);
+		_queue.push(sendBuffer);
+	}
+	
+	bool Try_pop(shared_ptr<SendBuffer>& buffer)
+	{
+		return _queue.try_pop(buffer);
 	}
 
-	/*shared_ptr<SendBuffer> TryPop()
-	{
-		return _queue.TryPop();
-	}*/
-
-	
-
-	vector<shared_ptr<SendBuffer>> PopAll() { return _queue.PopAll(); }
-
+	bool isEmpty() { return _queue.empty(); }
 	
 public:
-	ConcurrentQueue<shared_ptr<SendBuffer>> _queue;
-	// concurrency::concurrent_queue<shared_ptr<SendBuffer>> _queue;
+	
+	concurrency::concurrent_queue<shared_ptr<SendBuffer>> _queue;
 };
 

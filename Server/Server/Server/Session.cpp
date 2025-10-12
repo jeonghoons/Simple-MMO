@@ -54,12 +54,12 @@ void Session::OnConnected()
 
 void Session::Disconnect(const WCHAR* cause)
 {
-	if (_connected.exchange(false) == false)
+	/*if (_connected.exchange(false) == false)
+		return;*/
+	if (false == IsConnected())
 		return;
 
-	// _currPlayer->GetCurrentRoom()->LeaveRoom(_currPlayer);
-
-
+	
 	_currPlayer->GetCurrentRoom()->PushJob(&Room::LeaveRoom, _currPlayer);
 	GetService()->ReleaseSession(static_pointer_cast<Session>(shared_from_this()));
 
@@ -73,17 +73,10 @@ void Session::Send(shared_ptr<SendBuffer> sendBuffer)
 {
 	if (false == IsConnected())
 		return;
+	
+	_sendQueue.Push(sendBuffer);
 
 	bool expected = false;
-
-	{
-		RWLock::WriteGuard lock(_lock);
-		_sendQueue.push(sendBuffer);
-	}
-
-	//if (_sendRegistered.exchange(true) == false) // 첫 번째 쓰레드만 실행
-	//	RegisterSend();
-
 	if (_sendRegistered.compare_exchange_strong(expected, true)) {
 		RegisterSend();
 	}
@@ -123,7 +116,6 @@ void Session::ProcessPacket(BYTE* buffer, int len)
 
 void Session::RegisterRecv()
 {
-	// thread safe
 	if (IsConnected() == false)
 		return;
 
@@ -152,7 +144,6 @@ void Session::ProcessRecv(int numOfBytes)
 {
 	_recvEvent._owner = nullptr;
 
-	// cout << "Recv " << numOfBytes << " Bytes" << endl;
 	if (numOfBytes == 0) {
 		Disconnect(L"Recv 0");
 		return;
@@ -185,28 +176,10 @@ void Session::RegisterSend()
 	_sendEvent.Init();
 	_sendEvent._owner = shared_from_this();
 
-
-	// vector<shared_ptr<SendBuffer>> temp = _sendQueue.PopAll();
-	vector<shared_ptr<SendBuffer>> temp;
-
-
-	{
-		RWLock::WriteGuard lock(_lock);
-
-		while (_sendQueue.empty() == false) {
-			auto sB = _sendQueue.front();
-			_sendQueue.pop();
-			temp.push_back(sB);
-		}
+	shared_ptr<SendBuffer> buffer;
+	while (_sendQueue.Try_pop(buffer)) {
+		_sendEvent.sendBuffers.push_back(buffer);
 	}
-
-	int writeSize = 0;
-	for (auto& sendBuffer : temp) {
-		writeSize += sendBuffer->WritePos();
-		_sendEvent.sendBuffers.push_back(sendBuffer);
-	}
-
-	
 
 	vector<WSABUF> wsaBufs;
 	wsaBufs.reserve(_sendEvent.sendBuffers.size());
@@ -244,9 +217,8 @@ void Session::ProcessSend(int numOfBytes)
 		return;
 	}
 
-	// RWLock::WriteGuard lock(_lock);
-	
-	if (_sendQueue.empty())
+
+	if (_sendQueue.isEmpty())
 		_sendRegistered.store(false);
 	else 
 		RegisterSend();

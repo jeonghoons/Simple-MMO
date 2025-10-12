@@ -6,15 +6,11 @@
 
 bool Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
-	// DB ¶Ç´Â ·£´ý
-	int playerId = session->GetId();
-	
+	int playerId = session->GetId();	
 
 	shared_ptr<Player> player = make_shared<Player>(session);
 	player->SetId(playerId);
-	// player->SetOwnerSession(session);
 	session->_currPlayer = player;
-	
 	
 	GRoomManager->EnterPlayer(player);
 
@@ -38,23 +34,15 @@ bool Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* packet)
 
 	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(cPacket.header.size);
 	sendBuffer->CopyData(&cPacket, cPacket.header.size);
-
 	
-	// GRoom->Broadcast(sendBuffer);
 
 	return true;
 }
 
 bool Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* packet)
 {
-	
-
-	/*if(auto room = session->_currPlayer->GetCurrentRoom())
-		room->PlayerMove(session->_currPlayer, packet->direction, packet->move_time);*/
-
 	if (auto room = session->_currPlayer->GetCurrentRoom())
 		room->PushJob(&Room::PlayerMoven, session->_currPlayer, packet->direction, packet->move_time);
-
 
 	return true;
 }

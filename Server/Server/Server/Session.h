@@ -50,8 +50,8 @@ public:
 	RecvBuffer	_recvBuffer;
 	
 
-	queue<shared_ptr<SendBuffer>> _sendQueue;
-	// SendBufferQueue		_sendQueue;
+	// queue<shared_ptr<SendBuffer>> _sendQueue;
+	SendBufferQueue		_sendQueue;
 	atomic<bool>			_sendRegistered = false;
 
 	shared_ptr<Player>	_currPlayer;
@@ -64,7 +64,7 @@ private:
 	unsigned int		_cid = {};
 
 	RecvEvent		_recvEvent;
-	SendEvent		_sendEvent;
+	SendEvent		_sendEvent; // 패킷을 모아서 보내기 위해서 재사용
 
 
 };

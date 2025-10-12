@@ -69,7 +69,7 @@
 
 void Timer::Run()
 {
-    while (!_stopFlag.load())
+    while (true)
     {
         ProcessTimerQueue();
 

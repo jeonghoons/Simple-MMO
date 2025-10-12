@@ -9,9 +9,7 @@ void worker_thread(shared_ptr<ServerService>& service)
 {
 	while (true)
 	{
-		
 		service->GetIocpInstance()->Dispatch();
-
 	}
 }
 
@@ -37,8 +35,8 @@ int main()
 	// GTimerQueue->GetInstance(service);
 
 	vector<thread> threads;
-	// int num_threads = thread::hardware_concurrency();
-	int num_threads = 6;
+	int num_threads = thread::hardware_concurrency();
+	// int num_threads = 6;
 	for (int i = 0; i < num_threads; ++i) {
 		
 		Lthreadid++;
@@ -53,7 +51,8 @@ int main()
 	
 	// timerThread.join();
 	for (thread& t : threads) {
-		t.join();
+		if(t.joinable()) 
+			t.join();
 	}
 
 	delete GRoomManager;
