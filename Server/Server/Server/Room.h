@@ -19,16 +19,7 @@ public:
 
 	~Room() = default;
 
-	
-
 	void InitRoom();
-
-	/*template<typename... Arguments>
-	void PushJob(void(Room::* memFunc)(Arguments...), Arguments... args)
-	{
-		shared_ptr<Job> job = make_shared<Job>(static_pointer_cast<Room>(shared_from_this()), memFunc, std::forward<Arguments>(args)...);
-		_jobQueue->Push(job);
-	}*/
 
 	template<typename... Arguments>
 	void PushJob(void(Room::* memFunc)(Arguments...), Arguments... args)
@@ -54,7 +45,6 @@ public:
 
 	void Update();
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
-	void PlayerMoven(shared_ptr<Player> player, int direction, unsigned move_time);
 	void NPCMove();
 
 	bool canSee(int from, int to);

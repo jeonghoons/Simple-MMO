@@ -27,24 +27,16 @@ void Room::EnterRoom(shared_ptr<Player> player)
 	}
 
 	_gameMap.UpdateObjectPosition(player->GetId(), player->GetPosition()); // 게임맵에 등록
-	unordered_set<int> candidates = _gameMap.GetAOIObjectIds(player->GetId()); // 후보 
+	unordered_set<int> candidates = _gameMap.GetObjectIds(player->GetId()); // 후보 
 	std::unordered_set<int> newView;
-	const PositionInfo& my_pos = player->GetPosition();
-
+	
 	for (int target_id : candidates) {
 		if (player->GetId() == target_id) continue;
 
 		auto it = _players.find(target_id);
 		if (it == _players.end()) continue;
 
-		const PositionInfo& target_pos = it->second->GetPosition();
-
-		float dx = abs(my_pos.pos_x - target_pos.pos_x);
-		float dy = abs(my_pos.pos_y - target_pos.pos_y);
-
-		if (dx <= VIEW_RANGE && dy <= VIEW_RANGE) {
-			newView.insert(target_id);
-		}
+		newView.insert(target_id);
 	}
 
 	for (int target_id : newView) {
@@ -64,22 +56,6 @@ void Room::EnterRoom(shared_ptr<Player> player)
 		}
 	}
 
-
-
-	//{ // 들어온 플레이어 시야처리
-	//	for (auto& [id, oldplayer] : _players) {
-	//		if (player->GetId() == id) continue;
-	//		if (false == canSee(player->GetId(), id)) continue;
-
-
-	//		_players[id]->_viewList.insert(player->GetId());
-	//		oldplayer->GetSession()->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
-
-	//		player->_viewList.insert(id);
-	//		player->GetSession()->Send(PacketHandler::MakePacket(oldplayer, SC_PACKET_LIST::SC_ADD_PLAYER));
-
-	//	}
-	//}
 }
 
 void Room::LeaveRoom(shared_ptr<Player> player)
@@ -125,107 +101,9 @@ void Room::Update()
 
 }
 
+
 void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time)
 {
-
-	if (_players.find(player->GetId()) == _players.end())
-		return;
-	PositionInfo pos = player->GetPosition();
-	player->_last_moveTime = move_time;
-
-	switch (direction)
-	{
-	case 2: // left
-		// pos.first -= 1;
-		pos.pos_x -= 1;
-		break;
-	case 3: // right
-		// pos.first += 1;
-		pos.pos_x += 1;
-		break;
-	case 0: // up
-		// pos.second -= 1;
-		pos.pos_y -= 1;
-		break;
-	case 1: // down
-		// pos.second += 1;
-		pos.pos_y += 1;
-		break;
-
-	default:
-		cout << "Move Error" << endl;
-		break;
-	}
-
-	player->SetPosition(pos);
-
-	if (auto p = player->GetSession()) {
-		p->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
-	}
-
-	unordered_set<int> near_list;
-	unordered_set<int> old_list = player->_viewList;
-	unordered_map<int, shared_ptr<Player>> players = _players;
-
-
-	for (auto& [id, pl] : _players) { // 현재의 시야 생성
-		if (id == player->GetId()) continue;
-		if (canSee(player->GetId(), id))
-			near_list.insert(id);
-	}
-
-
-
-	for (int id : near_list) {
-		if (_players[id]->_viewList.count(player->GetId())) {// 상대에 내가있으면 move
-			if (auto session = _players[id]->GetSession()) {
-				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
-			}
-		}
-		else {// 없으면 add
-			{
-
-				_players[id]->_viewList.insert(player->GetId());
-			}
-			if (auto session = _players[id]->GetSession())
-				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
-		}
-		if (old_list.count(id) == 0) {// 전 시야엔 없지만 지금은 있으면 move
-			{
-
-				player->_viewList.insert(id);
-			}
-			if (auto p = player->GetSession()) {
-				p->Send(PacketHandler::MakePacket(_players[id], SC_PACKET_LIST::SC_ADD_PLAYER));
-			}
-		}
-	}
-
-	for (int id : old_list) {
-		if (near_list.count(id) == 0) { // 현재시야에도 전시야사람이 없으면 서로 remove
-
-
-			if (auto p = player->GetSession()) {
-				player->_viewList.erase(id);
-				p->Send(MAKE_SC_REMOVE_PLAYER(id));
-			}
-
-			auto it = _players.find(id);
-			if (it != _players.end()) {
-				if (auto p = _players[id]->GetSession()) {
-					_players[id]->_viewList.erase(player->GetId());
-					p->Send(MAKE_SC_REMOVE_PLAYER(player->GetId()));
-				}
-			}
-		}
-	}
-
-
-
-}
-
-void Room::PlayerMoven(shared_ptr<Player> player, int direction, unsigned move_time)
-{
 	if (_players.find(player->GetId()) == _players.end())
 		return;
 	PositionInfo pos = player->GetPosition();
@@ -252,80 +130,68 @@ void Room::PlayerMoven(shared_ptr<Player> player, int direction, unsigned move_t
 	player->_last_moveTime = move_time;
 	player->SetPosition(pos);
 
-	if (auto p = player->GetSession()) {
+	if (auto p = player->GetSession()) { // 자신은 이동
 		p->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
 	}
 
 	unordered_set<int> oldView = player->_viewList; // 이전 시야
-	bool changeCell = _gameMap.UpdateObjectPosition(player->GetId(), pos);
+	bool changeCell = _gameMap.UpdateObjectPosition(player->GetId(), pos); // 셀 업데이트
 
+	if (changeCell) {
+		unordered_set<int> candidates = _gameMap.GetObjectIds(player->GetId()); // 시야 후보
+		unordered_set<int> newView; // 최종 시야를 저장
 
-	unordered_set<int> candidates = _gameMap.GetAOIObjectIds(player->GetId()); // 시야 후보
-	unordered_set<int> newView; // 최종 시야를 저장
+		for (int id : candidates) { // 최종 시야
+			if (id == player->GetId()) continue;
 
-	for (int id : candidates) { // 최종 시야
-		if (id == player->GetId()) continue;
+			auto it = _players.find(id);
+			if (it == _players.end()) continue;
 
-		auto it = _players.find(id);
-		if (it == _players.end()) continue;
-
-		const PositionInfo& target_pos = it->second->GetPosition();
-
-		float dx = abs(pos.pos_x - target_pos.pos_x);
-		float dy = abs(pos.pos_y - target_pos.pos_y);
-
-		if (dx <= VIEW_RANGE && dy <= VIEW_RANGE) {
 			newView.insert(id);
 		}
-	}
+		for (int old_id : oldView) { // 있 -> 없 제거
+			if (newView.count(old_id) == 0) {
 
-	for (int old_id : oldView) { // 있 -> 없 제거
-		if (newView.count(old_id) == 0) {
-			// 1) 나(player)의 시야에서 객체 old_id 제거 -> 나에게 REMOVE(old_id) 전송
-			if (auto session = player->GetSession()) {
-				session->Send(MAKE_SC_REMOVE_PLAYER(old_id)); // 올바른 대상 ID
+				if (auto session = player->GetSession()) {
+					session->Send(MAKE_SC_REMOVE_PLAYER(old_id));
+				}
+
+				auto it = _players.find(old_id);
+				if (it != _players.end() && it->second->_viewList.erase(player->GetId()) > 0) {
+					if (auto session = it->second->GetSession()) {
+						session->Send(MAKE_SC_REMOVE_PLAYER(player->GetId()));
+					}
+				}
 			}
+		} 
+		for (int new_id : newView) { // 새로 보이면 서로 추가
+			if (oldView.count(new_id) == 0) {
+				if (auto session = player->GetSession()) {
+					session->Send(PacketHandler::MakePacket(_players[new_id], SC_PACKET_LIST::SC_ADD_PLAYER));
+				}
 
-			// 2) 객체 B(old_id)의 시야에서 나(player->GetId()) 제거 -> B에게 REMOVE(Player ID) 전송
-			auto it = _players.find(old_id);
-			if (it != _players.end() && it->second->_viewList.erase(player->GetId()) > 0) {
-				if (auto session = it->second->GetSession()) {
-					session->Send(MAKE_SC_REMOVE_PLAYER(player->GetId())); // 올바른 대상 ID
+				auto it = _players.find(new_id);
+				if (it != _players.end() && it->second->_viewList.insert(player->GetId()).second) {
+					if (auto session = it->second->GetSession()) {
+						session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
+					}
 				}
 			}
 		}
-	}
 
-	for (int new_id : newView) { // 새로 보이면 서로 추가
-		if (oldView.count(new_id) == 0) {
-			// 1) 나(player)의 시야에 객체 B(new_id) 추가 -> 나에게 ADD(B 정보) 전송
-			if (auto session = player->GetSession()) {
-				session->Send(PacketHandler::MakePacket(_players[new_id], SC_PACKET_LIST::SC_ADD_PLAYER));
-			}
-
-			// 2) 객체 B(new_id)의 시야에 나(player) 추가 -> B에게 ADD(Player 정보) 전송
-			auto it = _players.find(new_id);
-			if (it != _players.end() && it->second->_viewList.insert(player->GetId()).second) {
-				if (auto session = it->second->GetSession()) {
-					session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
+		for (auto id : newView) {
+			if (oldView.count(id) > 0) {
+				if (auto session = _players[id]->GetSession()) {
+					session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
 				}
 			}
 		}
+		player->_viewList = std::move(newView);
 	}
 
-	for (auto id : newView) { // 
-		if (oldView.count(id) > 0) { // KEEP 대상에게만 MOVE 패킷 전송
-			if (auto session = _players[id]->GetSession()) {
-				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
-			}
-		}
-	}
-	player->_viewList = std::move(newView);
-
-
-
-	for (int old_id : oldView) {
-		auto it = _players.find(old_id);
+	unordered_set<int>& currentView = player->_viewList;
+	for (int id : currentView) {
+		auto it = _players.find(id);
 		if (it != _players.end()) {
 			if (auto session = it->second->GetSession()) {
 				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));

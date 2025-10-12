@@ -1,9 +1,10 @@
 #pragma once
 
-const int MAP_WIDTH = 32;
-const int MAP_HEIGHT = 32;
-const int CELL_SIZE = 4;
-const float VIEW_RANGE = 5.f;
+const int MAP_WIDTH = 100;
+const int MAP_HEIGHT = 100;
+const int CELL_SIZE = 5;
+const float VIEW_RANGE = CELL_SIZE;
+const int VIEW_RANGE_CELLS = 1;
 
 struct Cell
 {
@@ -18,17 +19,13 @@ public:
 
     bool UpdateObjectPosition(int objectId, const PositionInfo& new_pos);
 
-    unordered_set<int> GetAOIObjectIds(int objectId) const;
+    unordered_set<int> GetObjectIds(int objectId) const;
 
    
 private:
-    
-
     const int GRID_WIDTH = MAP_WIDTH / CELL_SIZE;
     const int GRID_HEIGHT = MAP_HEIGHT / CELL_SIZE;
     
-    const int VIEW_RANGE_CELLS = 1;
-
     vector<std::vector<Cell>> _grid;
     unordered_map<int, std::pair<int, int>> _currentCellIndices;
 };

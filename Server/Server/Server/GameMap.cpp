@@ -27,28 +27,28 @@ bool GameMap::UpdateObjectPosition(int objectId, const PositionInfo& new_pos)
         old_cell = _currentCellIndices.at(objectId);
     }
 
-    // Cell이 변경되었거나, 처음 입장한 경우에만 갱신 (true 반환)
+    // Cell이 변경되었거나, 처음 입장한 경우에만 갱신
     if (isFirstEntry || old_cell != new_cell)
     {
-        // 1. 이전 Cell에서 제거
-        // 조건: 1) 첫 입장이 아닐 것. 2) 이전 Cell 인덱스가 유효할 것 (>= 0).
+        // 이전 Cell에서 제거
         if (!isFirstEntry && old_cell.first >= 0 && old_cell.second >= 0) {
             // objectsIds -> object_ids (일관성 유지를 위해)
             _grid[old_cell.second][old_cell.first].objectsIds.erase(objectId);
         }
 
-        // 2. 새 Cell에 추가
+        // 새 Cell에 추가
         _grid[new_cell.second][new_cell.first].objectsIds.insert(objectId);
 
-        // 3. 현재 Cell 인덱스 갱신
+        // 현재 Cell 인덱스 갱신
         _currentCellIndices[objectId] = new_cell;
-        return true; // Cell이 변경되었음
+        return true;
     }
+
     return false;
 }
 
 
-unordered_set<int> GameMap::GetAOIObjectIds(int objectId) const
+unordered_set<int> GameMap::GetObjectIds(int objectId) const
 {
     if (_currentCellIndices.count(objectId) == 0)
         return {};
