@@ -2,6 +2,7 @@
 #include "Room.h"
 #include "Session.h"
 #include "PacketHandler.h"
+#include "PacketSerializer.h"
 #include "Player.h"
 #include "Monster.h"
 
@@ -47,12 +48,12 @@ void Room::EnterRoom(shared_ptr<Player> player)
 
 		player->_viewList.insert(target_id);
 		if (auto session = player->GetSession()) {
-			session->Send(PacketHandler::MakePacket(target_player, SC_PACKET_LIST::SC_ADD_PLAYER));
+			session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(target_player));
 		}
 
 		target_player->_viewList.insert(player->GetId());
 		if (auto session = target_player->GetSession()) {
-			session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
+			session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(player));
 		}
 	}
 
@@ -61,7 +62,7 @@ void Room::EnterRoom(shared_ptr<Player> player)
 void Room::LeaveRoom(shared_ptr<Player> player)
 {
 	// cout << "PLayer[" << player->GetId() << "] Leave" << endl;
-	shared_ptr<SendBuffer> sendBuffer = PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_REMOVE_PLAYER);
+	shared_ptr<SendBuffer> sendBuffer = PacketSerializer::MAKE_SC_REMOVE_PLAYER(player->GetId());
 	Broadcast(sendBuffer);
 
 
@@ -71,7 +72,6 @@ void Room::LeaveRoom(shared_ptr<Player> player)
 
 void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 {
-	// RWLock::WriteGuard lock(_lock);
 	for (const auto& p : _players)
 	{
 		if (auto session = p.second->GetSession())
@@ -131,7 +131,7 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 	player->SetPosition(pos);
 
 	if (auto p = player->GetSession()) { // 자신은 이동
-		p->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
+		p->Send(PacketSerializer::MAKE_SC_MOVE_OBJECT(player));
 	}
 
 	unordered_set<int> oldView = player->_viewList; // 이전 시야
@@ -153,13 +153,13 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 			if (newView.count(old_id) == 0) {
 
 				if (auto session = player->GetSession()) {
-					session->Send(MAKE_SC_REMOVE_PLAYER(old_id));
+					session->Send(PacketSerializer::MAKE_SC_REMOVE_PLAYER(old_id));
 				}
 
 				auto it = _players.find(old_id);
 				if (it != _players.end() && it->second->_viewList.erase(player->GetId()) > 0) {
 					if (auto session = it->second->GetSession()) {
-						session->Send(MAKE_SC_REMOVE_PLAYER(player->GetId()));
+						session->Send(PacketSerializer::MAKE_SC_REMOVE_PLAYER(player->GetId()));
 					}
 				}
 			}
@@ -167,13 +167,13 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 		for (int new_id : newView) { // 새로 보이면 서로 추가
 			if (oldView.count(new_id) == 0) {
 				if (auto session = player->GetSession()) {
-					session->Send(PacketHandler::MakePacket(_players[new_id], SC_PACKET_LIST::SC_ADD_PLAYER));
+					session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(_players[new_id]));
 				}
 
 				auto it = _players.find(new_id);
 				if (it != _players.end() && it->second->_viewList.insert(player->GetId()).second) {
 					if (auto session = it->second->GetSession()) {
-						session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_ADD_PLAYER));
+						session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(player));
 					}
 				}
 			}
@@ -182,7 +182,7 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 		for (auto id : newView) {
 			if (oldView.count(id) > 0) {
 				if (auto session = _players[id]->GetSession()) {
-					session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
+					session->Send(PacketSerializer::MAKE_SC_MOVE_OBJECT(player));
 				}
 			}
 		}
@@ -194,7 +194,7 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 		auto it = _players.find(id);
 		if (it != _players.end()) {
 			if (auto session = it->second->GetSession()) {
-				session->Send(PacketHandler::MakePacket(player, SC_PACKET_LIST::SC_MOVE_OBJECT));
+				session->Send(PacketSerializer::MAKE_SC_MOVE_OBJECT(player));
 			}
 		}
 	}
@@ -294,7 +294,6 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 					player->SetOwnerRoom(room);
 					player->SetPosition(room->RandomPos());
 
-					// room->SendEnteredPlayer(player);
 					room->PushJob(&Room::EnterRoom, player);
 					return; // 성공 시 바로 종료
 				}
@@ -304,9 +303,6 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 			CreateRoom();
 		}
 
-		// lock 해제된 상태에서 다시 while 재시도
-		// (CreateRoom에서 _rooms에 새로운 방 추가됨)
-		// 다음 루프에서 새로 생성된 방에 들어가게 됨
 	}
 }
 

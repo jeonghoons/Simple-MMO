@@ -19,12 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>17.0</VCProjectVersion>
+    <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{608cacf7-11ec-4fa8-82ee-13e61eb2f7ee}</ProjectGuid>
-    <RootNamespace>Server</RootNamespace>
+    <ProjectGuid>{397b5b69-70d1-4ade-bb01-cc027495db35}</ProjectGuid>
+    <RootNamespace>STRESS</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>GameServer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -77,9 +76,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,9 +90,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -111,9 +104,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,9 +118,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,60 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ConcurrentQueue.h" />
-    <ClInclude Include="FineGrainedQueue.h" />
-    <ClInclude Include="GameMap.h" />
-    <ClInclude Include="IocpCore.h" />
-    <ClInclude Include="IocpEvent.h" />
-    <ClInclude Include="Job.h" />
-    <ClInclude Include="JobQueue.h" />
-    <ClInclude Include="Listener.h" />
-    <ClInclude Include="Monster.h" />
-    <ClInclude Include="NetAddress.h" />
-    <ClInclude Include="GameObject.h" />
-    <ClInclude Include="PacketHandler.h" />
-    <ClInclude Include="PacketSerializer.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="ProtocolSturct.h" />
-    <ClInclude Include="RecvBuffer.h" />
-    <ClInclude Include="Room.h" />
-    <ClInclude Include="RWLock.h" />
-    <ClInclude Include="SendBuffer.h" />
-    <ClInclude Include="ServerService.h" />
-    <ClInclude Include="Session.h" />
-    <ClInclude Include="TestProtocol.h" />
-    <ClInclude Include="Timer.h" />
+    <ClCompile Include="DrawModule.cpp" />
+    <ClCompile Include="NetworkModule.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConcurrentQueue.cpp" />
-    <ClCompile Include="FineGrainedQueue.cpp" />
-    <ClCompile Include="GameMap.cpp" />
-    <ClCompile Include="gameserver.cpp" />
-    <ClCompile Include="IocpCore.cpp" />
-    <ClCompile Include="IocpEvent.h.cpp" />
-    <ClCompile Include="Job.cpp" />
-    <ClCompile Include="JobQueue.cpp" />
-    <ClCompile Include="Listener.cpp" />
-    <ClCompile Include="Monster.cpp" />
-    <ClCompile Include="NetAddress.cpp" />
-    <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="PacketHandler.cpp" />
-    <ClCompile Include="PacketSerializer.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="RecvBuffer.cpp" />
-    <ClCompile Include="Room.cpp" />
-    <ClCompile Include="RWLock.cpp" />
-    <ClCompile Include="SendBuffer.cpp" />
-    <ClCompile Include="ServerService.cpp" />
-    <ClCompile Include="Session.cpp" />
-    <ClCompile Include="Timer.cpp" />
+    <ClInclude Include="NetworkModule.h" />
+    <ClInclude Include="ProtocolSturct.h" />
+    <ClInclude Include="TestProtocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

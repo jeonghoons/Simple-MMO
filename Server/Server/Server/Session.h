@@ -58,7 +58,7 @@ public:
 
 private:
 	weak_ptr<ServerService> _service;
-	SOCKET _socket;
+	SOCKET			_socket;
 	NetAddress		_netAddress = {};
 	atomic<bool>		_connected = false;
 	unsigned int		_cid = {};

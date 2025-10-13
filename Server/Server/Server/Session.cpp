@@ -54,16 +54,12 @@ void Session::OnConnected()
 
 void Session::Disconnect(const WCHAR* cause)
 {
-	/*if (_connected.exchange(false) == false)
-		return;*/
-	if (false == IsConnected())
+	if (_connected.exchange(false) == false)
 		return;
-
+	
 	
 	_currPlayer->GetCurrentRoom()->PushJob(&Room::LeaveRoom, _currPlayer);
 	GetService()->ReleaseSession(static_pointer_cast<Session>(shared_from_this()));
-
-	
 	
 	wcout << "DisConnect :" << cause << endl;
 }
