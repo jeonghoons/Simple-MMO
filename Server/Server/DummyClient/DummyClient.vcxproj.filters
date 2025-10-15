@@ -34,7 +34,13 @@
     <ClCompile Include="Object.cpp">
       <Filter>GameContents</Filter>
     </ClCompile>
-    <ClCompile Include="framework.cpp">
+    <ClCompile Include="ClientApp.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="GameClient.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkManager.cpp">
       <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,7 +57,13 @@
     <ClInclude Include="Object.h">
       <Filter>GameContents</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
+    <ClInclude Include="ClientApp.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="GameClient.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkManager.h">
       <Filter>Main</Filter>
     </ClInclude>
   </ItemGroup>

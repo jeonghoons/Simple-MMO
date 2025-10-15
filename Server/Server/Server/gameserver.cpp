@@ -32,8 +32,6 @@ int main()
 	GRoomManager->SetIocpHandle(service);
 	GRoomManager->CreateRoom();
 
-	// GTimerQueue->GetInstance(service);
-
 	vector<thread> threads;
 	int num_threads = thread::hardware_concurrency();
 	// int num_threads = 6;
@@ -43,13 +41,8 @@ int main()
 		threads.emplace_back(worker_thread, std::ref(service));
 	}
 
+
 	
-	
-	// thread timerThread{ timer_thread };
-	
-	// cout << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now().time_since_epoch()) << endl;
-	
-	// timerThread.join();
 	for (thread& t : threads) {
 		if(t.joinable()) 
 			t.join();

@@ -13,31 +13,26 @@
 #include <chrono>
 #include <thread>
 #include <unordered_map>
+#include <utility>
+using namespace std;
 
 #include "..//Server/TestProtocol.h"
 
 
-using namespace std;
+using BYTE = unsigned char;
 
 #define PORT_NUM 8888
 
-constexpr auto SCREEN_WIDTH = 16;
-constexpr auto SCREEN_HEIGHT = 16;
-
-constexpr auto TILE_WIDTH = 45;
-constexpr auto NUM_TILE = 64;
-// constexpr auto WINDOW_WIDTH = SCREEN_WIDTH * TILE_WIDTH;   // size of window
-// constexpr auto WINDOW_HEIGHT = SCREEN_WIDTH * TILE_WIDTH;
-constexpr auto WINDOW_WIDTH = 800;   // size of window
-constexpr auto WINDOW_HEIGHT = 600;
-
-static int g_left_x;
-static int g_top_y;
-static int g_myid;
 extern sf::RenderWindow* g_window;
-extern sf::Font* g_font;
+extern sf::Font* g_font;       // GameClient::_font의 포인터를 담을 변수
+extern sf::Texture* pieces;    // GameClient::_pieces의 포인터를 담을 변수
+extern int g_left_x;           // 맵 시야 기준점 X
+extern int g_top_y;            // 맵 시야 기준점 Y
+extern int g_myid;             // 내 캐릭터 ID
+extern const int MAP_GRID;
+extern const int TILE_WIDTH;   // 타일 크기 (상수)
+extern const int SCREEN_WIDTH; // 화면 너비 (상수)
+extern const int SCREEN_HEIGHT;// 화면 높이 (상수)
 
-extern sf::Texture* board;
-extern sf::Texture* pieces;
 
 

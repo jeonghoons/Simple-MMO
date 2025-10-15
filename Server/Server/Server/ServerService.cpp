@@ -45,15 +45,21 @@ shared_ptr<Session> ServerService::CreateSession()
 void ServerService::AddSession(shared_ptr<Session> session)
 {
 	RWLock::WriteGuard lock(_lock);
-	_sessions.emplace_back(session);
+	// _sessions.emplace_back(session);
 	
+	auto [it, success] = _sessions.emplace(session->GetId(), session);
+	if (!success) {
+		cout << "Error" << endl;
+	}
 }
 
 void ServerService::ReleaseSession(shared_ptr<Session> session)
 {
 	RWLock::WriteGuard lock(_lock);
 	
-	auto it = find(_sessions.begin(), _sessions.end(), session);
+	int sessionId = session->GetId();
+
+	auto it = _sessions.find(sessionId);
 	if (it == _sessions.end()) {
 		cout << "Error" << endl;
 	}

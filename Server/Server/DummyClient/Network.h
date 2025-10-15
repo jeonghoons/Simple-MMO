@@ -15,17 +15,13 @@ public:
 	{
 		unsigned char* p = reinterpret_cast<unsigned char*>(buffer);
 		size_t sent = 0;
-		// int len = send(_socket, reinterpret_cast<char*>(p), static_cast<int>(p[0]), sent);
 		_socket.send(buffer, p[0], sent);
 		cout << sent << "Bytes Send" << endl;
 	}
 
 	int RecvPacket()
 	{
-
 		size_t received = 0;
-
-		// int len = recv(_socket, reinterpret_cast<char*>(_recvBuffer.WritePos()), _recvBuffer.FreeSize(), sent);
 		auto recv_result = _socket.receive(_recvBuffer.WritePos(), _recvBuffer.FreeSize(), received);
 		if (recv_result == sf::Socket::Error)
 		{
@@ -39,11 +35,6 @@ public:
 		
 		if (recv_result != sf::Socket::NotReady)
 			if (received > 0) process_data(_recvBuffer.ReadPos(), received);
-
-		//if (received > 0) {
-		//	process_data(_recvBuffer.ReadPos(), received);
-		//	// cout << len << "Bytes Recv" << endl;
-		//}
 		
 		return received;
 	}
@@ -84,8 +75,8 @@ public:
 			SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(net_buf);
 			g_myid = packet->objectInfo.id;
 			myPlayer.SetId(g_myid);
-			int posX = (int)packet->objectInfo.position.pos_x;
-			int posY = (int)packet->objectInfo.position.pos_y;
+			int posX = (int)packet->objectInfo.position.x;
+			int posY = (int)packet->objectInfo.position.y;
 			myPlayer.SetPosition(posX, posY);
 			g_left_x = posX - SCREEN_WIDTH / 2;
 			g_top_y = posY - SCREEN_HEIGHT / 2;
@@ -98,8 +89,8 @@ public:
 
 			SC_ADD_PLAYER_PACKET* packet = reinterpret_cast<SC_ADD_PLAYER_PACKET*>(net_buf);
 			int id = packet->objectInfo.id;
-			int posX = packet->objectInfo.position.pos_x;
-			int posY = packet->objectInfo.position.pos_y;
+			int posX = packet->objectInfo.position.x;
+			int posY = packet->objectInfo.position.y;
 
 			if (id == g_myid) {
 				myPlayer.SetPosition(posX, posY);
@@ -119,8 +110,8 @@ public:
 
 			SC_ADD_OBJECT_PACKET* packet = reinterpret_cast<SC_ADD_OBJECT_PACKET*>(net_buf);
 			int id = packet->objectInfo.id;
-			int posX = packet->objectInfo.position.pos_x;
-			int posY = packet->objectInfo.position.pos_y;
+			int posX = packet->objectInfo.position.x;
+			int posY = packet->objectInfo.position.y;
 
 			players[id] = Object{ *pieces, 88, 0,TILE_WIDTH - 1, TILE_WIDTH - 1 };
 			players[id].SetPosition(posX, posY);
@@ -155,8 +146,8 @@ public:
 			SC_MOVE_PACKET* packet = reinterpret_cast<SC_MOVE_PACKET*>(net_buf);
 			int id = packet->objectInfo.id;
 			auto pos = packet->objectInfo.position;
-			int posX = pos.pos_x;
-			int posY = pos.pos_y;
+			int posX = pos.x;
+			int posY = pos.y;
 
 			if (id == g_myid) {
 				

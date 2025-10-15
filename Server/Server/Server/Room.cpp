@@ -111,16 +111,16 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 	switch (direction)
 	{
 	case 2: // left
-		pos.pos_x -= 1;
+		pos.x -= 1;
 		break;
 	case 3: // right
-		pos.pos_x += 1;
+		pos.x += 1;
 		break;
 	case 0: // up
-		pos.pos_y -= 1;
+		pos.y -= 1;
 		break;
 	case 1: // down
-		pos.pos_y += 1;
+		pos.y += 1;
 		break;
 	default:
 		cout << "Move Error" << endl;
@@ -246,8 +246,8 @@ void Room::NPCMove()
 
 bool Room::canSee(int from, int to)
 {
-	if (abs(_players[from]->GetPosition().pos_x - _players[to]->GetPosition().pos_x) > 5.f) return false;
-	return abs(_players[from]->GetPosition().pos_y - _players[to]->GetPosition().pos_y) <= 5.f;
+	if (abs(_players[from]->GetPosition().x - _players[to]->GetPosition().x) > 5.f) return false;
+	return abs(_players[from]->GetPosition().y - _players[to]->GetPosition().y) <= 5.f;
 }
 
 PositionInfo Room::RandomPos()
@@ -255,13 +255,13 @@ PositionInfo Room::RandomPos()
 	static std::random_device rd;
 	static std::mt19937 gen(rd());
 	// static std::uniform_real_distribution<float> dist(0.f, 400.f);
-	static std::uniform_real_distribution<float> dist(0.f, 32.f);
+	static std::uniform_real_distribution<float> dist(0.f, 99.f);
 
 	float x = dist(gen);
 	float y = dist(gen);
-	float z = dist(gen);
+	// float z = dist(gen);
 
-	return { x, y, z, 0.f };
+	return { x, y, 0.f, 0.f };
 }
 
 void RoomManager::CreateRoom()

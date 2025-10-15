@@ -25,9 +25,9 @@ struct PacketHeader
 
 struct PositionInfo
 {
-	float pos_x{};
-	float pos_y{};
-	float pos_z{};
+	float x{};
+	float y{};
+	float z{};
 	float yaw{};
 };
 

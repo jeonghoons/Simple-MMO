@@ -15,20 +15,15 @@ struct TimerItem
         : _executeTime(time), _job(std::move(job)), _jobQueue(jobQueue) {
     }
 
-    TimePoint _executeTime{};                   // 실행 시각
-    std::shared_ptr<Job> _job{};               // 실행할 Job
-    std::weak_ptr<JobQueue> _jobQueue{};    // Job을 넣을 Room의 JobQueue (weak_ptr로 안전하게 참조)
+    TimePoint _executeTime{};                  
+    std::shared_ptr<Job> _job{};               
+    std::weak_ptr<JobQueue> _jobQueue{};    
 
 };
 
 class Timer
 {
 public:
-    /*struct TimerItemCompare {
-        bool operator()(const TimerItem& a, const TimerItem& b) const {
-            return a._executeTime > b._executeTime;
-        }
-    };*/
     Timer()
     {
         // 타이머 스레드를 시작합니다.
@@ -62,9 +57,10 @@ private:
 
 private:
     mutex       _lock;
-    // priority_queue<TimerItem> _timerQueue;
     concurrency::concurrent_priority_queue<TimerItem> _timerQueue;
     std::unique_ptr<std::thread> _thread;
 };
+
+
 
 

@@ -28,8 +28,8 @@ private:
 	NetAddress				_netAddress;
 	shared_ptr<IocpCore>		_iocpCore;
 	
-	vector<shared_ptr<Session>> _sessions;
-
+	// vector<shared_ptr<Session>> _sessions;
+	unordered_map<int, shared_ptr<Session>> _sessions;
 
 };
 

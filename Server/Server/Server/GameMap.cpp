@@ -5,8 +5,8 @@
 
 std::pair<int, int> GameMap::GetCellIndex(const PositionInfo& pos) const
 {
-	int x_index = static_cast<int>(pos.pos_x / CELL_SIZE);
-	int y_index = static_cast<int>(pos.pos_y / CELL_SIZE);
+	int x_index = static_cast<int>(pos.x / CELL_SIZE);
+	int y_index = static_cast<int>(pos.y / CELL_SIZE);
 
 	x_index = std::max(0, std::min(x_index, GRID_WIDTH - 1));
 	y_index = std::max(0, std::min(y_index, GRID_HEIGHT - 1));

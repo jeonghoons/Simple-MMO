@@ -19,7 +19,7 @@ public:
 	void CleanCheck();
 
 private:
-	int		_bufferSize;
+	int		_bufferSize = 0;
 	int		_readPos = 0;
 	int		_writePos = 0;
 	vector<BYTE>	 _buffer;
