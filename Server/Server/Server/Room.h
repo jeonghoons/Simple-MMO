@@ -59,10 +59,9 @@ public:
 		for (int id : candidates) { // 최종 시야
 			if (id == objectId) continue;
 
-			/*auto it = _players.find(id);
-			if (it == _players.end()) continue;*/
-
-			newView.insert(id);
+			if (GetGameObject(id)) {
+				newView.insert(id);
+			}
 		}
 	}
 
