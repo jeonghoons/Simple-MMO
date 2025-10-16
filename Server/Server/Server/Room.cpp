@@ -6,9 +6,16 @@
 #include "Player.h"
 #include "Monster.h"
 
-
+const int NUM_MONSTER = 100;
 void Room::InitRoom()
 {
+	for (int i = 0; i < NUM_MONSTER; ++i) {
+		shared_ptr<Monster> monster = make_shared<Monster>();
+		monster->SetId(MonsterIdGenerator());
+		if (false == AddObject(monster))
+			break;
+	}
+
 	Update();
 }
 
@@ -16,7 +23,10 @@ void Room::InitRoom()
 
 void Room::EnterRoom(shared_ptr<Player> player)
 {
-	_players.insert({ player->GetId(), player });
+	if (false == AddObject(player)) {
+		return;
+	}
+
 	SC_LOGIN_INFO_PACKET logInPacket;
 	logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
 	logInPacket.objectInfo = player->GetInfo();
@@ -30,7 +40,7 @@ void Room::EnterRoom(shared_ptr<Player> player)
 	_gameMap.UpdateObjectPosition(player->GetId(), player->GetPosition()); // 게임맵에 등록
 	unordered_set<int> candidates = _gameMap.GetObjectIds(player->GetId()); // 후보 
 	std::unordered_set<int> newView;
-	
+
 	for (int target_id : candidates) {
 		if (player->GetId() == target_id) continue;
 
@@ -48,26 +58,45 @@ void Room::EnterRoom(shared_ptr<Player> player)
 
 		player->_viewList.insert(target_id);
 		if (auto session = player->GetSession()) {
-			session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(target_player));
+			session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_player));
 		}
 
 		target_player->_viewList.insert(player->GetId());
 		if (auto session = target_player->GetSession()) {
-			session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(player));
+			session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(player));
 		}
 	}
+
+	player->_viewList = std::move(newView);
+
+	// 몬스터들 정보 전송
+
 
 }
 
 void Room::LeaveRoom(shared_ptr<Player> player)
 {
 	// cout << "PLayer[" << player->GetId() << "] Leave" << endl;
-	shared_ptr<SendBuffer> sendBuffer = PacketSerializer::MAKE_SC_REMOVE_PLAYER(player->GetId());
-	Broadcast(sendBuffer);
+
+	int playerId = player->GetId();
+
+	shared_ptr<SendBuffer> sendBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(player->GetId());
+
+	for (int target_id : player->_viewList) {
+		if (auto target_player = Id2Player(target_id)) {
+			if (auto session = target_player->GetSession()) {
+				session->Send(sendBuffer);
+			}
+			target_player->_viewList.erase(playerId);
+		}
+	}
 
 
-	_players.erase(player->GetId());
+	if (false == RemoveObject(playerId)) {
+		cout << "Error" << endl;
+	}
 
+	// Broadcast(sendBuffer);
 }
 
 void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
@@ -79,24 +108,55 @@ void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 	}
 }
 
-bool Room::AddObject(shared_ptr<Monster> object)
+bool Room::AddObject(shared_ptr<GameObject> object)
 {
-	_monsters.insert(make_pair(object->GetId(), object));
-	object->SetOwnerRoom(static_pointer_cast<Room>(shared_from_this()));
-	// object->SetPosition(RandomPos());
+	int objectId = object->GetId();
 
+	auto [it, success] = _objects.emplace(objectId, object);
+	if (!success) {
+		cout << "Error" << endl;
+		return false;
+	}
+
+	shared_ptr<Player> player = dynamic_pointer_cast<Player>(object);
+	if (player) {
+		_players.emplace(objectId, player);
+	}
+	else if (shared_ptr<Monster> monster = dynamic_pointer_cast<Monster>(object)) {
+		_monsters.emplace(objectId, monster);
+	}
+	else {
+		cout << "Error" << endl;
+		_objects.erase(objectId);
+		return false;
+	}
+
+	object->SetOwnerRoom(static_pointer_cast<Room>(shared_from_this()));
+	object->SetPosition(RandomPos());
+
+	_gameMap.UpdateObjectPosition(objectId, object->GetPosition());
 
 	return true;
 }
 
 bool Room::RemoveObject(int objectId)
 {
-	return false;
+	_players.erase(objectId);
+	_monsters.erase(objectId);
+
+	return _objects.erase(objectId) > 0;
 }
 
 void Room::Update()
 {
 	// cout << "Update Room" << endl;
+	
+	for (const auto& [id, monster] : _monsters) {
+		if (monster->_isActive == false) continue;
+		// NPCMove(monster); // DO_AI
+	}
+		
+	
 	ReserveJob(1000, &Room::Update);
 
 }
@@ -130,8 +190,9 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 	player->_last_moveTime = move_time;
 	player->SetPosition(pos);
 
+	shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
 	if (auto p = player->GetSession()) { // 자신은 이동
-		p->Send(PacketSerializer::MAKE_SC_MOVE_OBJECT(player));
+		p->Send(playerMoveBuffer);
 	}
 
 	unordered_set<int> oldView = player->_viewList; // 이전 시야
@@ -144,57 +205,62 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 		for (int id : candidates) { // 최종 시야
 			if (id == player->GetId()) continue;
 
-			auto it = _players.find(id);
-			if (it == _players.end()) continue;
-
 			newView.insert(id);
 		}
-		for (int old_id : oldView) { // 있 -> 없 제거
+
+		for (int old_id : oldView) { // 있었음 -> 없음 제거
 			if (newView.count(old_id) == 0) {
 
 				if (auto session = player->GetSession()) {
-					session->Send(PacketSerializer::MAKE_SC_REMOVE_PLAYER(old_id));
+					if (Id2Player(old_id)) {
+						session->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(old_id));
+					}
+					else if (Id2Monster(old_id)) {
+						session->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(old_id)); // 몬스터
+					}
 				}
 
-				auto it = _players.find(old_id);
-				if (it != _players.end() && it->second->_viewList.erase(player->GetId()) > 0) {
-					if (auto session = it->second->GetSession()) {
-						session->Send(PacketSerializer::MAKE_SC_REMOVE_PLAYER(player->GetId()));
+
+				if (auto target_player = Id2Player(old_id)) {
+					if (auto session = target_player->GetSession()) {
+						session->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(player->GetId()));
 					}
 				}
 			}
-		} 
-		for (int new_id : newView) { // 새로 보이면 서로 추가
+		}
+
+		for (int new_id : newView) { // 없었음 -> 있음 추가
 			if (oldView.count(new_id) == 0) {
+
 				if (auto session = player->GetSession()) {
-					session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(_players[new_id]));
+					if (auto target_player = Id2Player(new_id)) { // Player 포인터를 바로 가져옴
+						session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_player));
+					}
+					else if (auto target_monster = Id2Monster(new_id)) { // Monster 포인터를 바로 가져옴
+						session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_monster));
+					}
 				}
 
-				auto it = _players.find(new_id);
-				if (it != _players.end() && it->second->_viewList.insert(player->GetId()).second) {
-					if (auto session = it->second->GetSession()) {
-						session->Send(PacketSerializer::MAKE_SC_ADD_PLAYER(player));
+				if (auto target_obj = GetGameObject(new_id)) {
+					if (target_obj->_viewList.insert(player->GetId()).second) {
+						if (auto target_player = Id2Player(new_id)) {
+							if (auto session = target_player->GetSession()) {
+								session->Send(playerMoveBuffer);
+							}
+						}
 					}
 				}
 			}
 		}
 
-		for (auto id : newView) {
-			if (oldView.count(id) > 0) {
-				if (auto session = _players[id]->GetSession()) {
-					session->Send(PacketSerializer::MAKE_SC_MOVE_OBJECT(player));
-				}
-			}
-		}
 		player->_viewList = std::move(newView);
 	}
 
 	unordered_set<int>& currentView = player->_viewList;
-	for (int id : currentView) {
-		auto it = _players.find(id);
-		if (it != _players.end()) {
-			if (auto session = it->second->GetSession()) {
-				session->Send(PacketSerializer::MAKE_SC_MOVE_OBJECT(player));
+	for (int target_id : currentView) {
+		if (auto target_player = Id2Player(target_id)) {
+			if (auto session = target_player->GetSession()) {
+				session->Send(playerMoveBuffer);
 			}
 		}
 	}
@@ -203,30 +269,32 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 
 
 
-void Room::NPCMove()
+void Room::NPCMove(shared_ptr<Monster> monster)
 {
 
-	/*auto monsters = _monsters;
-
-	for (auto monster : monsters) {
-
-		int x = monster.second->GetPosition().first;
-		int y = monster.second->GetPosition().second;
-		switch (rand() % 4) {
-		case 0:
-			if (x < (16 - 1)) x++; break;
-		case 1:
-			if (x > 0) x--; break;
-		case 2:
-			if (y < (16 - 1)) y++; break;
-		case 3:
-			if (y > 0) y--; break;
-		}
-		monster.second->SetPosition({ x, y });
+	PositionInfo& pos = monster->GetPosition();
+	switch (rand() % 4)
+	{
+	case 2: // left
+		pos.x -= 1;
+		break;
+	case 3: // right
+		pos.x += 1;
+		break;
+	case 0: // up
+		pos.y -= 1;
+		break;
+	case 1: // down
+		pos.y += 1;
+		break;
+	default:
+		cout << "Move Error" << endl;
+		return;
 	}
+	
+	monster->SetPosition(pos);
 
-
-	int dataSize = sizeof(SC_MOVE_PACKET) * _monsters.size();
+	/*int dataSize = sizeof(SC_MOVE_PACKET) * _monsters.size();
 	vector<BYTE> buf(dataSize);
 	int bufIndex{};
 
@@ -237,17 +305,27 @@ void Room::NPCMove()
 		movePacket.position = monster->GetPosition();
 		memcpy(&buf[bufIndex], &movePacket, sizeof(movePacket));
 		bufIndex += sizeof(movePacket);
-	}
+	}*/
 
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(bufIndex);
-	Broadcast(sendBuffer);*/
 
 }
 
-bool Room::canSee(int from, int to)
+shared_ptr<Player> Room::Id2Player(int pId)
 {
-	if (abs(_players[from]->GetPosition().x - _players[to]->GetPosition().x) > 5.f) return false;
-	return abs(_players[from]->GetPosition().y - _players[to]->GetPosition().y) <= 5.f;
+	auto it = _players.find(pId);
+	if (it == _players.end())
+		return nullptr;
+
+	return it->second;
+}
+
+shared_ptr<Monster> Room::Id2Monster(int mId)
+{
+	auto it = _monsters.find(mId);
+	if (it == _monsters.end())
+		return nullptr;
+
+	return it->second;
 }
 
 PositionInfo Room::RandomPos()
@@ -292,7 +370,7 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 			for (auto& [id, room] : _rooms) {
 				if (room->NumPlayers() < MAX_ROOM_CAPACITY) {
 					player->SetOwnerRoom(room);
-					player->SetPosition(room->RandomPos());
+					// player->SetPosition(room->RandomPos());
 
 					room->PushJob(&Room::EnterRoom, player);
 					return; // 성공 시 바로 종료

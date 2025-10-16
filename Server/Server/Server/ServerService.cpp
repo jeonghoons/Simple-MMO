@@ -25,8 +25,6 @@ bool ServerService::Start()
 	if (_listener->StartAccept(service) == false)
 		return false;
 
-	// _sessions.reserve(10000);
-
 	return true;
 }
 
@@ -45,8 +43,6 @@ shared_ptr<Session> ServerService::CreateSession()
 void ServerService::AddSession(shared_ptr<Session> session)
 {
 	RWLock::WriteGuard lock(_lock);
-	// _sessions.emplace_back(session);
-	
 	auto [it, success] = _sessions.emplace(session->GetId(), session);
 	if (!success) {
 		cout << "Error" << endl;

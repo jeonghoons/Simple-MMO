@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "NetworkManager.h"
 #include "GameClient.h"
-#include "Network.h"
+
 
 
 NetworkManager::NetworkManager()
@@ -121,11 +121,11 @@ void NetworkManager::ProcessPacket(BYTE* net_buf, int io_byte)
         g_left_x = posX - SCREEN_WIDTH / 2;
         g_top_y = posY - SCREEN_HEIGHT / 2;
     }break;
-    case SC_PACKET_LIST::SC_ADD_PLAYER:
+    case SC_PACKET_LIST::SC_ADD_OBJECT:
     {
         std::cout << "ADD PLAYER " << io_byte << "Bytes " << std::endl;
 
-        SC_ADD_PLAYER_PACKET* packet = reinterpret_cast<SC_ADD_PLAYER_PACKET*>(net_buf);
+        SC_ADD_OBJECT_PACKET* packet = reinterpret_cast<SC_ADD_OBJECT_PACKET*>(net_buf);
         int id = packet->objectInfo.id;
         int posX = (int)packet->objectInfo.position.x;
         int posY = (int)packet->objectInfo.position.y;
@@ -140,11 +140,11 @@ void NetworkManager::ProcessPacket(BYTE* net_buf, int io_byte)
             players[id].SetPosition(posX, posY);
         }
     } break;
-    case SC_PACKET_LIST::SC_REMOVE_PLAYER:
+    case SC_PACKET_LIST::SC_REMOVE_OBJECT:
     {
         cout << "DELETE PLAYER " << io_byte << "Bytes " << endl;
-        SC_REMOVE_PLAYER_PACKET* packet = reinterpret_cast<SC_REMOVE_PLAYER_PACKET*>(net_buf);
-        int id = packet->playerId;
+        SC_REMOVE_OBJECT_PACKET* packet = reinterpret_cast<SC_REMOVE_OBJECT_PACKET*>(net_buf);
+        int id = packet->objectId;
 
         auto it = players.find(id);
         if (it != players.end())

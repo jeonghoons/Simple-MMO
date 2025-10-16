@@ -30,14 +30,14 @@ struct SC_LOGIN_INFO_PACKET {
 	ObjectInfo			objectInfo;
 };
 
-struct SC_ADD_PLAYER_PACKET {
+struct SC_ADD_OBJECT_PACKET {
 	PacketHeader header;
-	ObjectInfo			objectInfo;
+	ObjectInfo	objectInfo;
 };
 
-struct SC_REMOVE_PLAYER_PACKET {
+struct SC_REMOVE_OBJECT_PACKET {
 	PacketHeader header;
-	int			playerId;
+	int				objectId;
 };
 
 struct SC_CHAT_PACKET {
@@ -51,15 +51,9 @@ struct SC_MOVE_PACKET {
 	unsigned int move_time;
 };
 
-struct SC_ADD_OBJECT_PACKET {
-	PacketHeader header;
-	ObjectInfo	objectInfo;
-};
 
-struct SC_REMOVE_OBJECT_PACKET {
-	PacketHeader header;
-	int				objectId;
-};
+
+
 
 
 #pragma pack (pop)

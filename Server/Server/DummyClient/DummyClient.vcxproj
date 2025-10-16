@@ -135,9 +135,6 @@
     <ClCompile Include="dummyClientMain.cpp" />
     <ClCompile Include="ClientApp.cpp" />
     <ClCompile Include="GameClient.cpp" />
-    <ClCompile Include="Network.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="pch.cpp">
@@ -148,9 +145,6 @@
   <ItemGroup>
     <ClInclude Include="ClientApp.h" />
     <ClInclude Include="GameClient.h" />
-    <ClInclude Include="Network.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="NetworkManager.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="pch.h" />

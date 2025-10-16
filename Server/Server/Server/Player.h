@@ -27,8 +27,7 @@ public:
 	}
 	void SetOwnerSession(shared_ptr<Session> session) { _ownerSession = session; }
 	
-	unordered_set<int>		_viewList;
-
+	
 private:
 	weak_ptr<Session> _ownerSession;
 	

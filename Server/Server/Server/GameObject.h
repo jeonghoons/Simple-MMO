@@ -30,7 +30,7 @@ public:
 	void SetId(int id) { _objectInfo.id = id; }
 
 	unsigned _last_moveTime{};
-
+	unordered_set<int>	_viewList;
 protected:
 	ObjectInfo		_objectInfo{};
 	weak_ptr<Room>	_ownerRoom;

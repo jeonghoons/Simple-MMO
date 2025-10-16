@@ -9,7 +9,7 @@ void worker_thread(shared_ptr<ServerService>& service)
 {
 	while (true)
 	{
-		service->GetIocpInstance()->Dispatch();
+		service->GetIocpInstance()->Dispatch(10);
 	}
 }
 

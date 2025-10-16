@@ -22,9 +22,6 @@
     <ClCompile Include="dummyClientMain.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="Network.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
@@ -41,13 +38,10 @@
       <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="NetworkManager.cpp">
-      <Filter>Main</Filter>
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Network.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -64,7 +58,7 @@
       <Filter>Main</Filter>
     </ClInclude>
     <ClInclude Include="NetworkManager.h">
-      <Filter>Main</Filter>
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -56,7 +56,6 @@ private:
     void ProcessTimerQueue();
 
 private:
-    mutex       _lock;
     concurrency::concurrent_priority_queue<TimerItem> _timerQueue;
     std::unique_ptr<std::thread> _thread;
 };

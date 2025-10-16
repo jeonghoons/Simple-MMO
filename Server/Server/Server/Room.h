@@ -40,36 +40,54 @@ public:
 	void LeaveRoom(shared_ptr<Player> player);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
 
-	bool AddObject(shared_ptr<Monster> object);
+	bool AddObject(shared_ptr<GameObject> object);
 	bool RemoveObject(int objectId);
+	shared_ptr<GameObject> GetGameObject(int objectId)
+	{
+		auto it = _objects.find(objectId);
+		if (it == _objects.end()) {
+			return nullptr;
+		}
+		return it->second;
+	}
+
+
+	unordered_set<int> GetViewList(int objectId)
+	{
+		unordered_set<int> candidates = _gameMap.GetObjectIds(objectId);
+		unordered_set<int> newView;
+		for (int id : candidates) { // 최종 시야
+			if (id == objectId) continue;
+
+			/*auto it = _players.find(id);
+			if (it == _players.end()) continue;*/
+
+			newView.insert(id);
+		}
+	}
 
 	void Update();
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
-	void NPCMove();
+	void NPCMove(shared_ptr<Monster> monster);
 
-	bool canSee(int from, int to);
-	
 	int MonsterIdGenerator()
 	{
-		static atomic<int> _midGenerator = 10000;
+		static atomic<int> _midGenerator = 100000;
 		return ++_midGenerator;
 	}
 
-	shared_ptr<Player> Id2Player(int pId) { return _players[pId]; }
+	shared_ptr<Player> Id2Player(int pId);
+	shared_ptr<Monster> Id2Monster(int mId);
 
 	PositionInfo RandomPos();
 
 	int NumPlayers() { return static_cast<int>(_players.size()); }
 
-	RWLock		_lock;
-	
-
 private:
-	/// <vector<bool>> _tileMap;
-	// map<int, shared_ptr<GameObject>> _objects;
-	RWLock			_vlLock;
+	
+	unordered_map<int, shared_ptr<GameObject>> _objects;
 	unordered_map<int, shared_ptr<Player>> _players;
-	map<int, shared_ptr<Monster>> _monsters;
+	unordered_map<int, shared_ptr<Monster>> _monsters;
 
 	GameMap				_gameMap;
 
