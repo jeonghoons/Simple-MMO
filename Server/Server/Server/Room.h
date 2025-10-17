@@ -34,15 +34,14 @@ public:
 		_timer->Reserve(ectime, _jobQueue, shared_from_this(), memFunc, std::forward<Arguments>(args)...);
 	}
 
-	
-	
-	void EnterRoom(shared_ptr<Player> player);
+	void PlayerEnterRoom(shared_ptr<Player> player);
+	void NpcEnterRoom(shared_ptr<Monster> monster);
 	void LeaveRoom(shared_ptr<Player> player);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
 
 	bool AddObject(shared_ptr<GameObject> object);
 	bool RemoveObject(int objectId);
-	shared_ptr<GameObject> GetGameObject(int objectId)
+	shared_ptr<GameObject> GetGameObject(int objectId) const
 	{
 		auto it = _objects.find(objectId);
 		if (it == _objects.end()) {
@@ -50,7 +49,7 @@ public:
 		}
 		return it->second;
 	}
-
+	optional<PositionInfo> GetObjectPosition(int objectId) const;
 
 	unordered_set<int> GetViewList(int objectId)
 	{
@@ -63,11 +62,30 @@ public:
 				newView.insert(id);
 			}
 		}
+		return newView;
+	}
+
+	unordered_set<int> GetNPCViewList(int objectId)
+	{
+		unordered_set<int> candidates = _gameMap.GetObjectIds(objectId);
+		unordered_set<int> newView;
+
+		for (int id : candidates) {
+			if (id == objectId) continue;
+
+			if (Id2Player(id)) {
+				newView.insert(id);
+			}
+		}
+
+		return newView;
 	}
 
 	void Update();
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
 	void NPCMove(shared_ptr<Monster> monster);
+
+	void NpcAI(shared_ptr<Monster> monster);
 
 	int MonsterIdGenerator()
 	{
@@ -83,7 +101,7 @@ public:
 	int NumPlayers() { return static_cast<int>(_players.size()); }
 
 private:
-	
+
 	unordered_map<int, shared_ptr<GameObject>> _objects;
 	unordered_map<int, shared_ptr<Player>> _players;
 	unordered_map<int, shared_ptr<Monster>> _monsters;
@@ -100,7 +118,7 @@ class RoomManager
 {
 public:
 
-	void CreateRoom();
+	shared_ptr<Room> CreateRoom();
 	void Remove(int roomId);
 	void Remove(shared_ptr<Room> room);
 

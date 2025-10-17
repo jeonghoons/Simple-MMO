@@ -47,6 +47,53 @@ bool GameMap::UpdateObjectPosition(int objectId, const PositionInfo& new_pos)
     return false;
 }
 
+bool GameMap::OutOfBounds(const PositionInfo& pos) const
+{
+    return pos.x < 0.f || pos.x >= MAP_WIDTH || pos.y < 0.f || pos.y >= MAP_HEIGHT;;
+}
+
+bool GameMap::CanMove(int objectId, const PositionInfo& new_pos) const
+{
+    if (OutOfBounds(new_pos)) {
+        return false;
+    }
+}
+
+int GameMap::ValidateMove(int objectId, const PositionInfo& new_pos) const
+{
+    shared_ptr<Room> ownerRoom = _ownerRoom.lock();
+    if (!ownerRoom) {
+        return static_cast<int>(MoveResult::Error);
+    }
+
+    if (OutOfBounds(new_pos)) {
+        return static_cast<int>(MoveResult::OutOfBounds);
+    }
+
+    std::pair<int, int> new_tile = GetTilePosition(new_pos);
+    const int new_tile_x = new_tile.first;
+    const int new_tile_y = new_tile.second;
+
+    std::pair<int, int> new_cell_index = GetCellIndex(new_pos);
+    const auto& candidate_ids = _grid[new_cell_index.second][new_cell_index.first].objectsIds;
+
+    for (int target_id : candidate_ids) {
+        if (target_id == objectId) continue;
+
+        if (std::optional<PositionInfo> target_pos = ownerRoom->GetObjectPosition(target_id)) {
+
+            std::pair<int, int> target_tile = GetTilePosition(*target_pos);
+
+            
+            if (target_tile.first == new_tile_x && target_tile.second == new_tile_y) {
+                return target_id; 
+            }
+        }
+    }
+
+    return static_cast<int>(MoveResult::Validate);
+}
+
 
 unordered_set<int> GameMap::GetObjectIds(int objectId) const
 {
@@ -67,5 +114,12 @@ unordered_set<int> GameMap::GetObjectIds(int objectId) const
         }
     }
     return candidate_ids;
+}
+
+std::pair<int, int> GameMap::GetTilePosition(const PositionInfo& pos) const
+{
+    int tile_x = static_cast<int>(std::round(pos.x));
+    int tile_y = static_cast<int>(std::round(pos.y));
+    return { tile_x, tile_y };
 }
 

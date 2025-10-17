@@ -6,15 +6,11 @@ class GameObject : public enable_shared_from_this<GameObject>
 {
 public:
 	GameObject();
-	// GameObject(shared_ptr<Room> room);
 	virtual ~GameObject() = default;
 
 public:
 	shared_ptr<Room> GetCurrentRoom() const { return _ownerRoom.lock(); }
 	void SetOwnerRoom(shared_ptr<Room> room) { _ownerRoom = room; }
-
-	/*pair<int, int> GetPosition() const { return _position; }
-	void SetPosition(pair<int, int> position) { _position = position; }*/
 
 	PositionInfo& GetPosition() { return _objectInfo.position; }
 	const PositionInfo& GetPosition() const { return _objectInfo.position; }

@@ -10,7 +10,6 @@ public:
 	virtual ~Monster() = default;
 
 public:
-	atomic<bool>			_isActive = false;
-	
+	atomic<bool>			_wakeUp = false;
 };
 

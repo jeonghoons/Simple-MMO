@@ -11,18 +11,36 @@ struct Cell
 	unordered_set<int> objectsIds;
 };
 
+enum MoveResult
+{
+    Validate = -1, // ok
+    OutOfBounds = -2, // stay
+    Error = -3, // error
+};
+
+class Room;
+
 class GameMap
 {
 public:
     GameMap() : _grid(GRID_HEIGHT, std::vector<Cell>(GRID_WIDTH)) {}
-    std::pair<int, int> GetCellIndex(const PositionInfo& pos) const;
+    void Init(weak_ptr<Room> room) { _ownerRoom = room; }
 
+    std::pair<int, int> GetCellIndex(const PositionInfo& pos) const;
     bool UpdateObjectPosition(int objectId, const PositionInfo& new_pos);
+
+    int ValidateMove(int objectId, const PositionInfo& new_pos) const;
+    bool OutOfBounds(const PositionInfo& pos) const;
+    bool CanMove(int objectId, const PositionInfo& new_pos) const;
+
 
     unordered_set<int> GetObjectIds(int objectId) const;
 
-   
 private:
+    std::pair<int, int> GetTilePosition(const PositionInfo& pos) const;
+
+private:
+    weak_ptr<Room>          _ownerRoom;
     const int GRID_WIDTH = MAP_WIDTH / CELL_SIZE;
     const int GRID_HEIGHT = MAP_HEIGHT / CELL_SIZE;
     
