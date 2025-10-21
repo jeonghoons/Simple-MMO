@@ -4,27 +4,26 @@
 
 class RWLock {
 public:
-    // 읽기용 RAII 락
+    
     class ReadGuard {
     public:
         ReadGuard(RWLock& lock) : _lock(lock) {
-            _lock._mutex.lock_shared();  // 읽기 락 획득
+            _lock._mutex.lock_shared();
         }
         ~ReadGuard() {
-            _lock._mutex.unlock_shared(); // 읽기 락 해제
+            _lock._mutex.unlock_shared(); 
         }
     private:
         RWLock& _lock;
     };
 
-    // 쓰기용 RAII 락
     class WriteGuard {
     public:
         WriteGuard(RWLock& lock) : _lock(lock) {
-            // _lock._mutex.lock();  // 쓰기 락 획득
+            _lock._mutex.lock();  
         }
         ~WriteGuard() {
-            // _lock._mutex.unlock(); // 쓰기 락 해제
+            _lock._mutex.unlock(); 
         }
     private:
         RWLock& _lock;

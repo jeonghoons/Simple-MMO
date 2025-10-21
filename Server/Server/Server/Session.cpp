@@ -45,7 +45,7 @@ void Session::Dispatch(IocpEvent* iocpEvent, int numBytes)
 void Session::OnConnected()
 {
 	_connected.store(true);
-	cout << "Client[" << _cid << "] Connected" << endl;
+	// cout << "Client[" << _cid << "] Connected" << endl;
 
 	GetService()->AddSession(static_pointer_cast<Session>(shared_from_this()));
 	

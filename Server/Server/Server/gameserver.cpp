@@ -9,7 +9,7 @@ void worker_thread(shared_ptr<ServerService>& service)
 {
 	while (true)
 	{
-		service->GetIocpInstance()->Dispatch(10);
+		service->GetIocpInstance()->Dispatch();
 	}
 }
 
@@ -34,10 +34,8 @@ int main()
 
 	vector<thread> threads;
 	int num_threads = thread::hardware_concurrency();
-	// int num_threads = 6;
+	// int num_threads = 1;
 	for (int i = 0; i < num_threads; ++i) {
-		
-		Lthreadid++;
 		threads.emplace_back(worker_thread, std::ref(service));
 	}
 

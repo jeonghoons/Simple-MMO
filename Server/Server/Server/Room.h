@@ -85,7 +85,7 @@ public:
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
 	void NPCMove(shared_ptr<Monster> monster);
 
-	void NpcAI(shared_ptr<Monster> monster);
+	void NpcAI(shared_ptr<Monster> monster, long long curr_tick);
 
 	int MonsterIdGenerator()
 	{

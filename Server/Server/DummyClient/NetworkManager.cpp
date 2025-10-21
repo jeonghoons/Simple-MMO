@@ -130,13 +130,17 @@ void NetworkManager::ProcessPacket(BYTE* net_buf, int io_byte)
         int posX = (int)packet->objectInfo.position.x;
         int posY = (int)packet->objectInfo.position.y;
 
-        if (id == g_myid) {
+        if (id == g_myid) { // 자신
             myPlayer.SetPosition(posX, posY);
             g_left_x = posX - SCREEN_WIDTH / 2;
             g_top_y = posY - SCREEN_HEIGHT / 2;
         }
-        else {
+        else if (id >= 100000) { // 몬스터
             players[id] = Object{ *pieces, 32, 0, TILE_WIDTH, TILE_WIDTH};
+            players[id].SetPosition(posX, posY);
+        }
+        else { // 다른 클라이언트
+            players[id] = Object{ *pieces, 64, 0, TILE_WIDTH, TILE_WIDTH };
             players[id].SetPosition(posX, posY);
         }
     } break;

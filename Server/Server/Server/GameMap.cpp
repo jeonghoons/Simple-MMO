@@ -118,8 +118,8 @@ unordered_set<int> GameMap::GetObjectIds(int objectId) const
 
 std::pair<int, int> GameMap::GetTilePosition(const PositionInfo& pos) const
 {
-    int tile_x = static_cast<int>(std::round(pos.x));
-    int tile_y = static_cast<int>(std::round(pos.y));
+    int tile_x = static_cast<int>(pos.x);
+    int tile_y = static_cast<int>(pos.y);
     return { tile_x, tile_y };
 }
 

@@ -104,8 +104,7 @@ void Room::LeaveRoom(shared_ptr<Player> player)
 	if (false == RemoveObject(playerId)) {
 		cout << "Error" << endl;
 	}
-
-	// Broadcast(sendBuffer);
+	
 }
 
 void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
@@ -143,8 +142,6 @@ bool Room::AddObject(shared_ptr<GameObject> object)
 	object->SetOwnerRoom(static_pointer_cast<Room>(shared_from_this()));
 	object->SetPosition(RandomPos());
 
-	// _gameMap.UpdateObjectPosition(objectId, object->GetPosition());
-
 	return true;
 }
 
@@ -169,14 +166,15 @@ void Room::Update()
 {
 	// cout << "Update Room" << endl;
 
+	long long current_tick = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
+
 	for (const auto& [id, monster] : _monsters) {
-		if (monster->_wakeUp) {
-			PushJob(&Room::NpcAI, monster);
-		}
+		if (monster->_wakeUp == false) continue;
+		NpcAI(monster, current_tick);
 	}
 
 
-	ReserveJob(1000, &Room::Update);
+	ReserveJob(100, &Room::Update);
 
 }
 
@@ -208,12 +206,12 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 		return;
 	}
 
-	int moveResult = _gameMap.ValidateMove(player->GetId(), new_pos);
-	if (moveResult == static_cast<int>(MoveResult::OutOfBounds)) {
-		new_pos = pos;
+	int moveResult = _gameMap.ValidateMove(player->GetId(), new_pos); // 경계, 충돌 감지
+	if (moveResult == static_cast<int>(MoveResult::OutOfBounds)) {// 경계밖으로 나간경우
+		new_pos = pos; 
 	}
-	if (moveResult > static_cast<int>(MoveResult::Validate)) {
-		cout << "player[" << player->GetId() << "]가 [" << moveResult << "] 충돌" << endl;
+	if (moveResult > static_cast<int>(MoveResult::Validate)) { // 충돌을 감지
+		// cout << "player[" << player->GetId() << "]가 [" << moveResult << "] 충돌" << endl;
 	}
 
 	player->_last_moveTime = move_time;
@@ -226,7 +224,6 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 
 	unordered_set<int> oldView = player->_viewList; // 이전 시야
 	bool changeCell = _gameMap.UpdateObjectPosition(player->GetId(), new_pos); // 셀 업데이트
-
 	if (changeCell) {
 		unordered_set<int> newView = GetViewList(player->GetId());
 
@@ -268,12 +265,11 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 				}
 			}
 		}
-
 		player->_viewList = std::move(newView);
 	}
 
 	unordered_set<int>& currentView = player->_viewList;
-	for (int target_id : currentView) {
+	for (int target_id : currentView) { // 시야 리스트에만 BroadCast
 		if (shared_ptr<Player> target_player = Id2Player(target_id)) {
 			if (auto session = target_player->GetSession()) {
 				session->Send(playerMoveBuffer);
@@ -320,9 +316,9 @@ void Room::NPCMove(shared_ptr<Monster> monster)
 	if (moveResult == static_cast<int>(MoveResult::OutOfBounds)) {
 		new_pos = pos;
 	}
-	/*if (moveResult > static_cast<int>(MoveResult::Validate)) {
-		cout << "monster[" << monster->GetId() << "]가 [" << moveResult << "] 충돌" << endl;
-	}*/
+	if (moveResult > static_cast<int>(MoveResult::Validate) && Id2Player(moveResult) != nullptr) {
+		// cout << "monster[" << monster->GetId() << "]가 [" << moveResult << "] 충돌" << endl;
+	}
 
 	monster->SetPosition(new_pos);
 
@@ -341,7 +337,8 @@ void Room::NPCMove(shared_ptr<Monster> monster)
 
 					if (auto target_player = Id2Player(old_id)) {
 						if (auto target_session = target_player->GetSession()) {
-							target_session->Send(monsterRemoveBuffer); }
+							target_session->Send(monsterRemoveBuffer); 
+						}
 					}
 				}
 			}
@@ -376,12 +373,15 @@ void Room::NPCMove(shared_ptr<Monster> monster)
 	}
 }
 
-void Room::NpcAI(shared_ptr<Monster> monster)
+void Room::NpcAI(shared_ptr<Monster> monster, long long curr_tick)
 {
 	if (GetGameObject(monster->GetId()) == nullptr)
 		return;
 
-	NPCMove(monster);
+	if (monster->_nextMoveTime < curr_tick) {
+		monster->_nextMoveTime = curr_tick + CoolDown::Cool_Move;
+		NPCMove(monster);
+	}
 	
 	if (monster->_viewList.size() == 0) {
 		monster->_wakeUp = false;
@@ -450,7 +450,7 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 			if (room->NumPlayers() < MAX_ROOM_CAPACITY) {
 				player->SetOwnerRoom(room);
 				room->PushJob(&Room::PlayerEnterRoom, player);
-				return; // 성공 시 바로 종료
+				return;
 			}
 		}
 	} 
@@ -460,7 +460,7 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 		shared_ptr<Room> newRoom = CreateRoom();
 		player->SetOwnerRoom(newRoom);
 		newRoom->PushJob(&Room::PlayerEnterRoom, player);
-		return; // 성공 시 바로 종료
+		return;
 	}
 }
 
