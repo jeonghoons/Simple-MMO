@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\UClient.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{F31BBDD1-B3E8-3BCC-9652-680E16935819}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\UClient.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\UClientEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\UClient">
+      <UniqueIdentifier>{490482DE-E24F-321D-A9F6-9257EDF9E4B2}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\UClient\UClient.Build.cs">
+      <Filter>Source\UClient</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\UClient\UClient.cpp">
+      <Filter>Source\UClient</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\UClient.h">
+      <Filter>Source\UClient</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\UClientCharacter.cpp">
+      <Filter>Source\UClient</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\UClientCharacter.h">
+      <Filter>Source\UClient</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\UClientGameMode.cpp">
+      <Filter>Source\UClient</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\UClientGameMode.h">
+      <Filter>Source\UClient</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\UClientPlayerController.cpp">
+      <Filter>Source\UClient</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\UClientPlayerController.h">
+      <Filter>Source\UClient</Filter>
+    </ClInclude>
+    <Filter Include="Source\UClient\Variant_Strategy">
+      <UniqueIdentifier>{C558D4FA-20C8-3D01-8C73-BF9A2415B814}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UClient\Variant_Strategy\StrategyGameMode.cpp">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_Strategy\StrategyGameMode.h">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_Strategy\StrategyPawn.cpp">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_Strategy\StrategyPawn.h">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_Strategy\StrategyPlayerController.cpp">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_Strategy\StrategyPlayerController.h">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_Strategy\StrategyUnit.cpp">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_Strategy\StrategyUnit.h">
+      <Filter>Source\UClient\Variant_Strategy</Filter>
+    </ClInclude>
+    <Filter Include="Source\UClient\Variant_Strategy\UI">
+      <UniqueIdentifier>{E822A8D0-F609-381C-B4B6-60FA06E593C3}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UClient\Variant_Strategy\UI\StrategyHUD.cpp">
+      <Filter>Source\UClient\Variant_Strategy\UI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_Strategy\UI\StrategyHUD.h">
+      <Filter>Source\UClient\Variant_Strategy\UI</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_Strategy\UI\StrategyUI.cpp">
+      <Filter>Source\UClient\Variant_Strategy\UI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_Strategy\UI\StrategyUI.h">
+      <Filter>Source\UClient\Variant_Strategy\UI</Filter>
+    </ClInclude>
+    <Filter Include="Source\UClient\Variant_TwinStick">
+      <UniqueIdentifier>{2931EE55-83F6-3DC4-803D-DB232206E67D}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\TwinStickCharacter.cpp">
+      <Filter>Source\UClient\Variant_TwinStick</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\TwinStickCharacter.h">
+      <Filter>Source\UClient\Variant_TwinStick</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\TwinStickGameMode.cpp">
+      <Filter>Source\UClient\Variant_TwinStick</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\TwinStickGameMode.h">
+      <Filter>Source\UClient\Variant_TwinStick</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\TwinStickPlayerController.cpp">
+      <Filter>Source\UClient\Variant_TwinStick</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\TwinStickPlayerController.h">
+      <Filter>Source\UClient\Variant_TwinStick</Filter>
+    </ClInclude>
+    <Filter Include="Source\UClient\Variant_TwinStick\AI">
+      <UniqueIdentifier>{47AF4DD1-C452-3474-9090-E1CC9D6B119C}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickAIController.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickAIController.h">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickNPC.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickNPC.h">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickNPCDestruction.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickNPCDestruction.h">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickSpawner.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickSpawner.h">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickStateTreeUtility.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\AI\TwinStickStateTreeUtility.h">
+      <Filter>Source\UClient\Variant_TwinStick\AI</Filter>
+    </ClInclude>
+    <Filter Include="Source\UClient\Variant_TwinStick\Gameplay">
+      <UniqueIdentifier>{C4233EA6-BB78-3898-A4F1-C52B25B28293}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\Gameplay\TwinStickAoEAttack.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\Gameplay</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\Gameplay\TwinStickAoEAttack.h">
+      <Filter>Source\UClient\Variant_TwinStick\Gameplay</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\Gameplay\TwinStickPickup.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\Gameplay</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\Gameplay\TwinStickPickup.h">
+      <Filter>Source\UClient\Variant_TwinStick\Gameplay</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\Gameplay\TwinStickProjectile.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\Gameplay</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\Gameplay\TwinStickProjectile.h">
+      <Filter>Source\UClient\Variant_TwinStick\Gameplay</Filter>
+    </ClInclude>
+    <Filter Include="Source\UClient\Variant_TwinStick\UI">
+      <UniqueIdentifier>{CD345FD4-9C05-3E8D-ACF5-214F192606BB}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UClient\Variant_TwinStick\UI\TwinStickUI.cpp">
+      <Filter>Source\UClient\Variant_TwinStick\UI</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UClient\Variant_TwinStick\UI\TwinStickUI.h">
+      <Filter>Source\UClient\Variant_TwinStick\UI</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

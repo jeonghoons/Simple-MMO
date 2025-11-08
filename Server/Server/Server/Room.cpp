@@ -164,7 +164,7 @@ std::optional<PositionInfo> Room::GetObjectPosition(int objectId) const
 
 void Room::Update()
 {
-	// cout << "Update Room" << endl;
+	cout << "Update Room" << endl;
 
 	long long current_tick = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
 

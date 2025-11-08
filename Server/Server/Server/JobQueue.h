@@ -1,8 +1,6 @@
 #pragma once
 #include "Job.h"
 #include "IocpEvent.h"
-#include "ConcurrentQueue.h"
-#include "FineGrainedQueue.h"
 #include <concurrent_queue.h>
 
 class JobQueue : public IocpObject

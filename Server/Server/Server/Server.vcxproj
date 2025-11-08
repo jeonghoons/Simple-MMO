@@ -140,8 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ConcurrentQueue.h" />
-    <ClInclude Include="FineGrainedQueue.h" />
+    <ClInclude Include="ConcurrentPQ.h" />
     <ClInclude Include="GameMap.h" />
     <ClInclude Include="IocpCore.h" />
     <ClInclude Include="IocpEvent.h" />
@@ -166,8 +165,7 @@
     <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConcurrentQueue.cpp" />
-    <ClCompile Include="FineGrainedQueue.cpp" />
+    <ClCompile Include="ConcurrentPQ.cpp" />
     <ClCompile Include="GameMap.cpp" />
     <ClCompile Include="gameserver.cpp" />
     <ClCompile Include="IocpCore.cpp" />

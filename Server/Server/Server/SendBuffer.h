@@ -1,6 +1,6 @@
 #pragma once
-#include "ConcurrentQueue.h"
 #include <concurrent_queue.h>
+
 class SendBuffer
 {
 public:

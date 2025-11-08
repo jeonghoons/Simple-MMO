@@ -75,14 +75,11 @@
     <ClCompile Include="JobQueue.cpp">
       <Filter>Job</Filter>
     </ClCompile>
-    <ClCompile Include="ConcurrentQueue.cpp">
+    <ClCompile Include="ConcurrentPQ.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Timer.cpp">
       <Filter>Job</Filter>
-    </ClCompile>
-    <ClCompile Include="FineGrainedQueue.cpp">
-      <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="GameMap.cpp">
       <Filter>Contents</Filter>
@@ -149,14 +146,11 @@
     <ClInclude Include="JobQueue.h">
       <Filter>Job</Filter>
     </ClInclude>
-    <ClInclude Include="ConcurrentQueue.h">
+    <ClInclude Include="ConcurrentPQ.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Timer.h">
       <Filter>Job</Filter>
-    </ClInclude>
-    <ClInclude Include="FineGrainedQueue.h">
-      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="GameMap.h">
       <Filter>Contents</Filter>

@@ -1,5 +1,6 @@
 #pragma once
 #include "JobQueue.h"
+#include "ConcurrentPQ.h"
 #include <concurrent_priority_queue.h>
 
 using TimePoint = std::chrono::steady_clock::time_point;
@@ -32,6 +33,8 @@ public:
 
     ~Timer()
     {
+        // _timerQueue.GetCV().notify_one();
+
         if (_thread && _thread->joinable())
         {
             _thread->join();
@@ -46,18 +49,17 @@ public:
         shared_ptr<Job> job = std::make_shared<Job>(owner, memFunc, std::forward<Arguments>(args)...);
 
         TimerItem item = TimerItem(executeTime, std::move(job), jobQueue);
-        // lock_guard<mutex> lock(_lock);
-        _timerQueue.push(item);
+        _timerQueue.Push(item);
     }
 
 private:
     void Run();
 
-    void ProcessTimerQueue();
 
 private:
-    concurrency::concurrent_priority_queue<TimerItem> _timerQueue;
-    std::unique_ptr<std::thread> _thread;
+    // concurrency::concurrent_queue<TimerItem> _timerQueue;
+    ConcurrentPQ<TimerItem> _timerQueue;
+    unique_ptr<std::thread> _thread;
 };
 
 
