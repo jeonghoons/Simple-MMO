@@ -32,10 +32,12 @@ extern thread_local unsigned int Lthreadid;
 #include "RWLock.h"
 #include "Room.h"
 #include "Timer.h"
+#include "DBConnectionPool.h"
 
 
 extern RoomManager* GRoomManager;
 extern shared_ptr<Timer> GTimer;
+extern DBConnectionPool* GDBConnectionPool;
 
 
 

@@ -19,6 +19,9 @@
     <Filter Include="Job">
       <UniqueIdentifier>{db8f291c-1af4-4e0f-a604-f52dbfd43685}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DB">
+      <UniqueIdentifier>{949598d9-aa8a-43af-bfc2-793efadb5f53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -86,6 +89,12 @@
     </ClCompile>
     <ClCompile Include="PacketSerializer.cpp">
       <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="DBConnection.cpp">
+      <Filter>DB</Filter>
+    </ClCompile>
+    <ClCompile Include="DBConnectionPool.cpp">
+      <Filter>DB</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +166,12 @@
     </ClInclude>
     <ClInclude Include="PacketSerializer.h">
       <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="DBConnection.h">
+      <Filter>DB</Filter>
+    </ClInclude>
+    <ClInclude Include="DBConnectionPool.h">
+      <Filter>DB</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -27,8 +27,12 @@ int main()
 	else
 		cout << "Service Start" << endl;
 
-	
-	
+	if (false == GDBConnectionPool->Connect(6, L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;"))
+	{
+		std::cout << "DB Connect ¿À·ù !" << std::endl;
+		exit(-1);
+	}
+
 	GRoomManager->SetIocpHandle(service);
 	GRoomManager->CreateRoom();
 
