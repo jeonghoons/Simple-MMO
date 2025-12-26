@@ -27,12 +27,6 @@ int main()
 	else
 		cout << "Service Start" << endl;
 
-	if (false == GDBConnectionPool->Connect(6, L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;"))
-	{
-		std::cout << "DB Connect 오류 !" << std::endl;
-		exit(-1);
-	}
-
 	GRoomManager->SetIocpHandle(service);
 	GRoomManager->CreateRoom();
 
@@ -40,15 +34,23 @@ int main()
 	int num_threads = thread::hardware_concurrency();
 	// int num_threads = 1;
 	for (int i = 0; i < num_threads; ++i) {
-		threads.emplace_back(worker_thread, std::ref(service));
+		threads.emplace_back(worker_thread, ref(service));
 	}
 
-
+	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
+	if (false == GDBConnectionPool->Connect(num_threads, connectionPath))
+	{
+		std::cout << "DB Connect 오류 !" << std::endl;
+		exit(-1);
+	}
+	else
+	{
+		std::cout << "DB 서버 Connected" << std::endl;
+	}
 	
 	for (thread& t : threads) {
 		if(t.joinable()) 
 			t.join();
 	}
 
-	delete GRoomManager;
 }

@@ -8,11 +8,6 @@
 #include <SFML/System/Time.hpp>
 #include <SFML/Window/Event.hpp>
 
-//==================================================
-// ClientApp ±¸Çö (Main Logic)
-//==================================================
-
-
 ClientApp::ClientApp()
 {
     _networkManager = std::make_unique<NetworkManager>();
@@ -39,12 +34,12 @@ void ClientApp::Initialize()
 
     if (_networkManager->Connect2Server() == false)
     {
-        std::cerr << "Failed to connect to Server" << std::endl;
+        // std::cerr << "Failed to connect to Server" << std::endl;
         exit(-1);
     }
+
+    _networkManager->SendLoginPacket();
     
-    std::cout << "Connected to Server and Logged in" << std::endl;
-    _networkManager->SendLoginPacket(); 
 }
 
 void ClientApp::HandleEvents()

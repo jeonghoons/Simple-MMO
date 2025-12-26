@@ -185,7 +185,7 @@ void NetworkManager::SendLoginPacket()
 {
     CS_LOGIN_PACKET p;
     p.header.size = sizeof(p);
-    p.header.type = CS_PACKET_LIST::CS_LOGIN; // 클라이언트가 서버로 요청하는 패킷 타입
+    p.header.type = CS_PACKET_LIST::CS_LOGIN;
 
     // 일반 송신 함수 호출
     Send_packet(&p);

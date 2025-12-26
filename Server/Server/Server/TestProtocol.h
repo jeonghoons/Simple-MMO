@@ -1,12 +1,18 @@
 #pragma once
-// #include "pch.h"
-#include <DirectXMath.h>
 #include "ProtocolSturct.h"
 
 // =======================
 #pragma pack (push, 1)
 struct CS_LOGIN_PACKET {
 	PacketHeader header;
+	char accountID[20];
+	char accountPW[20];
+};
+
+struct CS_SIGNUP_PACKET {
+	PacketHeader header;
+	char accountID[20];
+	char accountPW[20];
 };
 
 struct CS_LOGOUT_PACKET {
@@ -24,10 +30,20 @@ struct CS_MOVE_PACKET {
 	unsigned	move_time;
 };
 
+struct CS_CMOVE_PACKET {
+	PacketHeader header;
+	PositionInfo pos;
+};
+
 // ------------------------------------------
 struct SC_LOGIN_INFO_PACKET {
 	PacketHeader header;
 	ObjectInfo			objectInfo;
+};
+
+struct SC_SIGNUP_PACKET {
+	PacketHeader header;
+	bool result;
 };
 
 struct SC_ADD_OBJECT_PACKET {

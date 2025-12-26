@@ -53,7 +53,7 @@ private:
 private:
 	HANDLE						_iocpHandle;
 	concurrency::concurrent_queue<shared_ptr<Job>> _jobQueue;
-	std::atomic<bool> _isProcessing = false;
+	atomic<bool> _isProcessing = false;
 };
 
 

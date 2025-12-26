@@ -77,18 +77,16 @@ void GameClient::Update()
 
 void GameClient::Render()
 {
-    // 1. 타일 맵 그리기
     for (auto& tiles : _tileMap)
         for (auto& tile : tiles)
             tile.draw();
 
-    // 2. 플레이어 및 다른 객체 그리기
     myPlayer.draw();
 
   
-    for (auto& pair : players) pair.second.draw();
+    for (auto& pair : players) 
+        pair.second.draw();
 
-    // 3. UI 텍스트 그리기 (g_window, g_font, myPlayer 사용)
     if (g_window && g_font)
     {
         sf::Text text;

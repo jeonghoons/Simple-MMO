@@ -6,14 +6,15 @@
 #include "Player.h"
 #include "Monster.h"
 
+
 const int NUM_MONSTER = 100;
 void Room::InitRoom()
 {
-	for (int i = 0; i < NUM_MONSTER; ++i) {
+	/*for (int i = 0; i < NUM_MONSTER; ++i) {
 		shared_ptr<Monster> monster = make_shared<Monster>();
 		monster->SetId(MonsterIdGenerator());
 		NpcEnterRoom(monster);
-	}
+	}*/
 	_gameMap.Init(weak_from_this());
 	Update();
 }
@@ -34,11 +35,14 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 		session->Send(sendBuffer);
 	}
 
+	shared_ptr<SendBuffer> objectAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
+	if (auto session = player->GetSession()) {
+		session->Send(objectAddBuffer);
+	}
+
 	_gameMap.UpdateObjectPosition(player->GetId(), player->GetPosition()); // 게임맵에 등록
 	unordered_set<int> newView = GetViewList(player->GetId());
-	player->_viewList = std::move(newView);
-
-	shared_ptr<SendBuffer> objectAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
+	
 
 	for (int target_id : newView) {
 
@@ -58,6 +62,7 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 		
 	}
 
+	player->_viewList = std::move(newView);
 }
 
 void Room::NpcEnterRoom(shared_ptr<Monster> monster)
@@ -168,13 +173,13 @@ void Room::Update()
 
 	long long current_tick = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
 
-	for (const auto& [id, monster] : _monsters) {
+	/*for (const auto& [id, monster] : _monsters) {
 		if (monster->_wakeUp == false) continue;
 		NpcAI(monster, current_tick);
 	}
 
 
-	ReserveJob(100, &Room::Update);
+	ReserveJob(100, &Room::Update);*/
 
 }
 
@@ -281,6 +286,19 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 			}
 		}
 	}
+
+}
+
+void Room::PlayerCMove(shared_ptr<Player> player, PositionInfo position)
+{
+	if (nullptr == Id2Player(player->GetId()))
+		return;
+
+	player->SetPosition(position);
+	
+	shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
+
+	Broadcast(playerMoveBuffer);
 
 }
 
@@ -408,16 +426,23 @@ shared_ptr<Monster> Room::Id2Monster(int mId)
 
 PositionInfo Room::RandomPos()
 {
-	static std::random_device rd;
-	static std::mt19937 gen(rd());
-	// static std::uniform_real_distribution<float> dist(0.f, 400.f);
-	static std::uniform_real_distribution<float> dist(0.f, 99.f);
+	//static std::random_device rd;
+	//static std::mt19937 gen(rd());
+	//// static std::uniform_real_distribution<float> dist(0.f, 400.f);
+	//static std::uniform_real_distribution<float> dist(0.f, 99.f);
 
-	float x = dist(gen);
-	float y = dist(gen);
+	//float x = dist(gen);
+	//float y = dist(gen);
+	//// float z = dist(gen);
+
+	//return { x, y, 0.f, 0.f };
+
+
+	float x = Utils::GetRandom(0.f, static_cast<float>(MAP_WIDTH));
+	float y = Utils::GetRandom(0.f, static_cast<float>(MAP_HEIGHT));
 	// float z = dist(gen);
 
-	return { x, y, 0.f, 0.f };
+	return { x, y, 90.f, 0.f };
 }
 
 shared_ptr<Room> RoomManager::CreateRoom()

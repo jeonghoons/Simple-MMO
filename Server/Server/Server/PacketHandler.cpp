@@ -8,6 +8,9 @@ void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET
 {
 	int playerId = session->GetId();
 
+	// DB ·Î±×ÀÎ
+	
+
 	shared_ptr<Player> player = make_shared<Player>(session);
 	player->SetId(playerId);
 	session->_currPlayer = player;
@@ -39,6 +42,15 @@ void PacketHandler::Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* 
 
 }
 
+void PacketHandler::Handle_CS_CMOVE(shared_ptr<Session> session, CS_CMOVE_PACKET* packet)
+{
+
+	if (auto room = session->_currPlayer->GetCurrentRoom())
+		room->PushJob(&Room::PlayerCMove, session->_currPlayer, packet->pos);
+	
+
+}
+
 
 
 void PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int len)
@@ -55,6 +67,13 @@ void PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int
 		break;
 	case CS_PACKET_LIST::CS_MOVE:
 		Handle_CS_MOVE(session, reinterpret_cast<CS_MOVE_PACKET*>(buffer));
+		break;
+	case CS_PACKET_LIST::CS_CMOVE:
+		Handle_CS_CMOVE(session, reinterpret_cast<CS_CMOVE_PACKET*>(buffer));
+		break;
+
+	case CS_PACKET_LIST::CS_LOGOUT:
+		session->Disconnect((const WCHAR*)"LogOut");
 		break;
 	default:
 		cout << "Unknown Packet [" << header->size << "]bytes" << endl;

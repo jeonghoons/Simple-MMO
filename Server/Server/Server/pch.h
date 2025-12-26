@@ -26,6 +26,9 @@ using namespace std;
 #include <random>
 #include <algorithm>
 
+#include <sql.h>
+#include <sqlext.h>
+
 extern thread_local unsigned int Lthreadid;
 
 #include "TestProtocol.h"
@@ -33,11 +36,11 @@ extern thread_local unsigned int Lthreadid;
 #include "Room.h"
 #include "Timer.h"
 #include "DBConnectionPool.h"
+#include "Utils.h"
 
-
-extern RoomManager* GRoomManager;
+extern unique_ptr<RoomManager> GRoomManager;
 extern shared_ptr<Timer> GTimer;
-extern DBConnectionPool* GDBConnectionPool;
+extern unique_ptr<DBConnectionPool> GDBConnectionPool;
 
 
 

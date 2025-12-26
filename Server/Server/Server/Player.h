@@ -5,7 +5,7 @@
 #include "Room.h"
 
 
-class Player :public GameObject
+class Player : public GameObject
 {
 public:
 	Player() = default;

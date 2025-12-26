@@ -7,13 +7,17 @@ constexpr int MAX_ROOM_CAPACITY = 100;
 // Packet Key
 enum SC_PACKET_LIST : unsigned char
 {
-	SC_LOGIN, SC_LOGOUT, SC_ADD_OBJECT, SC_REMOVE_OBJECT,
-	SC_CHAT, SC_MOVE_OBJECT,
+	SC_LOGIN, SC_SIGNUP, SC_LOGOUT,
+	SC_ADD_OBJECT, SC_REMOVE_OBJECT,
+	SC_CHAT,
+	SC_MOVE_OBJECT, SC_CMOVE_OBJECT,
 };
 
 enum CS_PACKET_LIST : unsigned char
 {
-	CS_LOGIN, CS_LOGOUT, CS_CHAT, CS_MOVE
+	CS_LOGIN, CS_SIGNUP, CS_LOGOUT,
+	CS_CHAT,
+	CS_MOVE, CS_CMOVE
 };
 
 #pragma pack(push, 1)
@@ -23,13 +27,21 @@ struct PacketHeader
 	unsigned short type{};
 };
 
+enum Move_State : unsigned char
+{
+	NONE, IDLE, RUN, JUMP
+};
+
 struct PositionInfo
 {
 	float x{};
 	float y{};
 	float z{};
 	float yaw{};
+	Move_State state = Move_State::NONE;
 };
+
+
 
 struct ObjectInfo
 {
@@ -38,17 +50,9 @@ struct ObjectInfo
 
 	};
 
-	enum Object_State : unsigned char
-	{
-		NONE, IDLE, RUN, JUMP
-	};
-
 	int id{};
-	// std::pair<int, int> position;
-	Object_State state = Object_State::NONE;
 	PositionInfo			position{};
 
 };
-
 #pragma pack (pop)
 

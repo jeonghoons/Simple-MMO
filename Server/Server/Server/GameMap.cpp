@@ -32,7 +32,6 @@ bool GameMap::UpdateObjectPosition(int objectId, const PositionInfo& new_pos)
     {
         // 이전 Cell에서 제거
         if (!isFirstEntry && old_cell.first >= 0 && old_cell.second >= 0) {
-            // objectsIds -> object_ids (일관성 유지를 위해)
             _grid[old_cell.second][old_cell.first].objectsIds.erase(objectId);
         }
 
@@ -49,7 +48,7 @@ bool GameMap::UpdateObjectPosition(int objectId, const PositionInfo& new_pos)
 
 bool GameMap::OutOfBounds(const PositionInfo& pos) const
 {
-    return pos.x < 0.f || pos.x >= MAP_WIDTH || pos.y < 0.f || pos.y >= MAP_HEIGHT;;
+    return pos.x < 0.f || pos.x >= MAP_WIDTH || pos.y < 0.f || pos.y >= MAP_HEIGHT;
 }
 
 bool GameMap::CanMove(int objectId, const PositionInfo& new_pos) const

@@ -114,6 +114,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,11 +166,13 @@
     <ClInclude Include="Session.h" />
     <ClInclude Include="TestProtocol.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConcurrentPQ.cpp" />
     <ClCompile Include="DBConnection.cpp" />
     <ClCompile Include="DBConnectionPool.cpp" />
+    <ClCompile Include="DBTable.h" />
     <ClCompile Include="GameMap.cpp" />
     <ClCompile Include="gameserver.cpp" />
     <ClCompile Include="IocpCore.cpp" />
@@ -196,6 +199,7 @@
     <ClCompile Include="ServerService.cpp" />
     <ClCompile Include="Session.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

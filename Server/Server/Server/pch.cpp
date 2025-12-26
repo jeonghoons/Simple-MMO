@@ -2,6 +2,6 @@
 
 thread_local unsigned int Lthreadid = 1;
 
-RoomManager* GRoomManager = new RoomManager();
+unique_ptr<RoomManager> GRoomManager = make_unique<RoomManager>();
 shared_ptr<Timer> GTimer = make_shared<Timer>();
-DBConnectionPool* GDBConnectionPool = new DBConnectionPool();
+unique_ptr<DBConnectionPool> GDBConnectionPool = make_unique<DBConnectionPool>();

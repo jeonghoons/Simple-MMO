@@ -61,6 +61,9 @@ public:
 			if (GetGameObject(id)) {
 				newView.insert(id);
 			}
+			else {
+				cout << "Error[" << id << "] obj" << endl;
+			}
 		}
 		return newView;
 	}
@@ -83,6 +86,7 @@ public:
 
 	void Update();
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
+	void PlayerCMove(shared_ptr<Player> player, PositionInfo position);
 	void NPCMove(shared_ptr<Monster> monster);
 
 	void NpcAI(shared_ptr<Monster> monster, long long curr_tick);

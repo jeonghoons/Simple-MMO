@@ -4,7 +4,7 @@ const int MAP_WIDTH = 100;
 const int MAP_HEIGHT = 100;
 const int CELL_SIZE = 5;
 const float VIEW_RANGE = CELL_SIZE;
-const int VIEW_RANGE_CELLS = 1;
+const int VIEW_RANGE_CELLS = 20;
 
 struct Cell
 {
