@@ -35,6 +35,8 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 		session->Send(sendBuffer);
 	}
 
+	cout << "Client[" << player->GetId() << "] Enter Room" << endl;
+
 	shared_ptr<SendBuffer> objectAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
 	if (auto session = player->GetSession()) {
 		session->Send(objectAddBuffer);
@@ -438,8 +440,8 @@ PositionInfo Room::RandomPos()
 	//return { x, y, 0.f, 0.f };
 
 
-	float x = Utils::GetRandom(0.f, static_cast<float>(MAP_WIDTH));
-	float y = Utils::GetRandom(0.f, static_cast<float>(MAP_HEIGHT));
+	float x = Utils::GetRandom(0.f, static_cast<float>(1000.f));
+	float y = Utils::GetRandom(0.f, static_cast<float>(1000.f));
 	// float z = dist(gen);
 
 	return { x, y, 90.f, 0.f };

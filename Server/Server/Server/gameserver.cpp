@@ -37,7 +37,7 @@ int main()
 		threads.emplace_back(worker_thread, ref(service));
 	}
 
-	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
+	/*const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
 	if (false == GDBConnectionPool->Connect(num_threads, connectionPath))
 	{
 		std::cout << "DB Connect 오류 !" << std::endl;
@@ -46,7 +46,7 @@ int main()
 	else
 	{
 		std::cout << "DB 서버 Connected" << std::endl;
-	}
+	}*/
 	
 	for (thread& t : threads) {
 		if(t.joinable()) 

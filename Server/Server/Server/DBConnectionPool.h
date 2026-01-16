@@ -15,6 +15,5 @@ public:
 private:
 	SQLHENV		_enviroment = SQL_NULL_HANDLE;
 	queue<DBConnection*>	_connectionQueue;
-
+	mutex				_mutex;
 };
-

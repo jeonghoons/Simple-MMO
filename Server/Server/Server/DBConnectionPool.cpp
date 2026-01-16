@@ -44,6 +44,8 @@ bool DBConnectionPool::Connect(int connectionCount, const WCHAR* connectionPath)
 
 DBConnection* DBConnectionPool::Pop()
 {
+	lock_guard<mutex> lock(_mutex);
+
 	if (_connectionQueue.empty())
 		return nullptr;
 
@@ -54,5 +56,6 @@ DBConnection* DBConnectionPool::Pop()
 
 void DBConnectionPool::Push(DBConnection* connection)
 {
+	lock_guard<mutex> lock(_mutex);
 	_connectionQueue.push(connection);
 }

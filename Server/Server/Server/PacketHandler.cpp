@@ -1,21 +1,25 @@
 #include "pch.h"
 #include "PacketHandler.h"
 #include "SendBuffer.h"
-#include "Room.h"
 #include "Player.h"
 
 void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
-	int playerId = session->GetId();
 
 	// DB ·Î±×ÀÎ
 	
+	string id = packet->accountID;
+	string pw = packet->accountPW;
 
-	shared_ptr<Player> player = make_shared<Player>(session);
+	GDBWorker->PushJob(&DatebaseWorker::TryLogin, session, id, pw);
+	
+	
+	// int playerId = session->GetId();
+	/*shared_ptr<Player> player = make_shared<Player>(session);
 	player->SetId(playerId);
 	session->_currPlayer = player;
 
-	GRoomManager->EnterPlayer(player);
+	GRoomManager->EnterPlayer(player);*/
 
 }
 

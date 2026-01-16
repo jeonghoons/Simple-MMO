@@ -28,7 +28,7 @@ private:
 
 private:
 	SOCKET _listenSocket;
-	atomic<int> _clientId = 0;
+	atomic<int> _clientId = 1;
 	
 	shared_ptr<ServerService> _service;
 	AcceptEvent*  _acceptOver;
