@@ -127,6 +127,7 @@ public:
 	void Remove(shared_ptr<Room> room);
 
 	void EnterPlayer(shared_ptr<Player> player);
+	void EnterPlayer(shared_ptr<Session> session);
 
 	int IdGenerator();
 

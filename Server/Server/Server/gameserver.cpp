@@ -37,16 +37,18 @@ int main()
 		threads.emplace_back(worker_thread, ref(service));
 	}
 
-	/*const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
-	if (false == GDBConnectionPool->Connect(num_threads, connectionPath))
 	{
-		std::cout << "DB Connect 오류 !" << std::endl;
-		exit(-1);
+		auto query = L"									\
+			CREATE TABLE [dbo].[User_Account]					\
+			(											\
+				[id] INT NOT NULL PRIMARY KEY IDENTITY, \
+				[account_id] NVARCHAR(20) NOT NULL UNIQUE, \
+				[password] NVARCHAR(20) NOT NULL,						\
+				[createDate] DATETIME NULL				\
+			);";
+
+		// GDBWorker->PushJob(&DatebaseWorker::TryLogin, session, id, pw);
 	}
-	else
-	{
-		std::cout << "DB 서버 Connected" << std::endl;
-	}*/
 	
 	for (thread& t : threads) {
 		if(t.joinable()) 

@@ -25,6 +25,7 @@ public:
 	}
 
 	void TryLogin(shared_ptr<Session> session, string recvId, string recvPw);
+	void TrySignUP(shared_ptr<Session> session, string recvId, string recvPw);
 
 private:
 	concurrency::concurrent_queue<shared_ptr<Job>> _dbJobQueue;

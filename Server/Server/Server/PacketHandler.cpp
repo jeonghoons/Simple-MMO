@@ -23,6 +23,14 @@ void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET
 
 }
 
+void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACKET* packet)
+{
+	string id = packet->accountID;
+	string pw = packet->accountPW;
+
+	GDBWorker->PushJob(&DatebaseWorker::TrySignUP, session, id, pw);
+}
+
 void PacketHandler::Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* packet)
 {
 	char message[1024] = { '\0', };
@@ -65,6 +73,9 @@ void PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int
 	{
 	case CS_PACKET_LIST::CS_LOGIN:
 		Handle_CS_LOGIN(session, reinterpret_cast<CS_LOGIN_PACKET*>(buffer));
+		break;
+	case CS_PACKET_LIST::CS_SIGNUP:
+		Handle_CS_SIGNUP(session, reinterpret_cast<CS_SIGNUP_PACKET*>(buffer));
 		break;
 	case CS_PACKET_LIST::CS_CHAT:
 		Handle_CS_CHAT(session, reinterpret_cast<CS_CHAT_PACKET*>(buffer));

@@ -491,6 +491,28 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 	}
 }
 
+void RoomManager::EnterPlayer(shared_ptr<Session> session)
+{
+	RWLock::WriteGuard lock(_lock);
+	int playerId = session->GetId();
+	shared_ptr<Player> player = make_shared<Player>(session);
+	player->SetId(playerId);
+	session->_currPlayer = player;
+
+	for (auto& [id, room] : _rooms) {
+		if (room->NumPlayers() < MAX_ROOM_CAPACITY) {
+			player->SetOwnerRoom(room);
+			room->PushJob(&Room::PlayerEnterRoom, player);
+			return;
+		}
+	}
+
+	shared_ptr<Room> newRoom = CreateRoom();
+	player->SetOwnerRoom(newRoom);
+	newRoom->PushJob(&Room::PlayerEnterRoom, player);
+	
+}
+
 int RoomManager::IdGenerator()
 {
 	static atomic<int> _idGenerator = 0;
