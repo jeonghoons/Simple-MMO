@@ -4,6 +4,8 @@
 #include "IocpCore.h"
 #include "Room.h"
 
+shared_ptr<DatabaseWorker> GDBWorker = nullptr;
+unique_ptr<RoomManager> GRoomManager = nullptr;
 
 void worker_thread(shared_ptr<ServerService>& service)
 {
@@ -27,8 +29,11 @@ int main()
 	else
 		cout << "Service Start" << endl;
 
-	GRoomManager->SetIocpHandle(service);
+	// GRoomManager->SetIocpHandle(service);
+	GRoomManager = make_unique<RoomManager>(service->GetIocpInstance()->GetHandle());
 	GRoomManager->CreateRoom();
+
+	GDBWorker = make_shared<DatabaseWorker>(service->GetIocpInstance()->GetHandle(), 6);
 
 	vector<thread> threads;
 	int num_threads = thread::hardware_concurrency();
@@ -37,18 +42,6 @@ int main()
 		threads.emplace_back(worker_thread, ref(service));
 	}
 
-	{
-		auto query = L"									\
-			CREATE TABLE [dbo].[User_Account]					\
-			(											\
-				[id] INT NOT NULL PRIMARY KEY IDENTITY, \
-				[account_id] NVARCHAR(20) NOT NULL UNIQUE, \
-				[password] NVARCHAR(20) NOT NULL,						\
-				[createDate] DATETIME NULL				\
-			);";
-
-		// GDBWorker->PushJob(&DatebaseWorker::TryLogin, session, id, pw);
-	}
 	
 	for (thread& t : threads) {
 		if(t.joinable()) 

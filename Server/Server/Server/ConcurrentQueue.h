@@ -52,3 +52,39 @@ private:
 	condition_variable _cv;
 };
 
+template <typename T>
+class ConcurrentQ
+{
+public:
+	void Push(T item)
+	{
+		{
+			lock_guard<std::mutex> lock(_mutex);
+			_queue.push(std::move(item));
+		}
+		_cv.notify_one(); 
+	}
+
+	
+	void WaitPop(T& value)
+	{
+		unique_lock<mutex> lock(_mutex);
+
+
+		_cv.wait(lock, [this] { return !_queue.empty(); });
+
+		value = std::move(_queue.front()); 
+		_queue.pop();
+	}
+
+	bool Is_empty() const {
+		lock_guard<mutex> lock(_mutex);
+		return _queue.empty();
+	}
+
+private:
+	queue<T> _queue;
+	mutable mutex _mutex;
+	condition_variable _cv;
+};
+

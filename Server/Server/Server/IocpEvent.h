@@ -7,7 +7,7 @@ enum class EventType : unsigned char
 	Recv,
 	Send,
 	Job,
-
+	DBResult,
 };
 
 class IocpEvent : public OVERLAPPED
@@ -54,5 +54,11 @@ class JobEvent : public IocpEvent
 {
 public:
 	JobEvent(shared_ptr<IocpObject> owner) : IocpEvent(EventType::Job, owner) {}
+};
+
+class DBEvent : public IocpEvent
+{
+public:
+	DBEvent(shared_ptr<IocpObject> owner) : IocpEvent(EventType::DBResult, owner) {}
 };
 

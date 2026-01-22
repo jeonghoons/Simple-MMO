@@ -35,12 +35,12 @@ extern thread_local unsigned int Lthreadid;
 #include "RWLock.h"
 #include "Room.h"
 #include "Timer.h"
-#include "DatebaseWorker.h"
+#include "DatabaseWorker.h"
 #include "Utils.h"
 
 extern unique_ptr<RoomManager> GRoomManager;
 extern shared_ptr<Timer> GTimer;
-extern shared_ptr<DatebaseWorker> GDBWorker;
+extern shared_ptr<DatabaseWorker> GDBWorker;
 
 
 

@@ -1,10 +1,11 @@
 #include "pch.h"
-#include "DatebaseWorker.h"
+#include "DatabaseWorker.h"
 #include "Player.h"
 
-DatebaseWorker::DatebaseWorker(int num_connections)
+DatabaseWorker::DatabaseWorker(HANDLE iocpHandle, int num_connections) : _iocpHandle(iocpHandle)
 {
-	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
+	// const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
+	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-0I9E8CG\\SQLEXPRESS;Database=SimpleMMO;Trusted_Connection=Yes;";
 	_dbConnectionPool = make_unique<DBConnectionPool>();
 	if (false == _dbConnectionPool->Connect(num_connections, connectionPath))
 	{
@@ -14,26 +15,34 @@ DatebaseWorker::DatebaseWorker(int num_connections)
 	std::cout << "DB 서버 Connected" << std::endl;
 
 	for (int i = 0; i < num_connections; ++i) {
-		_threads.emplace_back(&DatebaseWorker::Run, this);
+		_threads.emplace_back(&DatabaseWorker::Run, this);
 	}
 }
 
-void DatebaseWorker::Run()
+DatabaseWorker::~DatabaseWorker()
 {
+	for (auto& t : _threads) {
+		if (t.joinable()) t.join();
+	}
+}
+
+void DatabaseWorker::Run()
+{
+	
 	while (true)
 	{
-		shared_ptr<Job> job;
-		if (_dbJobQueue.try_pop(job)) {
+		shared_ptr<Job> job = nullptr;
+
+		_dbJobQueue.WaitPop(job);
+
+		if (job) {
 			job->Execute();
-		}
-		else {
-			std::this_thread::yield();
 		}
 	}
 }
 
 
-void DatebaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string recvPw)
+void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string recvPw)
 {
 	DBConnection* dbConn = _dbConnectionPool->Pop();
 	dbConn->Unbind();
@@ -59,28 +68,28 @@ void DatebaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 
 	if (dbConn->Execute(L"SELECT id, account_id, password FROM [dbo].[User_Account] WHERE account_id = (?)"))
 	{
-
-	}
-
-	if (dbConn->Fetch())
-	{
-		WCHAR clpassword[20] = {};
-		MultiByteToWideChar(CP_ACP, 0, recvPw.c_str(), -1, clpassword, _countof(clpassword));
-		if (lstrcmpW(clpassword, outpassword) == 0)
+		if (dbConn->Fetch())
 		{
-			cout << "로그인 성공" << std::endl;
-			GRoomManager->EnterPlayer(session);			
+			WCHAR clpassword[20] = {};
+			MultiByteToWideChar(CP_ACP, 0, recvPw.c_str(), -1, clpassword, _countof(clpassword));
+			if (lstrcmpW(clpassword, outpassword) == 0)
+			{
+				cout << "로그인 성공" << std::endl;
+
+
+				PostQueuedCompletionStatus(_iocpHandle, 0, 0, new DBEvent(session));
+				// DBLoginResult
+			}
+			else
+			{
+				cout << "비밀번호가 다릅니다." << std::endl;
+			}
 		}
 		else
 		{
-			cout << "비밀번호가 다릅니다." << std::endl;
+			cout << "없는 아이디" << std::endl;
 		}
 	}
-	else
-	{
-		cout << "없는 아이디" << std::endl;
-	}
-
 	
 
 	_dbConnectionPool->Push(dbConn);
@@ -89,7 +98,7 @@ void DatebaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	
 }
 
-void DatebaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, string recvPw)
+void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, string recvPw)
 {
 	DBConnection* dbConn = _dbConnectionPool->Pop();
 	dbConn->Unbind();
@@ -104,13 +113,18 @@ void DatebaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, strin
 	SQLLEN passwordLen = 0;
 	dbConn->BindParam(2, password, &passwordLen);
 
-	TIMESTAMP_STRUCT ts = { 1998, 10, 01 };
+	/*TIMESTAMP_STRUCT ts = { 1998, 10, 01 };
 	SQLLEN tsLen = 0;
-	dbConn->BindParam(3, &ts, &tsLen);
+	dbConn->BindParam(3, &ts, &tsLen);*/
 
-	if (dbConn->Execute(L"INSERT INTO [dbo].[User_Account]([account_id], [password], [createDate]) VALUES(?, ?, ?)"))
+	if (dbConn->Execute(L"INSERT INTO [dbo].[User_Account]([account_id], [password], [createDate]) VALUES(?, ?, GETDATE())"))
 	{
-		std::cout << "Sign Up" << std::endl;
+		cout << "Sign Up 성공" << std::endl;
+		// 
+	}
+	else
+	{
+		cout << "중복 아이디" << endl;
 	}
 
 	_dbConnectionPool->Push(dbConn);

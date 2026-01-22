@@ -44,6 +44,8 @@ private:
 	void			RegisterSend();
 	void			ProcessSend(int numOfBytes);
 
+	void			ProcessDBEvent();
+
 public:
 	RWLock		_lock;
 	
@@ -66,6 +68,6 @@ private:
 	RecvEvent		_recvEvent;
 	SendEvent		_sendEvent; // 패킷을 모아서 보내기 위해서 재사용
 
-
+	
 };
 

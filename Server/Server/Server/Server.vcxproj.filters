@@ -78,7 +78,7 @@
     <ClCompile Include="JobQueue.cpp">
       <Filter>Job</Filter>
     </ClCompile>
-    <ClCompile Include="ConcurrentPQ.cpp">
+    <ClCompile Include="ConcurrentQueue.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Timer.cpp">
@@ -99,7 +99,7 @@
     <ClCompile Include="Utils.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="DatebaseWorker.cpp">
+    <ClCompile Include="DatabaseWorker.cpp">
       <Filter>DB</Filter>
     </ClCompile>
   </ItemGroup>
@@ -161,7 +161,7 @@
     <ClInclude Include="JobQueue.h">
       <Filter>Job</Filter>
     </ClInclude>
-    <ClInclude Include="ConcurrentPQ.h">
+    <ClInclude Include="ConcurrentQueue.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Timer.h">
@@ -182,7 +182,7 @@
     <ClInclude Include="Utils.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="DatebaseWorker.h">
+    <ClInclude Include="DatabaseWorker.h">
       <Filter>DB</Filter>
     </ClInclude>
   </ItemGroup>

@@ -121,7 +121,8 @@ private:
 class RoomManager
 {
 public:
-
+	RoomManager(HANDLE iocpHandle) : _iocpHandle(iocpHandle) {}
+public:
 	shared_ptr<Room> CreateRoom();
 	void Remove(int roomId);
 	void Remove(shared_ptr<Room> room);
@@ -131,16 +132,12 @@ public:
 
 	int IdGenerator();
 
-	void SetIocpHandle(shared_ptr<ServerService> service) { 
-		_iocpHandle = service->GetIocpInstance()->GetHandle();
-	}
-
 public:
 	
 	RWLock				_lock;
 	
 	unordered_map<int, shared_ptr<Room>> _rooms;
 
-	HANDLE _iocpHandle = nullptr;
+	HANDLE _iocpHandle;
 };
 

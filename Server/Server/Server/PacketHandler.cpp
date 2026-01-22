@@ -2,6 +2,9 @@
 #include "PacketHandler.h"
 #include "SendBuffer.h"
 #include "Player.h"
+#include "DatabaseWorker.h"
+
+extern shared_ptr<DatabaseWorker> GDBWorker;
 
 void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
@@ -11,7 +14,7 @@ void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET
 	string id = packet->accountID;
 	string pw = packet->accountPW;
 
-	GDBWorker->PushJob(&DatebaseWorker::TryLogin, session, id, pw);
+	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);
 	
 	
 	// int playerId = session->GetId();
@@ -28,7 +31,7 @@ void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACK
 	string id = packet->accountID;
 	string pw = packet->accountPW;
 
-	GDBWorker->PushJob(&DatebaseWorker::TrySignUP, session, id, pw);
+	GDBWorker->PushDBJob(&DatabaseWorker::TrySignUP, session, id, pw);
 }
 
 void PacketHandler::Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* packet)

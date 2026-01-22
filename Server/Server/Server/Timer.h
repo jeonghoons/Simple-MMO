@@ -1,6 +1,6 @@
 #pragma once
 #include "JobQueue.h"
-#include "ConcurrentPQ.h"
+#include "ConcurrentQueue.h"
 #include <concurrent_priority_queue.h>
 
 using TimePoint = std::chrono::steady_clock::time_point;
@@ -17,8 +17,8 @@ struct TimerItem
     }
 
     TimePoint _executeTime{};                  
-    std::shared_ptr<Job> _job{};               
-    std::weak_ptr<JobQueue> _jobQueue{};    
+    shared_ptr<Job> _job{};               
+    weak_ptr<JobQueue> _jobQueue{};    
 
 };
 
@@ -27,15 +27,12 @@ class Timer
 public:
     Timer()
     {
-        // 타이머 스레드를 시작합니다.
         _thread = std::make_unique<std::thread>(&Timer::Run, this);
     }
 
     ~Timer()
     {
-        // _timerQueue.GetCV().notify_one();
-
-        if (_thread && _thread->joinable())
+        if (_thread->joinable())
         {
             _thread->join();
         }

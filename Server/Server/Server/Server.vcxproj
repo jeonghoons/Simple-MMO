@@ -141,8 +141,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ConcurrentPQ.h" />
-    <ClInclude Include="DatebaseWorker.h" />
+    <ClInclude Include="ConcurrentQueue.h" />
+    <ClInclude Include="DatabaseWorker.h" />
     <ClInclude Include="DBConnection.h" />
     <ClInclude Include="DBConnectionPool.h" />
     <ClInclude Include="GameMap.h" />
@@ -170,8 +170,8 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConcurrentPQ.cpp" />
-    <ClCompile Include="DatebaseWorker.cpp" />
+    <ClCompile Include="ConcurrentQueue.cpp" />
+    <ClCompile Include="DatabaseWorker.cpp" />
     <ClCompile Include="DBConnection.cpp" />
     <ClCompile Include="DBConnectionPool.cpp" />
     <ClCompile Include="GameMap.cpp" />

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Timer.h"
-#include "DatebaseWorker.h"
+#include "DatabaseWorker.h"
 
 void Timer::Run()
 {
