@@ -7,7 +7,7 @@
 shared_ptr<DatabaseWorker> GDBWorker = nullptr;
 unique_ptr<RoomManager> GRoomManager = nullptr;
 
-void worker_thread(shared_ptr<ServerService>& service)
+void worker_thread(shared_ptr<ServerService> service)
 {
 	while (true)
 	{
@@ -29,7 +29,6 @@ int main()
 	else
 		cout << "Service Start" << endl;
 
-	// GRoomManager->SetIocpHandle(service);
 	GRoomManager = make_unique<RoomManager>(service->GetIocpInstance()->GetHandle());
 	GRoomManager->CreateRoom();
 
@@ -39,10 +38,9 @@ int main()
 	int num_threads = thread::hardware_concurrency();
 	// int num_threads = 1;
 	for (int i = 0; i < num_threads; ++i) {
-		threads.emplace_back(worker_thread, ref(service));
+		threads.emplace_back(worker_thread, service);
 	}
 
-	
 	for (thread& t : threads) {
 		if(t.joinable()) 
 			t.join();

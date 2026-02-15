@@ -39,6 +39,8 @@ struct PositionInfo
 	float z{};
 	float yaw{};
 	Move_State state = Move_State::NONE;
+	float inputX; // аб©Л
+	float inputY; // ╬у╣з
 };
 
 

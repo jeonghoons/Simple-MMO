@@ -10,11 +10,11 @@ void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET
 {
 
 	// DB ·Î±×ÀÎ
-	
-	string id = packet->accountID;
+	/*string id = packet->accountID;
 	string pw = packet->accountPW;
+	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);*/
 
-	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);
+	GRoomManager->EnterPlayer(session);
 	
 	
 	// int playerId = session->GetId();

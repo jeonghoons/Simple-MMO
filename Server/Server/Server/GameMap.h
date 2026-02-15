@@ -1,14 +1,22 @@
 #pragma once
 
-const int MAP_WIDTH = 100;
-const int MAP_HEIGHT = 100;
-const int CELL_SIZE = 5;
-const float VIEW_RANGE = CELL_SIZE;
-const int VIEW_RANGE_CELLS = 20;
+constexpr float MAP_WIDTH = 50.0f;
+constexpr float MAP_HEIGHT = 50.0f;
+constexpr int CELL_SIZE = 5;
+constexpr int GRID_WIDTH = static_cast<int>(MAP_WIDTH / CELL_SIZE);
+constexpr int GRID_HEIGHT = static_cast<int>(MAP_HEIGHT / CELL_SIZE);
+const int VIEW_RANGE_CELLS = 1;
 
 struct Cell
 {
 	unordered_set<int> objectsIds;
+};
+
+struct CellPos {
+    int x, y;
+
+    bool operator==(const CellPos& other) const { return x == other.x && y == other.y; }
+    bool operator!=(const CellPos& other) const { return !(*this == other); }
 };
 
 enum MoveResult
@@ -23,28 +31,25 @@ class Room;
 class GameMap
 {
 public:
-    GameMap() : _grid(GRID_HEIGHT, std::vector<Cell>(GRID_WIDTH)) {}
+    GameMap() : _grid(GRID_HEIGHT, vector<Cell>(GRID_WIDTH)) {}
     void Init(weak_ptr<Room> room) { _ownerRoom = room; }
 
-    std::pair<int, int> GetCellIndex(const PositionInfo& pos) const;
-    bool UpdateObjectPosition(int objectId, const PositionInfo& new_pos);
+public:
+    CellPos GetCellPos(const PositionInfo& pos) const;
+    bool UpdateObjectPosition(int objectId, const PositionInfo& currPos);
+    unordered_set<int> GetObjectIds(int objectId) const;
+
 
     int ValidateMove(int objectId, const PositionInfo& new_pos) const;
     bool OutOfBounds(const PositionInfo& pos) const;
-    bool CanMove(int objectId, const PositionInfo& new_pos) const;
-
-
-    unordered_set<int> GetObjectIds(int objectId) const;
+    bool CanMove(int objectId, const PositionInfo& new_pos) const;    
 
 private:
-    std::pair<int, int> GetTilePosition(const PositionInfo& pos) const;
+    pair<int, int> GetTilePosition(const PositionInfo& pos) const;
 
 private:
-    weak_ptr<Room>          _ownerRoom;
-    const int GRID_WIDTH = MAP_WIDTH / CELL_SIZE;
-    const int GRID_HEIGHT = MAP_HEIGHT / CELL_SIZE;
-    
-    vector<std::vector<Cell>> _grid;
-    unordered_map<int, std::pair<int, int>> _currentCellIndices;
+    weak_ptr<Room>             _ownerRoom;    
+    vector<vector<Cell>>        _grid;
+    unordered_map<int, CellPos>  _currentCellIndices;
 };
 

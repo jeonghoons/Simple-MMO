@@ -179,9 +179,9 @@ void Room::Update()
 		if (monster->_wakeUp == false) continue;
 		NpcAI(monster, current_tick);
 	}
-
-
 	ReserveJob(100, &Room::Update);*/
+
+
 
 }
 
@@ -302,6 +302,8 @@ void Room::PlayerCMove(shared_ptr<Player> player, PositionInfo position)
 
 	Broadcast(playerMoveBuffer);
 
+	// printf("Player[%d] - (%f, %f) Yaw: %f)\n", player->GetId(), position.x, position.y, position.yaw);
+	printf("Player[%d] - (%f, %f)\n", player->GetId(), position.inputX, position.inputY);
 }
 
 
@@ -428,23 +430,12 @@ shared_ptr<Monster> Room::Id2Monster(int mId)
 
 PositionInfo Room::RandomPos()
 {
-	//static std::random_device rd;
-	//static std::mt19937 gen(rd());
-	//// static std::uniform_real_distribution<float> dist(0.f, 400.f);
-	//static std::uniform_real_distribution<float> dist(0.f, 99.f);
+	/*float x = Utils::GetRandom(0.f, static_cast<float>(1000.f));
+	float y = Utils::GetRandom(0.f, static_cast<float>(1000.f));*/
+	float x = Utils::GetRandom(0.f, MAP_WIDTH / 2.f);
+	float y = Utils::GetRandom(0.f, MAP_HEIGHT / 2.f);
 
-	//float x = dist(gen);
-	//float y = dist(gen);
-	//// float z = dist(gen);
-
-	//return { x, y, 0.f, 0.f };
-
-
-	float x = Utils::GetRandom(0.f, static_cast<float>(1000.f));
-	float y = Utils::GetRandom(0.f, static_cast<float>(1000.f));
-	// float z = dist(gen);
-
-	return { x, y, 90.f, 0.f };
+	return { x, y, 10.f, 0.f };
 }
 
 shared_ptr<Room> RoomManager::CreateRoom()
