@@ -38,6 +38,7 @@ public:
 	void NpcEnterRoom(shared_ptr<Monster> monster);
 	void LeaveRoom(shared_ptr<Player> player);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
+	void BroadcastAOI(shared_ptr<Player> player, shared_ptr<SendBuffer> sendBuffer);
 
 	bool AddObject(shared_ptr<GameObject> object);
 	bool RemoveObject(int objectId);
@@ -86,7 +87,7 @@ public:
 
 	void Update();
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
-	void PlayerCMove(shared_ptr<Player> player, PositionInfo position);
+	void PlayerCMove(shared_ptr<Player> player, PositionInfo position, bool force);
 	void NPCMove(shared_ptr<Monster> monster);
 
 	void NpcAI(shared_ptr<Monster> monster, long long curr_tick);

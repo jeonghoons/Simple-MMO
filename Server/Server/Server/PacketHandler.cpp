@@ -8,22 +8,11 @@ extern shared_ptr<DatabaseWorker> GDBWorker;
 
 void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
-
 	// DB ·Î±×ÀÎ
 	/*string id = packet->accountID;
 	string pw = packet->accountPW;
 	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);*/
-
 	GRoomManager->EnterPlayer(session);
-	
-	
-	// int playerId = session->GetId();
-	/*shared_ptr<Player> player = make_shared<Player>(session);
-	player->SetId(playerId);
-	session->_currPlayer = player;
-
-	GRoomManager->EnterPlayer(player);*/
-
 }
 
 void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACKET* packet)
@@ -61,7 +50,7 @@ void PacketHandler::Handle_CS_CMOVE(shared_ptr<Session> session, CS_CMOVE_PACKET
 {
 
 	if (auto room = session->_currPlayer->GetCurrentRoom())
-		room->PushJob(&Room::PlayerCMove, session->_currPlayer, packet->pos);
+		room->PushJob(&Room::PlayerCMove, session->_currPlayer, packet->pos, packet->force);
 	
 
 }

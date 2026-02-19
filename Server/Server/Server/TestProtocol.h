@@ -33,6 +33,7 @@ struct CS_MOVE_PACKET {
 struct CS_CMOVE_PACKET {
 	PacketHeader header;
 	PositionInfo pos;
+	bool force = false;
 };
 
 // ------------------------------------------

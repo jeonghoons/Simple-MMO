@@ -68,12 +68,14 @@ void Session::Disconnect(const WCHAR* cause)
 }
 
 
-void Session::Send(shared_ptr<SendBuffer> sendBuffer)
+void Session::Send(shared_ptr<SendBuffer> sendBuffer, bool pushOnly)
 {
 	if (false == IsConnected())
 		return;
 	
 	_sendQueue.Push(sendBuffer);
+
+	if (pushOnly) return;
 
 	bool expected = false;
 	if (_sendRegistered.compare_exchange_strong(expected, true)) {

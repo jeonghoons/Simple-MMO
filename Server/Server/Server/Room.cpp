@@ -123,6 +123,16 @@ void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 	}
 }
 
+void Room::BroadcastAOI(shared_ptr<Player> player, shared_ptr<SendBuffer> sendBuffer)
+{
+	unordered_set<int>& currentView = player->_viewList;
+	for (const int& id : currentView) {
+		if (auto session = _players[id]->GetSession()) {
+			session->Send(sendBuffer);
+		}
+	}
+}
+
 bool Room::AddObject(shared_ptr<GameObject> object)
 {
 	int objectId = object->GetId();
@@ -181,10 +191,15 @@ void Room::Update()
 	}
 	ReserveJob(100, &Room::Update);*/
 
-
+	for (const auto& [id, player] : _players) {
+		if (shared_ptr<Session> session = player->GetSession()) {
+			shared_ptr<SendBuffer> playerUpdateBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
+			Broadcast(playerUpdateBuffer);
+		}
+	}
+	ReserveJob(100, &Room::Update);
 
 }
-
 
 void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time)
 {
@@ -291,22 +306,79 @@ void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_ti
 
 }
 
-void Room::PlayerCMove(shared_ptr<Player> player, PositionInfo position)
+void Room::PlayerCMove(shared_ptr<Player> player, PositionInfo position, bool force)
 {
 	if (nullptr == Id2Player(player->GetId()))
 		return;
 
 	player->SetPosition(position);
 	
-	shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
+	// 시야처리
+	unordered_set<int> oldView = player->_viewList; // 이전 시야
+	bool changeCell = _gameMap.UpdateObjectPosition(player->GetId(), position);
+	if (changeCell) {
+		unordered_set<int> newView = GetViewList(player->GetId());
 
-	Broadcast(playerMoveBuffer);
+		shared_ptr<SendBuffer> playerRemoveBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(player->GetId());
+		for (int old_id : oldView) { // 있었음 -> 없음 제거
+			if (newView.count(old_id) == 0) {
+
+				if (auto session = player->GetSession()) {
+					session->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(old_id));
+				}
+
+				if (shared_ptr<GameObject> target_obj = GetGameObject(old_id)) {
+					target_obj->_viewList.erase(player->GetId());
+					if (auto target_player = Id2Player(old_id)) {
+						if (auto target_session = target_player->GetSession()) {
+							target_session->Send(playerRemoveBuffer);
+						}
+					}
+				}
+			}
+		}
+
+		shared_ptr<SendBuffer> playerAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
+		for (int new_id : newView) { // 없었음 -> 있음 추가
+			if (oldView.count(new_id) == 0) {
+				if (shared_ptr<GameObject> target_obj = GetGameObject(new_id)) {
+					if (auto session = player->GetSession()) {
+						session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_obj));
+					}
+
+					if (target_obj->_viewList.insert(player->GetId()).second) {
+						if (auto target_player = Id2Player(new_id)) {
+							if (auto target_session = target_player->GetSession()) {
+								target_session->Send(playerAddBuffer);
+							}
+						}
+					}
+				}
+			}
+		}
+		player->_viewList = std::move(newView);
+	}
+
+	// force처리
+	if (force) {
+		shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
+		unordered_set<int>& currentView = player->_viewList;
+		for (int target_id : currentView) { // 시야 리스트에만 BroadCast
+			if (shared_ptr<Player> target_player = Id2Player(target_id)) {
+				if (auto session = target_player->GetSession()) {
+					session->Send(playerMoveBuffer);
+				}
+			}
+			else if (shared_ptr<Monster> target_monster = Id2Monster(target_id)) {
+				if (false == target_monster->_wakeUp) {
+					target_monster->_wakeUp = true;
+				}
+			}
+		}
+	}
 
 	// printf("Player[%d] - (%f, %f) Yaw: %f)\n", player->GetId(), position.x, position.y, position.yaw);
-	printf("Player[%d] - (%f, %f)\n", player->GetId(), position.inputX, position.inputY);
 }
-
-
 
 void Room::NPCMove(shared_ptr<Monster> monster)
 {
@@ -430,12 +502,12 @@ shared_ptr<Monster> Room::Id2Monster(int mId)
 
 PositionInfo Room::RandomPos()
 {
-	/*float x = Utils::GetRandom(0.f, static_cast<float>(1000.f));
-	float y = Utils::GetRandom(0.f, static_cast<float>(1000.f));*/
 	float x = Utils::GetRandom(0.f, MAP_WIDTH / 2.f);
 	float y = Utils::GetRandom(0.f, MAP_HEIGHT / 2.f);
+	/*float x = Utils::GetRandom(0.f, 0.f);
+	float y = Utils::GetRandom(0.f, 0.f);*/
 
-	return { x, y, 10.f, 0.f };
+	return { x, y, 500.f, 0.f };
 }
 
 shared_ptr<Room> RoomManager::CreateRoom()

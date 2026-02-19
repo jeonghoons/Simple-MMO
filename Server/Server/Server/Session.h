@@ -32,7 +32,7 @@ public:
 	void			OnConnected();
 	void			Disconnect(const WCHAR* cause);
 
-	void			Send(shared_ptr<SendBuffer> sendBuffer);
+	void			Send(shared_ptr<SendBuffer> sendBuffer, bool pushOnly = false);
 
 	int			ProcessData(BYTE* buffer, int len);
 	void			ProcessPacket(BYTE* buffer, int len);
