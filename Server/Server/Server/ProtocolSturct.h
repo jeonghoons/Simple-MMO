@@ -43,15 +43,14 @@ struct PositionInfo
 	float inputY; // ¾ÕµÚ
 };
 
-
-
 struct ObjectInfo
 {
 	enum Object_Type : unsigned char
 	{
-
+		NONE, Player, Monster, Npc, Item, ENVIRONMENT
 	};
 
+	Object_Type		type;
 	int id{};
 	PositionInfo			position{};
 

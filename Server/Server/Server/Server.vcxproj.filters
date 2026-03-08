@@ -22,6 +22,9 @@
     <Filter Include="DB">
       <UniqueIdentifier>{949598d9-aa8a-43af-bfc2-793efadb5f53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Contents\Object">
+      <UniqueIdentifier>{8c405df8-df17-40f0-9711-17b90f051d62}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -57,20 +60,11 @@
     <ClCompile Include="Room.cpp">
       <Filter>Contents</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Contents</Filter>
-    </ClCompile>
     <ClCompile Include="PacketHandler.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Contents</Filter>
-    </ClCompile>
     <ClCompile Include="RWLock.cpp">
       <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Monster.cpp">
-      <Filter>Contents</Filter>
     </ClCompile>
     <ClCompile Include="Job.cpp">
       <Filter>Job</Filter>
@@ -101,6 +95,18 @@
     </ClCompile>
     <ClCompile Include="DatabaseWorker.cpp">
       <Filter>DB</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Contents\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Monster.cpp">
+      <Filter>Contents\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Contents\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Character.cpp">
+      <Filter>Contents\Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,20 +143,11 @@
     <ClInclude Include="Room.h">
       <Filter>Contents</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Contents</Filter>
-    </ClInclude>
     <ClInclude Include="PacketHandler.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Contents</Filter>
-    </ClInclude>
     <ClInclude Include="RWLock.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Monster.h">
-      <Filter>Contents</Filter>
     </ClInclude>
     <ClInclude Include="ProtocolSturct.h">
       <Filter>Protocol</Filter>
@@ -184,6 +181,18 @@
     </ClInclude>
     <ClInclude Include="DatabaseWorker.h">
       <Filter>DB</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Contents\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Contents\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Contents\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Character.h">
+      <Filter>Contents\Object</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

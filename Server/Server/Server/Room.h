@@ -33,13 +33,8 @@ public:
 	{
 		_timer->Reserve(ectime, _jobQueue, shared_from_this(), memFunc, std::forward<Arguments>(args)...);
 	}
-
-	void PlayerEnterRoom(shared_ptr<Player> player);
-	void NpcEnterRoom(shared_ptr<Monster> monster);
-	void LeaveRoom(shared_ptr<Player> player);
-	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
-	void BroadcastAOI(shared_ptr<Player> player, shared_ptr<SendBuffer> sendBuffer);
-
+	void Update(long long elapsedTime);
+	// 공용
 	bool AddObject(shared_ptr<GameObject> object);
 	bool RemoveObject(int objectId);
 	shared_ptr<GameObject> GetGameObject(int objectId) const
@@ -52,46 +47,17 @@ public:
 	}
 	optional<PositionInfo> GetObjectPosition(int objectId) const;
 
-	unordered_set<int> GetViewList(int objectId)
-	{
-		unordered_set<int> candidates = _gameMap.GetObjectIds(objectId);
-		unordered_set<int> newView;
-		for (int id : candidates) { // 최종 시야
-			if (id == objectId) continue;
-
-			if (GetGameObject(id)) {
-				newView.insert(id);
-			}
-			else {
-				cout << "Error[" << id << "] obj" << endl;
-			}
-		}
-		return newView;
-	}
-
-	unordered_set<int> GetNPCViewList(int objectId)
-	{
-		unordered_set<int> candidates = _gameMap.GetObjectIds(objectId);
-		unordered_set<int> newView;
-
-		for (int id : candidates) {
-			if (id == objectId) continue;
-
-			if (Id2Player(id)) {
-				newView.insert(id);
-			}
-		}
-
-		return newView;
-	}
-
-	void Update();
+	// Player
+	void PlayerEnterRoom(shared_ptr<Player> player);	
+	void PlayerLeaveRoom(shared_ptr<Player> player);
 	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
 	void PlayerCMove(shared_ptr<Player> player, PositionInfo position, bool force);
+	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
+	void BroadcastAOI(shared_ptr<Player> player, shared_ptr<SendBuffer> sendBuffer);
+
+	// Npc
+	void NpcEnterRoom(shared_ptr<Monster> monster);
 	void NPCMove(shared_ptr<Monster> monster);
-
-	void NpcAI(shared_ptr<Monster> monster, long long curr_tick);
-
 	int MonsterIdGenerator()
 	{
 		static atomic<int> _midGenerator = 100000;
@@ -100,8 +66,6 @@ public:
 
 	shared_ptr<Player> Id2Player(int pId);
 	shared_ptr<Monster> Id2Monster(int mId);
-
-	PositionInfo RandomPos();
 
 	int NumPlayers() { return static_cast<int>(_players.size()); }
 

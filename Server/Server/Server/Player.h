@@ -1,36 +1,25 @@
 #pragma once
 #include "pch.h"
+#include "Character.h"
 #include "Session.h"
-#include "GameObject.h"
 #include "Room.h"
 
-
-class Player : public GameObject
+class Player : public Character
 {
 public:
-	Player() = default;
+	// Player();
 	Player(shared_ptr<Session> ownerSession);
 	virtual ~Player();
 
-	shared_ptr<Session> GetSession()
-	{
-		//auto s = _ownerSession.lock();
-		//if (s) {
-		//	/*std::cout << "[Warning] Player::GetSession(): session expired!" << std::endl;
-		//	OutputDebugStringA("[Warning] Player::GetSession(): session expired!\n");
-		//	__debugbreak();*/
-		//	return s;
-		//}
-		//else
-		//	return nullptr;
-		return _ownerSession.lock();
-	}
+public:
+	virtual void Update(float deltaTime) override;
+
 	void SetOwnerSession(shared_ptr<Session> session) { _ownerSession = session; }
+	shared_ptr<Session> GetSession() {return _ownerSession.lock();	}
 	
 	
 private:
 	weak_ptr<Session> _ownerSession;
-	
 	
 };
 

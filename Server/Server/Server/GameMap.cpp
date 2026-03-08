@@ -2,7 +2,7 @@
 #include "GameMap.h"
 
 
-CellPos GameMap::GetCellPos(const PositionInfo& pos) const
+CellPos GameMap::ToCellPos(const PositionInfo& pos) const
 {
     int x_index = static_cast<int>((pos.x + MAP_WIDTH / 2.f) / CELL_SIZE);
     int y_index = static_cast<int>((pos.y + MAP_HEIGHT / 2.f) / CELL_SIZE);
@@ -13,44 +13,105 @@ CellPos GameMap::GetCellPos(const PositionInfo& pos) const
 	return { x_index, y_index };
 }
 
-bool GameMap::UpdateObjectPosition(int objectId, const PositionInfo& currPos)
+ViewUpdate GameMap::EnterMap(int objectId, const PositionInfo& pos)
 {
-    CellPos curr_cell = GetCellPos(currPos);
-    auto it = _currentCellIndices.find(objectId);
-    if (it != _currentCellIndices.end()) { 
-        CellPos old_cell = it->second;
+    CellPos cellPos = ToCellPos(pos);
+    _grid[cellPos.y][cellPos.x].objectIds.push_back(objectId);
+    _id2CellPos[objectId] = cellPos;
 
-        if (old_cell == curr_cell) return false;
-
-        _grid[old_cell.y][old_cell.x].objectsIds.erase(objectId);
-        it->second = curr_cell;
+    // 처음 들어왔을 때는 주변 모든 객체가 '추가' 대상임
+    ViewUpdate result;
+    vector<CellPos> neighbors = GetNeighborCells(cellPos);
+    for (const auto& pos : neighbors) {
+        CollectObject(pos, result.entered);
     }
-    else {
-        _currentCellIndices.emplace(objectId, curr_cell);
-    }
-
-    _grid[curr_cell.y][curr_cell.x].objectsIds.insert(objectId);
-
-    return true;
+    return result;
 }
 
-unordered_set<int> GameMap::GetObjectIds(int objectId) const
+ViewUpdate GameMap::UpdateMap(int objectId, const PositionInfo& pos)
 {
-    auto it = _currentCellIndices.find(objectId);
-    if (it == _currentCellIndices.end()) {
-        return {};
-    }
+    CellPos newPos = ToCellPos(pos);
+    CellPos oldPos = _id2CellPos[objectId];
 
-    unordered_set<int> candidate_ids;
-    CellPos cell_pos = it->second;
-    for (int y = cell_pos.y - VIEW_RANGE_CELLS; y <= cell_pos.y + VIEW_RANGE_CELLS; ++y) {
-        for (int x = cell_pos.x - VIEW_RANGE_CELLS; x <= cell_pos.x + VIEW_RANGE_CELLS; ++x) {
-            if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) continue;
-            candidate_ids.insert(_grid[y][x].objectsIds.begin(), _grid[y][x].objectsIds.end());
+    if (newPos == oldPos) return {}; // 같은 셀이면 시야 변화 없음
+
+    auto& oldVec = _grid[oldPos.y][oldPos.x].objectIds;
+    auto it = find(oldVec.begin(), oldVec.end(), objectId);
+    if (it != oldVec.end()) {
+        *it = oldVec.back();
+        oldVec.pop_back();
+    }
+    _grid[newPos.y][newPos.x].objectIds.push_back(objectId);
+    _id2CellPos[objectId] = newPos;
+
+    ViewUpdate result;
+    vector<CellPos> old_view = GetNeighborCells(oldPos);
+    vector<CellPos> new_view = GetNeighborCells(newPos);
+
+    for (const auto& cell : new_view) {
+        
+        if (find(old_view.begin(), old_view.end(), cell) == old_view.end()) {
+            CollectObject(cell, result.entered);
         }
     }
 
-    return candidate_ids;
+    for (const auto& cell : old_view) {
+        if (find(new_view.begin(), new_view.end(), cell) == new_view.end()) {
+            CollectObject(cell, result.leaved);
+        }
+    }
+
+    return result;
+}
+
+ViewUpdate GameMap::LeaveMap(int objectId)
+{
+    auto itLoc = _id2CellPos.find(objectId);
+    if (itLoc == _id2CellPos.end()) return {};
+
+    CellPos lastPos = itLoc->second;
+
+    // 그리드에서 제거
+    auto& vec = _grid[lastPos.y][lastPos.x].objectIds;
+    auto it = find(vec.begin(), vec.end(), objectId);
+    if (it != vec.end()) {
+        *it = vec.back();
+        vec.pop_back();
+    }
+
+    // 나갈 때는 시야에 있던 모든 것이 '삭제' 대상
+    ViewUpdate result;
+    vector<CellPos> surrounding = GetNeighborCells(lastPos);
+    for (const auto& cp : surrounding) {
+        CollectObject(cp, result.leaved);
+    }
+
+    _id2CellPos.erase(itLoc);
+    return result;
+}
+
+
+
+void GameMap::CollectObject(CellPos pos, vector<int>& outList) const
+{
+    const vector<int>& ids = _grid[pos.y][pos.x].objectIds;
+    outList.insert(outList.end(), ids.begin(), ids.end());
+}
+
+vector<CellPos> GameMap::GetNeighborCells(CellPos pos) const
+{
+    vector<CellPos> cells;
+    int cellCount = VIEW_RANGE_CELLS * 2 + 1;
+    cells.reserve(cellCount * cellCount);
+
+    for (int y = pos.y - VIEW_RANGE_CELLS; y <= pos.y + VIEW_RANGE_CELLS; ++y) {
+        for (int x = pos.x - VIEW_RANGE_CELLS; x <= pos.x + VIEW_RANGE_CELLS; ++x) {
+            if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+                cells.push_back({ x, y });
+            }
+        }
+    }
+    return cells;
 }
 
 bool GameMap::OutOfBounds(const PositionInfo& pos) const
@@ -66,41 +127,6 @@ bool GameMap::CanMove(int objectId, const PositionInfo& new_pos) const
     }
 
     return true;
-}
-
-int GameMap::ValidateMove(int objectId, const PositionInfo& new_pos) const
-{
-    shared_ptr<Room> ownerRoom = _ownerRoom.lock();
-    if (!ownerRoom) {
-        return static_cast<int>(MoveResult::Error);
-    }
-
-    if (OutOfBounds(new_pos)) {
-        return static_cast<int>(MoveResult::OutOfBounds);
-    }
-
-    std::pair<int, int> new_tile = GetTilePosition(new_pos);
-    const int new_tile_x = new_tile.first;
-    const int new_tile_y = new_tile.second;
-
-    CellPos new_cell_index = GetCellPos(new_pos);
-    const auto& candidate_ids = _grid[new_cell_index.y][new_cell_index.x].objectsIds;
-
-    for (int target_id : candidate_ids) {
-        if (target_id == objectId) continue;
-
-        if (std::optional<PositionInfo> target_pos = ownerRoom->GetObjectPosition(target_id)) {
-
-            std::pair<int, int> target_tile = GetTilePosition(*target_pos);
-
-            
-            if (target_tile.first == new_tile_x && target_tile.second == new_tile_y) {
-                return target_id; 
-            }
-        }
-    }
-
-    return static_cast<int>(MoveResult::Validate);
 }
 
 

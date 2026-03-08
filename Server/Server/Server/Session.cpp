@@ -61,7 +61,7 @@ void Session::Disconnect(const WCHAR* cause)
 		return;
 	
 	
-	_currPlayer->GetCurrentRoom()->PushJob(&Room::LeaveRoom, _currPlayer);
+	_currPlayer->GetCurrentRoom()->PushJob(&Room::PlayerLeaveRoom, _currPlayer);
 	GetService()->ReleaseSession(static_pointer_cast<Session>(shared_from_this()));
 	
 	wcout << "DisConnect :" << cause << endl;

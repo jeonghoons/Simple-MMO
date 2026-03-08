@@ -1,21 +1,41 @@
 #pragma once
 #include "pch.h"
-#include "GameObject.h"
+#include "Character.h"
 
-enum CoolDown : long long
+class Player;
+
+enum class MonsterState
 {
-	Cool_Move = 1000,
+	NONE,   
+	PATROL,
+	TRACE,  
+	ATTACK  
 };
 
-class Monster : public GameObject
+class Monster : public Character
 {
 public:
-	Monster() = default;
-	virtual ~Monster() = default;
+	Monster();
+	virtual ~Monster();
 
+public:
+	virtual void Update(float deltaTime) override;
+
+	// FSM
+	void UpdateAI();
+	void ChangeState(MonsterState newState);
+
+	void UpdateNone();
+	void UpdatePatrol();
+	void UpdateTrace();
+	void UpdateAttack();
 	
 public:
-	long long			_nextMoveTime{};
+	MonsterState _monsterState = MonsterState::NONE;
 	atomic<bool>			_wakeUp = false;
+	std::chrono::steady_clock::time_point _nextDecisionTick;
+	weak_ptr<Player>	_targetPlayer;
+	float _traceRange = 500.f;
+	float _attackRange = 100.f;
 };
 

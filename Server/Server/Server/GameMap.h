@@ -7,9 +7,14 @@ constexpr int GRID_WIDTH = static_cast<int>(MAP_WIDTH / CELL_SIZE);
 constexpr int GRID_HEIGHT = static_cast<int>(MAP_HEIGHT / CELL_SIZE);
 const int VIEW_RANGE_CELLS = 1;
 
+struct ViewUpdate {
+    vector<int> entered;   // 새로 시야에 들어온 객체들
+    vector<int> leaved; // 시야에서 사라진 객체들
+};
+
 struct Cell
 {
-	unordered_set<int> objectsIds;
+    vector<int> objectIds;
 };
 
 struct CellPos {
@@ -17,13 +22,6 @@ struct CellPos {
 
     bool operator==(const CellPos& other) const { return x == other.x && y == other.y; }
     bool operator!=(const CellPos& other) const { return !(*this == other); }
-};
-
-enum MoveResult
-{
-    Validate = -1, // ok
-    OutOfBounds = -2, // stay
-    Error = -3, // error
 };
 
 class Room;
@@ -35,12 +33,15 @@ public:
     void Init(weak_ptr<Room> room) { _ownerRoom = room; }
 
 public:
-    CellPos GetCellPos(const PositionInfo& pos) const;
-    bool UpdateObjectPosition(int objectId, const PositionInfo& currPos);
-    unordered_set<int> GetObjectIds(int objectId) const;
+    CellPos ToCellPos(const PositionInfo& pos) const;
+    
+    ViewUpdate EnterMap(int objectId, const PositionInfo& pos);
+    ViewUpdate UpdateMap(int objectId, const PositionInfo& pos);
+    ViewUpdate LeaveMap(int objectId);
 
+    void CollectObject(CellPos pos, vector<int>& outList) const;
+    vector<CellPos> GetNeighborCells(CellPos pos) const;
 
-    int ValidateMove(int objectId, const PositionInfo& new_pos) const;
     bool OutOfBounds(const PositionInfo& pos) const;
     bool CanMove(int objectId, const PositionInfo& new_pos) const;    
 
@@ -50,6 +51,6 @@ private:
 private:
     weak_ptr<Room>             _ownerRoom;    
     vector<vector<Cell>>        _grid;
-    unordered_map<int, CellPos>  _currentCellIndices;
+    unordered_map<int, CellPos>  _id2CellPos;
 };
 

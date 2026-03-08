@@ -29,6 +29,10 @@ using namespace std;
 #include <sql.h>
 #include <sqlext.h>
 
+#include <DirectXMath.h>
+
+using namespace DirectX;
+
 extern thread_local unsigned int Lthreadid;
 
 #include "TestProtocol.h"
