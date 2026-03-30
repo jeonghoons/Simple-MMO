@@ -13,9 +13,11 @@ Monster::~Monster()
 
 void Monster::Update(float deltaTime)
 {
+	Character::Update(deltaTime);
 	auto now = std::chrono::steady_clock::now();
 	if (now < _nextDecisionTick)
 		return;
+
 	_nextDecisionTick = now + std::chrono::milliseconds(100);
 
 	bool hasView = !_viewList.empty();
@@ -29,7 +31,7 @@ void Monster::Update(float deltaTime)
 		UpdateAI();
 	}
 
-	Character::Update(deltaTime);
+	
 }
 
 void Monster::UpdateAI()
@@ -48,10 +50,16 @@ void Monster::ChangeState(MonsterState newState)
 	if (_monsterState == newState) return;
 	_monsterState = newState;
 
-	if (_monsterState != MonsterState::TRACE)
+	if (_monsterState != MonsterState::TRACE && _monsterState != MonsterState::PATROL)
 	{
-		_objectInfo.position.inputX = 0.f;
-		_objectInfo.position.inputY = 0.f;
+		_currentSpeed = 0.0f;
+		_velocity = { 0.f, 0.f, 0.f };
+		_moveDir = { 0.f, 0.f, 0.f };
+
+		_objectInfo.position.v_x = 0.f;
+		_objectInfo.position.v_y = 0.f;
+		_objectInfo.position.v_z = 0.f;
+		_objectInfo.position.state = Move_State::IDLE;
 	}
 }
 
@@ -120,22 +128,8 @@ void Monster::UpdateTrace()
 		return;
 	}
 
-	// 2. 추격 포기 거리 체크 (1.5배 마진 적용)
-	/*float giveUpDistSq = (_traceRange * 1.5f) * (_traceRange * 1.5f);
-	if (distSq > giveUpDistSq)
-	{
-		_targetPlayer.reset();
-		ChangeState(MonsterState::PATROL);
-		return;
-	}*/
-
-	// 3. 이동 입력 설정 (여기서만 정규화를 위해 sqrt 1회 수행)
-	float dist = sqrtf(distSq);
-	if (dist > 0.0001f)
-	{
-		_objectInfo.position.inputX = diffX / dist;
-		_objectInfo.position.inputY = diffY / dist;
-	}
+	XMFLOAT3 targetPos = { target->GetPosition().x, target->GetPosition().y, target->GetPosition().z };
+	Move(targetPos);
 }
 
 void Monster::UpdateAttack()

@@ -17,7 +17,8 @@ enum CS_PACKET_LIST : unsigned char
 {
 	CS_LOGIN, CS_SIGNUP, CS_LOGOUT,
 	CS_CHAT,
-	CS_MOVE, CS_CMOVE
+	CS_MOVE, CS_CMOVE,
+	CS_ENTER_ROOM, CS_LEAVE_ROOM
 };
 
 #pragma pack(push, 1)
@@ -34,13 +35,14 @@ enum Move_State : unsigned char
 
 struct PositionInfo
 {
-	float x{};
-	float y{};
-	float z{};
-	float yaw{};
-	Move_State state = Move_State::NONE;
-	float inputX; // аб©Л
-	float inputY; // ╬у╣з
+	float x;
+	float y;
+	float z;
+	float yaw;
+	float v_x;
+	float v_y;
+	float v_z;
+	Move_State state;	
 };
 
 struct ObjectInfo

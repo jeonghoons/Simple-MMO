@@ -17,7 +17,7 @@ public:
 
    
     void SendLoginPacket(); 
-    void SendMovePacket(int direction);
+    void SendMovePacket(const PositionInfo& posInfo);
 
 private:
 	int process_data(BYTE* net_buf, int io_byte);

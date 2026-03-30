@@ -24,15 +24,19 @@ struct CS_CHAT_PACKET {
 	char message[1024];
 };
 
+struct CS_ENTER_ROOM_PACKET {
+	PacketHeader header;
+};
+
 struct CS_MOVE_PACKET {
 	PacketHeader header;
-	int			direction; // 0 : UP, 1 : DOWN, 2 : LEFT, 3 : RIGHT
-	unsigned	move_time;
+	PositionInfo posInfo;
+	bool force = false;
 };
 
 struct CS_CMOVE_PACKET {
 	PacketHeader header;
-	PositionInfo pos;
+	PositionInfo posInfo;
 	bool force = false;
 };
 
@@ -64,7 +68,7 @@ struct SC_CHAT_PACKET {
 
 struct SC_MOVE_PACKET {
 	PacketHeader header;
-	ObjectInfo	objectInfo;
+	ObjectInfo objectInfo;
 	unsigned int move_time;
 };
 

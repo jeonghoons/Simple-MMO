@@ -227,7 +227,7 @@ void Session::ProcessSend(int numOfBytes)
 
 void Session::ProcessDBEvent()
 {
-	GRoomManager->EnterPlayer(static_pointer_cast<Session>(shared_from_this()));
+	// GRoomManager->EnterPlayer(static_pointer_cast<Session>(shared_from_this()));
 }
 
 

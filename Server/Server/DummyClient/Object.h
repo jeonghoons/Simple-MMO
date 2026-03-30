@@ -14,10 +14,12 @@ public:
 	void draw();
 	
 	std::pair<int, int> GetPosition() { return { m_x, m_y }; }
+	PositionInfo& GetPositionInfo() { return _pos; }
 
 	void set_name(const char str[]);
 	int GetId() const { return _id; }
 	void SetId(int id) { _id = id; }
+	void SetPositionInfo(PositionInfo& pos) { _pos = pos; }
 
 private:
 	sf::Sprite m_sprite;
@@ -27,8 +29,9 @@ private:
 	std::chrono::system_clock::time_point m_mess_end_time;
 
 	int		_id = 0;
-	int m_x = 0;
-	int m_y = 0;
+	float m_x = 0.f;
+	float m_y = 0.f;
+	PositionInfo _pos;
 	char name[20];
 };
 

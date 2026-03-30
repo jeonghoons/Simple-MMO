@@ -49,17 +49,15 @@ public:
 public:
 	virtual void Update(float deltaTime) override;
 
-	void  SetMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
-	void  SetAcceleration(float accel) { _acceleration = accel; }
-
+	void SetMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
 	float GetCurrentSpeed() const { return _currentSpeed; }
 	XMFLOAT3 GetVelocity() const { return _velocity; }
 
-protected:
-	// 입력 방향 분석 및 속도 계산
-	virtual void UpdateMovement(float deltaTime);
-	// 계산된 속도를 좌표에 적용
-	virtual void ApplyMovement(float deltaTime);
+	void Move(PositionInfo& posInfo);
+	void Move(const XMFLOAT3& desPos);
+
+private:
+	void UpdateMovement(float deltaTime);
 
 protected:
 	XMFLOAT3 _velocity = { 0.f, 0.f, 0.f }; // 현재 속도 벡터
@@ -67,7 +65,6 @@ protected:
 
 	float _currentSpeed = 0.0f;    // 현재 속력
 	float _maxSpeed = 500.0f;        // 최대 도달 속력
-	float _acceleration = 2048.0f;   // 초당 속도 증가량
-
+	
 	chrono::steady_clock::time_point _lastMoveTimePoint;
 };

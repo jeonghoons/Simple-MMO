@@ -2,7 +2,6 @@
 #include "Room.h"
 #include "Session.h"
 #include "PacketHandler.h"
-#include "PacketSerializer.h"
 #include "Player.h"
 #include "Monster.h"
 
@@ -13,7 +12,7 @@ void Room::InitRoom()
 	for (int i = 0; i < NUM_MONSTER; ++i) {
 		shared_ptr<Monster> monster = make_shared<Monster>();
 		monster->SetId(MonsterIdGenerator());
-		NpcEnterRoom(monster);
+		// NpcEnterRoom(monster);
 	}
 	_gameMap.Init(weak_from_this());
 	long long currentTick = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
@@ -32,9 +31,6 @@ void Room::Update(long long elapsedTime)
 	for (const auto& object : _objects) {
 		object.second->Update(dt);
 	}
-
-
-
 }
 
 bool Room::AddObject(shared_ptr<GameObject> object)
@@ -47,8 +43,10 @@ bool Room::AddObject(shared_ptr<GameObject> object)
 		return false;
 	}
 	object->SetOwnerRoom(shared_from_this());
-	object->SetPosition({ Utils::GetRandom(0.f, MAP_WIDTH / 2.f),
-		Utils::GetRandom(0.f, MAP_WIDTH / 2.f), 500.f, 0.f });
+	/*object->SetPosition({ Utils::GetRandom(0.f, MAP_WIDTH / 2.f),
+		Utils::GetRandom(0.f, MAP_WIDTH / 2.f), 500.f, 0.f });*/
+	object->SetPosition({ 31350.0,
+		15010.0, 300.f, 0.f });
 
 	return true;
 }
@@ -64,17 +62,7 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 		return;
 	}
 	_players.emplace(player->GetId(), player);
-
-	SC_LOGIN_INFO_PACKET logInPacket;
-	logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
-	logInPacket.objectInfo = player->GetInfo();
-	shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
-	loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
-
-	if (auto session = player->GetSession()) {
-		session->Send(loginInfoBuffer);
-	}
-
+	
 	cout << "Client[" << player->GetId() << "] Enter Room" << endl;
 
 	shared_ptr<SendBuffer> objectAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
@@ -148,111 +136,13 @@ void Room::PlayerLeaveRoom(shared_ptr<Player> player)
 
 }
 
-void Room::PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time)
+void Room::PlayerMove(shared_ptr<Player> player, PositionInfo position, bool force)
 {
 	if (nullptr == Id2Player(player->GetId()))
 		return;
 
-	PositionInfo pos = player->GetPosition();
-	PositionInfo new_pos{};
-
-	switch (direction)
-	{
-	case 2: // left
-		// new_pos.x -= 1;
-		new_pos.inputX = -1.f;
-		break;
-	case 3: // right
-		// new_pos.x += 1;
-		new_pos.inputX = 1.f;
-		break;
-	case 0: // up
-		// new_pos.y -= 1;
-		new_pos.inputY = -1.f;
-		break;
-	case 1: // down
-		// new_pos.y += 1;
-		new_pos.inputY = 1.f;
-		break;
-	default:
-		cout << "Move Error" << endl;
-		return;
-	}
-
-	// player->_last_moveTime = move_time;
-	player->SetPosition(new_pos);
-	shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
-	if (shared_ptr<Session> player_session = player->GetSession()) {
-		player_session->Send(playerMoveBuffer);
-	}
-	ViewUpdate result = _gameMap.UpdateMap(player->GetId(), new_pos);
-
-	shared_ptr<SendBuffer> playerRemoveBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(player->GetId());
-	for (const int target_id : result.leaved) {
-		if (target_id == player->GetId()) continue;
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-
-		player->RemoveView(target_id);
-		ObjectInfo::Object_Type target_type = target_obj->GetType();
-		if (target_type == ObjectInfo::Player || target_type == ObjectInfo::Monster) {
-			shared_ptr<Character> target_char = static_pointer_cast<Character>(target_obj);
-			target_char->RemoveView(player->GetId());
-			if (shared_ptr<Session> player_session = player->GetSession()) {
-				player_session->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(target_id));
-			}
-
-			if (target_type == ObjectInfo::Player) {
-				shared_ptr<Player> target_player = static_pointer_cast<Player>(target_char);
-				if (shared_ptr<Session> target_session = target_player->GetSession()) {
-					target_session->Send(playerRemoveBuffer);
-				}
-				
-			}
-		}
-	}
-
-	shared_ptr<SendBuffer> playerAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
-	for (const int target_id : result.entered) {
-		if (target_id == player->GetId()) continue;
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-
-		player->_viewList.push_back(target_id);
-		ObjectInfo::Object_Type target_type = target_obj->GetType();
-		if (target_type == ObjectInfo::Player || target_type == ObjectInfo::Monster) {
-			shared_ptr<Character> target_char = static_pointer_cast<Character>(target_obj);
-			target_char->_viewList.push_back(player->GetId());
-			if (shared_ptr<Session> player_session = player->GetSession()) {
-				player_session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_obj));
-			}
-
-			if (target_type == ObjectInfo::Player) {
-				shared_ptr<Player> target_player = static_pointer_cast<Player>(target_char);
-				if (shared_ptr<Session> target_session = target_player->GetSession()) {
-					target_session->Send(playerAddBuffer);
-				}
-				
-			}
-		}
-	}
-
-	for (const int id : player->_viewList) {
-		shared_ptr<Player> target_player = Id2Player(id);
-		if (!target_player) continue;
-		if (shared_ptr<Session> target_session = target_player->GetSession()) {
-			target_session->Send(playerMoveBuffer);
-		}
-	}
-
-}
-
-void Room::PlayerCMove(shared_ptr<Player> player, PositionInfo position, bool force)
-{
-	if (nullptr == Id2Player(player->GetId()))
-		return;
-
-	player->SetPosition(position);
+	// player->SetPosition(position);
+	player->Move(position);
 
 	shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
 	if (shared_ptr<Session> player_session = player->GetSession()) {
@@ -429,13 +319,10 @@ void RoomManager::Remove(shared_ptr<Room> room)
 	return;
 }
 
-void RoomManager::EnterPlayer(shared_ptr<Session> session)
+void RoomManager::EnterPlayer(shared_ptr<Player> player)
 {
 	RWLock::WriteGuard lock(_lock);
-	int playerId = session->GetId();
-	shared_ptr<Player> player = make_shared<Player>(session);
-	player->SetId(playerId);
-	session->_currPlayer = player;
+	
 
 	for (auto& [id, room] : _rooms) {
 		if (room->NumPlayers() < MAX_ROOM_CAPACITY) {

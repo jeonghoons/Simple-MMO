@@ -12,7 +12,19 @@ void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET
 	/*string id = packet->accountID;
 	string pw = packet->accountPW;
 	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);*/
-	GRoomManager->EnterPlayer(session);
+
+	int playerId = session->GetId();
+	shared_ptr<Player> player = make_shared<Player>(session);
+	player->SetId(playerId);
+	session->_currPlayer = player;
+
+	SC_LOGIN_INFO_PACKET logInPacket;
+	logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
+	logInPacket.objectInfo = player->GetInfo();
+	shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
+	loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
+
+	session->Send(loginInfoBuffer);
 }
 
 void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACKET* packet)
@@ -42,17 +54,24 @@ void PacketHandler::Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* 
 void PacketHandler::Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* packet)
 {
 	if (auto room = session->_currPlayer->GetCurrentRoom())
-		room->PushJob(&Room::PlayerMove, session->_currPlayer, packet->direction, packet->move_time);
+		room->PushJob(&Room::PlayerMove, session->_currPlayer, packet->posInfo, packet->force);
 
 }
 
 void PacketHandler::Handle_CS_CMOVE(shared_ptr<Session> session, CS_CMOVE_PACKET* packet)
 {
 
-	if (auto room = session->_currPlayer->GetCurrentRoom())
+	/*if (auto room = session->_currPlayer->GetCurrentRoom())
 		room->PushJob(&Room::PlayerCMove, session->_currPlayer, packet->pos, packet->force);
-	
+	*/
 
+}
+
+void PacketHandler::Handle_CS_ENTER_ROOM(shared_ptr<Session> session, CS_ENTER_ROOM_PACKET* packet)
+{
+	
+	shared_ptr<Player> player = session->_currPlayer;
+	GRoomManager->EnterPlayer(player);
 }
 
 
@@ -77,6 +96,9 @@ void PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int
 		break;
 	case CS_PACKET_LIST::CS_CMOVE:
 		Handle_CS_CMOVE(session, reinterpret_cast<CS_CMOVE_PACKET*>(buffer));
+		break;
+	case CS_PACKET_LIST::CS_ENTER_ROOM:
+		Handle_CS_ENTER_ROOM(session, reinterpret_cast<CS_ENTER_ROOM_PACKET*>(buffer));
 		break;
 
 	case CS_PACKET_LIST::CS_LOGOUT:

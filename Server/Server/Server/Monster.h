@@ -37,5 +37,7 @@ public:
 	weak_ptr<Player>	_targetPlayer;
 	float _traceRange = 500.f;
 	float _attackRange = 100.f;
+
+	XMFLOAT3 _nextPos;
 };
 

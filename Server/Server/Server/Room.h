@@ -50,8 +50,7 @@ public:
 	// Player
 	void PlayerEnterRoom(shared_ptr<Player> player);	
 	void PlayerLeaveRoom(shared_ptr<Player> player);
-	void PlayerMove(shared_ptr<Player> player, int direction, unsigned move_time);
-	void PlayerCMove(shared_ptr<Player> player, PositionInfo position, bool force);
+	void PlayerMove(shared_ptr<Player> player, PositionInfo position, bool force);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
 	void BroadcastAOI(shared_ptr<Player> player, shared_ptr<SendBuffer> sendBuffer);
 
@@ -93,7 +92,6 @@ public:
 	void Remove(shared_ptr<Room> room);
 
 	void EnterPlayer(shared_ptr<Player> player);
-	void EnterPlayer(shared_ptr<Session> session);
 
 	int IdGenerator();
 

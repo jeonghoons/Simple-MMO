@@ -103,29 +103,30 @@ void GameClient::Render()
 
 void GameClient::HandleInput(const sf::Event& event, NetworkManager& network)
 {
-    if (event.type == sf::Event::KeyPressed) {
-        int direction = -1;
-       
+    if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased) {
+        bool isPressed = (event.type == sf::Event::KeyPressed);
+        static bool up = false, down = false, left = false, right = false;
         switch (event.key.code) {
-
-        case sf::Keyboard::Left:
-            direction = 2;
-            break;
-        case sf::Keyboard::Right:
-            direction = 3;
-            break;
-        case sf::Keyboard::Up:
-            direction = 0;
-            break;
-        case sf::Keyboard::Down:
-            direction = 1;
-            break;
-
+        case sf::Keyboard::Up:    up = isPressed;    break;
+        case sf::Keyboard::Down:  down = isPressed;  break;
+        case sf::Keyboard::Left:  left = isPressed;  break;
+        case sf::Keyboard::Right: right = isPressed; break;
+        default: return;
         }
 
+        PositionInfo& pos = myPlayer.GetPositionInfo();
+        float inputX = 0.f;
+        float inputY = 0.f;
 
-        if (-1 != direction) {
-            network.SendMovePacket(direction);
-        }
+        if (left)  inputX -= 1.f;
+        if (right) inputX += 1.f;
+        if (up)    inputY -= 1.f; // 좌표계에 따라 -1.f 일 수도 있음
+        if (down)  inputY += 1.f;
+
+        pos.inputX = inputX;
+        pos.inputY = inputY;
+
+        network.SendMovePacket(pos);
     }
+    
 }

@@ -115,11 +115,9 @@ void NetworkManager::ProcessPacket(BYTE* net_buf, int io_byte)
 
         g_myid = packet->objectInfo.id;
         myPlayer.SetId(g_myid);
-        int posX = (int)packet->objectInfo.position.x;
-        int posY = (int)packet->objectInfo.position.y;
-        myPlayer.SetPosition(posX, posY);
-        g_left_x = posX - SCREEN_WIDTH / 2;
-        g_top_y = posY - SCREEN_HEIGHT / 2;
+        CS_ENTER_ROOM_PACKET enterPacket;
+        enterPacket.header = { sizeof(enterPacket), CS_ENTER_ROOM };
+        Send_packet(&enterPacket);
     }break;
     case SC_PACKET_LIST::SC_ADD_OBJECT:
     {
@@ -127,21 +125,26 @@ void NetworkManager::ProcessPacket(BYTE* net_buf, int io_byte)
 
         SC_ADD_OBJECT_PACKET* packet = reinterpret_cast<SC_ADD_OBJECT_PACKET*>(net_buf);
         int id = packet->objectInfo.id;
-        int posX = (int)packet->objectInfo.position.x;
-        int posY = (int)packet->objectInfo.position.y;
+        int posX = (int)packet->objectInfo.position.x / 10.f;
+        int posY = (int)packet->objectInfo.position.y / 10.f;
+
+        PositionInfo posInfo = packet->objectInfo.position;
+        posInfo.x /= 10.f;
+        posInfo.y /= 10.f;
 
         if (id == g_myid) { // 자신
-            myPlayer.SetPosition(posX, posY);
-            g_left_x = posX - SCREEN_WIDTH / 2;
-            g_top_y = posY - SCREEN_HEIGHT / 2;
+            myPlayer.SetPosition((int)posInfo.x, (int)posInfo.y);
+            myPlayer.SetPositionInfo(posInfo);
+            g_left_x = (int)posInfo.x - SCREEN_WIDTH / 2;
+            g_top_y = (int)posInfo.y - SCREEN_HEIGHT / 2;
         }
         else if (id >= 100000) { // 몬스터
             players[id] = Object{ *pieces, 32, 0, TILE_WIDTH, TILE_WIDTH};
-            players[id].SetPosition(posX, posY);
+            players[id].SetPosition((int)posInfo.x, (int)posInfo.y);
         }
         else { // 다른 클라이언트
             players[id] = Object{ *pieces, 64, 0, TILE_WIDTH, TILE_WIDTH };
-            players[id].SetPosition(posX, posY);
+            players[id].SetPosition((int)posInfo.x, (int)posInfo.y);
         }
     } break;
     case SC_PACKET_LIST::SC_REMOVE_OBJECT:
@@ -191,13 +194,12 @@ void NetworkManager::SendLoginPacket()
     Send_packet(&p);
 }
 
-void NetworkManager::SendMovePacket(int direction)
+void NetworkManager::SendMovePacket(const PositionInfo& posInfo)
 {
-    CS_MOVE_PACKET p;
+    CS_CMOVE_PACKET p;
     p.header.size = sizeof(p);
-    p.header.type = CS_PACKET_LIST::CS_MOVE; // 클라이언트가 서버로 요청하는 패킷 타입
-    p.direction = direction;
-    // 일반 송신 함수 호출
+    p.header.type = CS_PACKET_LIST::CS_CMOVE; // 클라이언트가 서버로 요청하는 패킷 타입
+    // p.pos = posInfo;
     Send_packet(&p);
 }
 

@@ -1,8 +1,8 @@
 #pragma once
 
-constexpr float MAP_WIDTH = 50.0f;
-constexpr float MAP_HEIGHT = 50.0f;
-constexpr int CELL_SIZE = 5;
+constexpr float MAP_WIDTH = 30000.0f;
+constexpr float MAP_HEIGHT = 30000.0f;
+constexpr int CELL_SIZE = 30000;
 constexpr int GRID_WIDTH = static_cast<int>(MAP_WIDTH / CELL_SIZE);
 constexpr int GRID_HEIGHT = static_cast<int>(MAP_HEIGHT / CELL_SIZE);
 const int VIEW_RANGE_CELLS = 1;

@@ -40,6 +40,7 @@ extern thread_local unsigned int Lthreadid;
 #include "Room.h"
 #include "Timer.h"
 #include "DatabaseWorker.h"
+#include "PacketSerializer.h"
 #include "Utils.h"
 
 extern unique_ptr<RoomManager> GRoomManager;
