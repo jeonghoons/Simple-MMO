@@ -25,6 +25,12 @@
     <Filter Include="Contents\Object">
       <UniqueIdentifier>{8c405df8-df17-40f0-9711-17b90f051d62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Contents\NavMesh">
+      <UniqueIdentifier>{30bcd13b-1d13-49a7-9da8-c47220cb164d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contents\NavMesh\Detour">
+      <UniqueIdentifier>{a47e2002-c3b8-4402-a797-8e59d069791f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -107,6 +113,30 @@
     </ClCompile>
     <ClCompile Include="Character.cpp">
       <Filter>Contents\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="NavmeshManager.cpp">
+      <Filter>Contents\NavMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourAlloc.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourAssert.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourCommon.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourNavMesh.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourNavMeshBuilder.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourNavMeshQuery.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Detour\Source\DetourNode.cpp">
+      <Filter>Contents\NavMesh\Detour</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +223,9 @@
     </ClInclude>
     <ClInclude Include="Character.h">
       <Filter>Contents\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="NavmeshManager.h">
+      <Filter>Contents\NavMesh</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

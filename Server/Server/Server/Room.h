@@ -14,10 +14,9 @@ class Monster;
 class Room : public enable_shared_from_this<Room>
 {
 public:
-	Room() = default;
-	Room(shared_ptr<Timer> timer, HANDLE iocpHandle) : _timer(timer), _jobQueue(make_shared<JobQueue>(iocpHandle)) {}
+	Room(shared_ptr<Timer> timer, HANDLE iocpHandle);
 
-	~Room() = default;
+	~Room();
 
 	void InitRoom();
 
@@ -52,7 +51,7 @@ public:
 	void PlayerLeaveRoom(shared_ptr<Player> player);
 	void PlayerMove(shared_ptr<Player> player, PositionInfo position, bool force);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
-	void BroadcastAOI(shared_ptr<Player> player, shared_ptr<SendBuffer> sendBuffer);
+	void BroadcastAOI(shared_ptr<class Character> viewableObj, shared_ptr<SendBuffer> sendBuffer);
 
 	// Npc
 	void NpcEnterRoom(shared_ptr<Monster> monster);
@@ -62,7 +61,7 @@ public:
 		static atomic<int> _midGenerator = 100000;
 		return ++_midGenerator;
 	}
-
+	NavmeshManager* GetNavManager() { return _gameMap.GetNavManager(); }
 	shared_ptr<Player> Id2Player(int pId);
 	shared_ptr<Monster> Id2Monster(int mId);
 
@@ -79,7 +78,6 @@ private:
 	shared_ptr<JobQueue> _jobQueue;
 
 	shared_ptr<Timer>		_timer;
-	
 };
 
 class RoomManager

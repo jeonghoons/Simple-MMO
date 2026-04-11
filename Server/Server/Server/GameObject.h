@@ -6,7 +6,7 @@ class GameObject : public enable_shared_from_this<GameObject>
 {
 public:
 	GameObject() = default;
-	GameObject(ObjectInfo::Object_Type type);
+	GameObject(Object_Type objectType);
 	virtual ~GameObject(){ _ownerRoom.reset(); }
 
 public:
@@ -19,7 +19,7 @@ public:
 	const PositionInfo& GetPosition() const { return _objectInfo.position; }
 	void SetPosition(const PositionInfo& pos) { _objectInfo.position = pos; }
 
-	ObjectInfo::Object_Type GetType() const { return _objectInfo.type; }
+	Object_Type GetType() const { return _objectInfo.objectType; }
 	ObjectInfo& GetInfo() { return _objectInfo; }
 	const ObjectInfo& GetInfo() const { return _objectInfo; }
 	void SetInfo(const ObjectInfo& info) { _objectInfo = info; }
@@ -36,14 +36,14 @@ protected:
 class StaticObject : public GameObject
 {
 public:
-	StaticObject(ObjectInfo::Object_Type type) : GameObject(type) {}
+	StaticObject(Object_Type objectType) : GameObject(objectType) {}
 	virtual ~StaticObject() = default;
 };
 
 class MovableObject : public GameObject
 {
 public:
-	MovableObject(ObjectInfo::Object_Type type);
+	MovableObject(Object_Type objectType);
 	virtual ~MovableObject() = default;
 
 public:
@@ -57,7 +57,7 @@ public:
 	void Move(const XMFLOAT3& desPos);
 
 private:
-	void UpdateMovement(float deltaTime);
+	void ApplyMovement(float deltaTime);
 
 protected:
 	XMFLOAT3 _velocity = { 0.f, 0.f, 0.f }; // 현재 속도 벡터

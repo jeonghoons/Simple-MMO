@@ -3,9 +3,9 @@
 int main()
 {
 	RecastNavMesh navMesh;
-	std::string binPath = "C:/Users/user/Desktop/UnrealProjectss/SimpleUCl/Export/VillageMap.bin";
+	std::string binPath = "C:/Users/user/Desktop/UnrealProjectss/SimpleUCl/Export/ParagonSample/Geometry/ParagonSample_Geo.bin";
 
-	std::string navPath = "../VillageMap.nav";
+	std::string navPath = "../ParagonSample_Geo.nav";
 	if (navMesh.Build(binPath)) {
 		std::cout << "\n=== NavMesh ºôµå ¼º°ø! ===" << std::endl;
 

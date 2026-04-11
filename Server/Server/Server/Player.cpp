@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "Player.h"
 
-Player::Player(shared_ptr<Session> ownerSession) : Character(ObjectInfo::Object_Type::Player), _ownerSession(ownerSession)
+Player::Player(shared_ptr<Session> ownerSession) : Character(Object_Type::Player), _ownerSession(ownerSession)
 {
-	
+	_objectInfo.playerType = PlayerType::Gideon;
 }
 
 Player::~Player()

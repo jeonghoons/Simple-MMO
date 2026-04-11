@@ -1,10 +1,6 @@
 #pragma once
-
-constexpr float MAP_WIDTH = 30000.0f;
-constexpr float MAP_HEIGHT = 30000.0f;
-constexpr int CELL_SIZE = 30000;
-constexpr int GRID_WIDTH = static_cast<int>(MAP_WIDTH / CELL_SIZE);
-constexpr int GRID_HEIGHT = static_cast<int>(MAP_HEIGHT / CELL_SIZE);
+#include "NavmeshManager.h"
+constexpr int CELL_SIZE = 500.f;
 const int VIEW_RANGE_CELLS = 1;
 
 struct ViewUpdate {
@@ -23,34 +19,54 @@ struct CellPos {
     bool operator==(const CellPos& other) const { return x == other.x && y == other.y; }
     bool operator!=(const CellPos& other) const { return !(*this == other); }
 };
-
+struct ServerSpawnPoint
+{
+    int32_t PointID;
+    float X;
+    float Y;
+    float Z;
+    float Yaw;
+};
 class Room;
 
 class GameMap
 {
 public:
-    GameMap() : _grid(GRID_HEIGHT, vector<Cell>(GRID_WIDTH)) {}
+    GameMap() = default;
+    ~GameMap() = default;
     void Init(weak_ptr<Room> room) { _ownerRoom = room; }
 
-public:
-    CellPos ToCellPos(const PositionInfo& pos) const;
-    
+public:    
     ViewUpdate EnterMap(int objectId, const PositionInfo& pos);
     ViewUpdate UpdateMap(int objectId, const PositionInfo& pos);
     ViewUpdate LeaveMap(int objectId);
 
-    void CollectObject(CellPos pos, vector<int>& outList) const;
-    vector<CellPos> GetNeighborCells(CellPos pos) const;
+    bool LoadMapData(const string& fileName);
+    const vector<ServerSpawnPoint>& GetSpawnPoints() const { return _spawnPoints; }
+    std::optional<ServerSpawnPoint> GetSpawnPoint(int index) const;
+    bool CanMove(const PositionInfo& from, const PositionInfo& to) const;
+    bool IsOutOfBounds(const PositionInfo& pos) const;
 
-    bool OutOfBounds(const PositionInfo& pos) const;
-    bool CanMove(int objectId, const PositionInfo& new_pos) const;    
+    NavmeshManager* GetNavManager() { return _navManager.get(); }
 
 private:
-    pair<int, int> GetTilePosition(const PositionInfo& pos) const;
+    CellPos ToCellPos(const PositionInfo& pos) const;
+    void CollectObject(CellPos pos, vector<int>& outList) const;
+    vector<CellPos> GetNeighborCells(CellPos pos) const;
 
 private:
     weak_ptr<Room>             _ownerRoom;    
     vector<vector<Cell>>        _grid;
     unordered_map<int, CellPos>  _id2CellPos;
+
+    float _minX = 0.f;
+    float _maxX = 0.f;
+    float _minY = 0.f;
+    float _maxY = 0.f;
+    int _gridWidth = 0;
+    int _gridHeight = 0;
+
+    vector<ServerSpawnPoint> _spawnPoints;
+    unique_ptr<NavmeshManager> _navManager;
 };
 

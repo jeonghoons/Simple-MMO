@@ -4,7 +4,7 @@
 class Character : public MovableObject
 {
 public:
-	Character(ObjectInfo::Object_Type type) : MovableObject(type) {}
+	Character(Object_Type type) : MovableObject(type) {}
 	virtual ~Character() = default;
 
 public:

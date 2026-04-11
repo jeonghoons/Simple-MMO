@@ -21,16 +21,27 @@ enum CS_PACKET_LIST : unsigned char
 	CS_ENTER_ROOM, CS_LEAVE_ROOM
 };
 
+enum class Move_State
+{
+	NONE, IDLE, RUN, JUMP
+};
+
+enum class Object_Type
+{
+	NONE, Player, Monster, Npc, Item, ENVIRONMENT
+};
+
+enum class PlayerType
+{
+	None,
+	Gideon, Sparrow, Monster
+};
+
 #pragma pack(push, 1)
 struct PacketHeader
 {
 	unsigned short size{};
 	unsigned short type{};
-};
-
-enum Move_State : unsigned char
-{
-	NONE, IDLE, RUN, JUMP
 };
 
 struct PositionInfo
@@ -42,18 +53,14 @@ struct PositionInfo
 	float v_x;
 	float v_y;
 	float v_z;
-	Move_State state;	
+	Move_State state;
 };
 
 struct ObjectInfo
 {
-	enum Object_Type : unsigned char
-	{
-		NONE, Player, Monster, Npc, Item, ENVIRONMENT
-	};
-
-	Object_Type		type;
 	int id{};
+	Object_Type		objectType;
+	PlayerType       playerType;
 	PositionInfo			position{};
 
 };

@@ -1,16 +1,16 @@
 #include "pch.h"
 #include "GameMap.h"
-
+#include <fstream>
 
 CellPos GameMap::ToCellPos(const PositionInfo& pos) const
 {
-    int x_index = static_cast<int>((pos.x + MAP_WIDTH / 2.f) / CELL_SIZE);
-    int y_index = static_cast<int>((pos.y + MAP_HEIGHT / 2.f) / CELL_SIZE);
+    int x_index = static_cast<int>((pos.x - _minX) / CELL_SIZE);
+    int y_index = static_cast<int>((pos.y - _minY) / CELL_SIZE);
 
-    x_index = clamp(x_index, 0, GRID_WIDTH - 1);
-    y_index = clamp(y_index, 0, GRID_HEIGHT - 1);
+    x_index = clamp(x_index, 0, _gridWidth - 1);
+    y_index = clamp(y_index, 0, _gridHeight - 1);
 
-	return { x_index, y_index };
+    return { x_index, y_index };
 }
 
 ViewUpdate GameMap::EnterMap(int objectId, const PositionInfo& pos)
@@ -106,7 +106,7 @@ vector<CellPos> GameMap::GetNeighborCells(CellPos pos) const
 
     for (int y = pos.y - VIEW_RANGE_CELLS; y <= pos.y + VIEW_RANGE_CELLS; ++y) {
         for (int x = pos.x - VIEW_RANGE_CELLS; x <= pos.x + VIEW_RANGE_CELLS; ++x) {
-            if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+            if (x >= 0 && x < _gridWidth && y >= 0 && y < _gridHeight) {
                 cells.push_back({ x, y });
             }
         }
@@ -114,26 +114,85 @@ vector<CellPos> GameMap::GetNeighborCells(CellPos pos) const
     return cells;
 }
 
-bool GameMap::OutOfBounds(const PositionInfo& pos) const
+bool GameMap::LoadMapData(const string& fileName)
 {
-    return pos.x < -(MAP_WIDTH /2) || pos.x >= (MAP_WIDTH / 2) ||
-        pos.y < -(MAP_HEIGHT / 2) || pos.y >= (MAP_HEIGHT / 2);
-}
+    bool isSuccess = true;
 
-bool GameMap::CanMove(int objectId, const PositionInfo& new_pos) const
-{
-    if (OutOfBounds(new_pos)) {
-        return false;
+    // 1. 지형 데이터 (NavMesh) 로드 및 Bounds 동적 추출
+    _navManager = std::make_unique<NavmeshManager>();
+    string navPath = "../" + fileName + "_Geo.nav";
+
+    if (!_navManager->LoadNavMesh(navPath, _minX, _maxX, _minY, _maxY)) {
+        cout << "[GameMap] NavMesh 로드 실패: " << navPath << endl;
+        isSuccess = false;
+    }
+    else {
+        // 배열 오버플로우 방지를 위해 외곽에 여유 타일 추가
+        _minX -= CELL_SIZE;
+        _maxX += CELL_SIZE;
+        _minY -= CELL_SIZE;
+        _maxY += CELL_SIZE;
+
+        // 실제 맵 크기에 맞춰 그리드 가로/세로 칸 수 계산
+        _gridWidth = static_cast<int>((_maxX - _minX) / CELL_SIZE) + 1;
+        _gridHeight = static_cast<int>((_maxY - _minY) / CELL_SIZE) + 1;
+
+        // 2차원 Grid 메모리 동적 할당
+        _grid.assign(_gridHeight, vector<Cell>(_gridWidth));
+
+        cout << "[GameMap] NavMesh 기반 동적 Grid 생성 완료!" << endl;
+        cout << " - Bounds X: " << _minX << " ~ " << _maxX << ", Y: " << _minY << " ~ " << _maxY << endl;
+        cout << " - Grid Size: " << _gridWidth << " x " << _gridHeight << " cells" << endl;
     }
 
-    return true;
+    // 2. 로직 데이터 (SpawnPoint) 로드
+    string logicPath = "C:/Users/user/Desktop/UnrealProjectss/SimpleUCl/Export/ParagonSample/Logic/ParagonSample_Logic.bin";
+    std::ifstream file(logicPath, std::ios::binary);
+    if (!file.is_open())
+    {
+        cout << "[GameMap] 로직 데이터를 찾을 수 없습니다: " << logicPath << endl;
+        isSuccess = false;
+    }
+    else
+    {
+        int32_t spawnCount = 0;
+        file.read((char*)&spawnCount, sizeof(int32_t));
+
+        if (spawnCount > 0)
+        {
+            _spawnPoints.resize(spawnCount);
+            file.read((char*)_spawnPoints.data(), spawnCount * sizeof(ServerSpawnPoint));
+        }
+
+        for (auto v : _spawnPoints) {
+            cout << v.X << ", " << v.Y << ", " << v.Z << endl;
+        }
+
+        file.close();
+        cout << "[GameMap] 로직 데이터 로드 완료! 스폰 포인트: " << spawnCount << "개" << endl;
+    }
+
+    return isSuccess;
 }
 
-
-std::pair<int, int> GameMap::GetTilePosition(const PositionInfo& pos) const
+bool GameMap::CanMove(const PositionInfo& from, const PositionInfo& to) const
 {
-    int tile_x = static_cast<int>(floor(pos.x));
-    int tile_y = static_cast<int>(floor(pos.y));
-    return { tile_x, tile_y };
+    return _navManager->CanMove(from, to);
 }
+
+bool GameMap::IsOutOfBounds(const PositionInfo& pos) const
+{
+    return _navManager->IsOutOfBounds(pos);
+}
+
+std::optional<ServerSpawnPoint> GameMap::GetSpawnPoint(int index) const
+{
+    if (index >= 0 && index < _spawnPoints.size())
+    {
+        return _spawnPoints[index];
+    }
+    return std::nullopt;
+}
+
+
 

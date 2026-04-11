@@ -26,7 +26,7 @@ bool RecastNavMesh::Build(const std::string& filePath)
     rcConfig cfg;
     memset(&cfg, 0, sizeof(cfg));
 
-    cfg.cs = 30.0f; // 격자 크기 30cm (표준)
+    cfg.cs = 40.0f; // 격자 크기 30cm (표준)
     cfg.ch = 20.0f; // 높이 해상도 20cm (표준)
 
     cfg.walkableHeight = (int)ceilf(176.0f / cfg.ch); // 키 176cm
