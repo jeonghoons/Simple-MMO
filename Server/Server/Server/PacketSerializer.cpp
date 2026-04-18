@@ -10,6 +10,7 @@ shared_ptr<SendBuffer> PacketSerializer::MAKE_SC_ADD_OBJECT(shared_ptr<GameObjec
 	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(sizeof(packet));
 	sendBuffer->CopyData(&packet, packet.header.size);
 
+	
 	return sendBuffer;
 }
 

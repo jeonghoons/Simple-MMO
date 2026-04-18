@@ -7,8 +7,8 @@ CellPos GameMap::ToCellPos(const PositionInfo& pos) const
     int x_index = static_cast<int>((pos.x - _minX) / CELL_SIZE);
     int y_index = static_cast<int>((pos.y - _minY) / CELL_SIZE);
 
-    x_index = clamp(x_index, 0, _gridWidth - 1);
-    y_index = clamp(y_index, 0, _gridHeight - 1);
+    /*x_index = clamp(x_index, 0, _gridWidth - 1);
+    y_index = clamp(y_index, 0, _gridHeight - 1);*/
 
     return { x_index, y_index };
 }
@@ -164,10 +164,6 @@ bool GameMap::LoadMapData(const string& fileName)
             file.read((char*)_spawnPoints.data(), spawnCount * sizeof(ServerSpawnPoint));
         }
 
-        for (auto v : _spawnPoints) {
-            cout << v.X << ", " << v.Y << ", " << v.Z << endl;
-        }
-
         file.close();
         cout << "[GameMap] 로직 데이터 로드 완료! 스폰 포인트: " << spawnCount << "개" << endl;
     }
@@ -192,6 +188,34 @@ std::optional<ServerSpawnPoint> GameMap::GetSpawnPoint(int index) const
         return _spawnPoints[index];
     }
     return std::nullopt;
+}
+
+PositionInfo GameMap::GetRandomPosInCell(const PositionInfo& pos) const
+{
+    CellPos cellPos = ToCellPos(pos);
+
+    float cellMinX = _minX + (cellPos.x * CELL_SIZE);
+    float cellMinY = _minY + (cellPos.y * CELL_SIZE);
+
+    float margin = 50.0f;
+
+    for (int i = 0; i < 10; ++i)
+    {
+        float randX = Utils::GetRandom<float>(cellMinX + margin, cellMinX + CELL_SIZE - margin);
+        float randY = Utils::GetRandom<float>(cellMinY + margin, cellMinY + CELL_SIZE - margin);
+
+        PositionInfo randomDest{ randX, randY, pos.z };
+
+        // IsOutOfBounds가 false(즉, 정상적인 NavMesh 위)일 경우에만 반환
+        if (CanMove(pos, randomDest))
+        {
+            CellPos randPos = ToCellPos(randomDest);
+            cout << cellPos.x << ", " << cellPos.y << " -> " << randPos.x << ", " << randPos.y << endl;
+            return randomDest;
+        }
+    }
+
+    return pos;
 }
 
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "GameObject.h"
+#include	"StatComponent.h"
 
 class Character : public MovableObject
 {
@@ -8,17 +9,19 @@ public:
 	virtual ~Character() = default;
 
 public:
-	void RemoveView(int objectId)
-	{
-		auto it = find(_viewList.begin(), _viewList.end(), objectId);
-		if (it != _viewList.end()) {
-			*it = _viewList.back();
-			_viewList.pop_back();
-		}
-	}
+	virtual void Update(float deltaTime) override;
+
+public:
+	void RemoveView(int objectId);
+	
+
+	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) {}
+	virtual void OnDead(std::shared_ptr<GameObject> attacker) {}
 
 	vector<int>	_viewList;
-public:
-	virtual void Update(float deltaTime) override;
+
+
+protected:
+	StatComponent _statInfo;
 };
 

@@ -32,7 +32,11 @@ public:
 
 public:
 	virtual void Update(float deltaTime) override;
+	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
+	virtual void OnDead(std::shared_ptr<GameObject> attacker) override;
 
+public:
+	virtual void StopMove() override;
 	// FSM
 	void UpdateAI();
 	void ChangeState(MonsterState newState);
@@ -43,7 +47,7 @@ public:
 	void UpdateAttack();
 	
 	void SetPath(const std::vector<PositionInfo>& path);
-	void Stop();
+	
 private:
 	// A* 경로를 따라 걷는 물리 시뮬레이션
 	void FollowPath(float deltaTime);
@@ -56,16 +60,18 @@ public:
 	std::chrono::steady_clock::time_point _nextDecisionTick;
 	std::weak_ptr<Player> _targetPlayer;
 
-	float _traceRange = 1000.f;
-	float _attackRange = 100.f;
-
 private:
-	// --- AI 길찾기 & 연산 최적화 데이터 ---
+	Cooldown _aiDecisionTimer;
+	Cooldown _patrolTimer;
+	Cooldown _attackTimer;
+	Cooldown _pathSearchTimer;
+
 	std::vector<PositionInfo> _path;
 	int _pathIndex = 0;
 	bool _hasPath = false;
-
-	std::chrono::steady_clock::time_point _lastPathSearchTick;
 	PositionInfo _lastTargetPos;
+
+	float _traceRange = 800.f;
+	float _attackRange = 100.f;
 };
 

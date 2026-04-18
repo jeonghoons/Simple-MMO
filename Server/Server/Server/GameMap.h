@@ -1,6 +1,6 @@
 #pragma once
 #include "NavmeshManager.h"
-constexpr int CELL_SIZE = 500.f;
+constexpr int CELL_SIZE = 1000.f;
 const int VIEW_RANGE_CELLS = 1;
 
 struct ViewUpdate {
@@ -48,7 +48,7 @@ public:
     bool IsOutOfBounds(const PositionInfo& pos) const;
 
     NavmeshManager* GetNavManager() { return _navManager.get(); }
-
+    PositionInfo GetRandomPosInCell(const PositionInfo& pos) const;
 private:
     CellPos ToCellPos(const PositionInfo& pos) const;
     void CollectObject(CellPos pos, vector<int>& outList) const;

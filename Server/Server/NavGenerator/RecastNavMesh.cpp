@@ -26,16 +26,16 @@ bool RecastNavMesh::Build(const std::string& filePath)
     rcConfig cfg;
     memset(&cfg, 0, sizeof(cfg));
 
-    cfg.cs = 40.0f; // 격자 크기 30cm (표준)
-    cfg.ch = 20.0f; // 높이 해상도 20cm (표준)
+    cfg.cs = 20.0f; // 격자 크기
+    cfg.ch = 10.0f; // 높이 해상도
 
     cfg.walkableHeight = (int)ceilf(176.0f / cfg.ch); // 키 176cm
-    cfg.walkableRadius = (int)ceilf(34.0f / cfg.cs);  // 반지름 34cm
-    cfg.walkableClimb = (int)floorf(45.0f / cfg.ch);  // 계단 오르기 45cm
-    cfg.walkableSlopeAngle = 45.0f;                   // 등반 각도 45도
+    cfg.walkableRadius = (int)floorf(34.0f / cfg.cs);  // 반지름 34cm
+    cfg.walkableClimb = (int)floorf(50.0f / cfg.ch);  // 계단 오르기 45cm
+    cfg.walkableSlopeAngle = 50.0f;                   // 등반 각도 45도
 
     cfg.maxEdgeLen = (int)(1200.0f / cfg.cs);
-    cfg.maxSimplificationError = 1.5f;
+    cfg.maxSimplificationError = 1.3f;
     cfg.minRegionArea = (int)rcSqr(8);
     cfg.mergeRegionArea = (int)rcSqr(20);
     cfg.maxVertsPerPoly = 6;
@@ -120,7 +120,7 @@ bool RecastNavMesh::Build(const std::string& filePath)
 
     params.walkableHeight = 176.0f;
     params.walkableRadius = 34.0f;
-    params.walkableClimb = 45.0f;
+    params.walkableClimb = 50.0f;
     rcVcopy(params.bmin, pmesh->bmin);
     rcVcopy(params.bmax, pmesh->bmax);
     params.cs = cfg.cs;

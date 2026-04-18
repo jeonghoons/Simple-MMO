@@ -31,6 +31,9 @@
     <Filter Include="Contents\NavMesh\Detour">
       <UniqueIdentifier>{a47e2002-c3b8-4402-a797-8e59d069791f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Contents\GameRoom">
+      <UniqueIdentifier>{827cae39-ed73-4845-97b7-93a9fac3dbae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -63,9 +66,6 @@
     <ClCompile Include="SendBuffer.cpp">
       <Filter>NetWork</Filter>
     </ClCompile>
-    <ClCompile Include="Room.cpp">
-      <Filter>Contents</Filter>
-    </ClCompile>
     <ClCompile Include="PacketHandler.cpp">
       <Filter>Main</Filter>
     </ClCompile>
@@ -83,9 +83,6 @@
     </ClCompile>
     <ClCompile Include="Timer.cpp">
       <Filter>Job</Filter>
-    </ClCompile>
-    <ClCompile Include="GameMap.cpp">
-      <Filter>Contents</Filter>
     </ClCompile>
     <ClCompile Include="PacketSerializer.cpp">
       <Filter>Main</Filter>
@@ -138,6 +135,12 @@
     <ClCompile Include="..\ThirdParty\Detour\Source\DetourNode.cpp">
       <Filter>Contents\NavMesh\Detour</Filter>
     </ClCompile>
+    <ClCompile Include="GameMap.cpp">
+      <Filter>Contents\GameRoom</Filter>
+    </ClCompile>
+    <ClCompile Include="Room.cpp">
+      <Filter>Contents\GameRoom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -170,9 +173,6 @@
     <ClInclude Include="SendBuffer.h">
       <Filter>NetWork</Filter>
     </ClInclude>
-    <ClInclude Include="Room.h">
-      <Filter>Contents</Filter>
-    </ClInclude>
     <ClInclude Include="PacketHandler.h">
       <Filter>Main</Filter>
     </ClInclude>
@@ -193,9 +193,6 @@
     </ClInclude>
     <ClInclude Include="Timer.h">
       <Filter>Job</Filter>
-    </ClInclude>
-    <ClInclude Include="GameMap.h">
-      <Filter>Contents</Filter>
     </ClInclude>
     <ClInclude Include="PacketSerializer.h">
       <Filter>Main</Filter>
@@ -226,6 +223,15 @@
     </ClInclude>
     <ClInclude Include="NavmeshManager.h">
       <Filter>Contents\NavMesh</Filter>
+    </ClInclude>
+    <ClInclude Include="GameMap.h">
+      <Filter>Contents\GameRoom</Filter>
+    </ClInclude>
+    <ClInclude Include="Room.h">
+      <Filter>Contents\GameRoom</Filter>
+    </ClInclude>
+    <ClInclude Include="StatComponent.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -7,7 +7,16 @@
 Monster::Monster() : Character(Object_Type::Monster)
 {
 	_objectInfo.playerType = PlayerType::Monster;
-	_maxSpeed = 450.0f;
+	StatInfo info;
+	info.hp = 100;
+	info.maxHp = 100;
+	info.attackDamage = 15;
+	info.attackSpeed = 1.0f; // 1초에 1번 공격
+	info.moveSpeed = 400.0f;
+	_statInfo.Init(info);
+
+	_maxSpeed = _statInfo.GetMoveSpeed(); // GameObject의 이동 속도와 연동
+	_aiDecisionTimer.Reset(0);
 }
 
 Monster::~Monster()
@@ -16,10 +25,11 @@ Monster::~Monster()
 
 void Monster::Update(float deltaTime)
 {
-	auto now = std::chrono::steady_clock::now();
-	if (now >= _nextDecisionTick)
+	if (_statInfo.IsDead()) return;
+
+	if (_aiDecisionTimer.IsReady())
 	{
-		_nextDecisionTick = now + std::chrono::milliseconds(500);
+		_aiDecisionTimer.Reset(500); // 0.5초 주기로 시야 및 타겟 갱신
 
 		bool hasView = !_viewList.empty();
 		if (_wakeUp != hasView)
@@ -29,25 +39,66 @@ void Monster::Update(float deltaTime)
 		}
 
 		if (_wakeUp) {
-			UpdateAI(); // 여기서 타겟을 찾거나, 길(Path)을 새로 생성합니다.
+			UpdateAI();
 		}
-
 	}
 
 	if (_hasPath) {
-		FollowPath(deltaTime); // UpdateAI가 방금 찾은 길을 즉시 반영하여 방향을 세팅합니다.
+		FollowPath(deltaTime);
 	}
-	
+
+	if (_objectInfo.position.state == Move_State::RUN)
+	{
+		if (auto room = GetCurrentRoom()) {
+			room->NPCMove(std::static_pointer_cast<Monster>(shared_from_this()));
+		}
+	}
+
 	Character::Update(deltaTime);
+}
+
+void Monster::OnDamaged(int damage, std::shared_ptr<GameObject> attacker)
+{
+	if (_statInfo.IsDead()) return;
+
+	// StatComponent를 통해 HP 차감
+	int actualDamage = _statInfo.OnDamaged(damage);
+
+	// 피격 패킷 전송 로직
+	// auto room = GetCurrentRoom();
+	// if (room) {
+	// 	shared_ptr<SendBuffer> hitBuffer = PacketSerializer::MAKE_SC_HIT(GetId(), actualDamage);
+	// 	room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), hitBuffer);
+	// }
+
+	if (_statInfo.IsDead())
+	{
+		OnDead(attacker);
+	}
+	else
+	{
+		// 살아있고 현재 타겟이 없다면 반격
+		if (_targetPlayer.expired() && attacker->GetType() == Object_Type::Player) {
+			_targetPlayer = std::static_pointer_cast<Player>(attacker);
+			ChangeState(MonsterState::TRACE);
+		}
+	}
+}
+
+void Monster::OnDead(std::shared_ptr<GameObject> attacker)
+{
+	StopMove();
+	ChangeState(MonsterState::NONE);
 
 	auto room = GetCurrentRoom();
-	// (매 틱마다 쏘는 패킷 폭탄을 방지)
-	shared_ptr<SendBuffer> MoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(shared_from_this());
-	room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), MoveBuffer);
+	if (room) {
+		// 사망 패킷
+		// shared_ptr<SendBuffer> deadBuffer = PacketSerializer::MAKE_SC_DEAD(GetId(), attacker->GetId());
+		// room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), deadBuffer);
 
-	if (MonsterState::NONE == _monsterState) return;
-	cout << "NPC[" << GetId() << "] - ";
-	cout << GetPosition().x << ", " << GetPosition().y << ", vel : " << _velocity.x << ", " << _velocity.y << endl;
+		// Room 관리 목록에서 안전하게 제거하기 위해 JobQueue 활용
+		// room->PushJob(&Room::RemoveObject, GetId());
+	}
 }
 
 void Monster::UpdateAI()
@@ -65,14 +116,15 @@ void Monster::ChangeState(MonsterState newState)
 {
 	if (_monsterState == newState) return;
 
-	Stop();
-
-	cout << "NPC[" << GetId() << "] - " << _monsterState << " -> " << newState<<endl;
+	StopMove();
+	// std::cout << "NPC[" << GetId() << "] State Changed: " << _monsterState << " -> " << newState << std::endl;
 	_monsterState = newState;
 
-	if (_monsterState == MonsterState::TRACE)
-	{
-		_lastPathSearchTick = std::chrono::steady_clock::time_point::min();
+	if (_monsterState == MonsterState::TRACE) {
+		_pathSearchTimer.Reset(0);
+	}
+	else if (_monsterState == MonsterState::PATROL) {
+		_patrolTimer.Reset(1000);
 	}
 }
 
@@ -87,41 +139,60 @@ void Monster::UpdatePatrol()
 	auto room = GetCurrentRoom();
 	if (room == nullptr) return;
 
-	shared_ptr<Player> closestPlayer = nullptr;
-	float minEntryDistSq = _traceRange * _traceRange;
+	std::shared_ptr<Player> closestPlayer = nullptr;
 	float currentMinDistSq = FLT_MAX;
+	float traceRangeSq = _traceRange * _traceRange;
 
 	for (int objectId : _viewList)
 	{
 		auto object = room->GetGameObject(objectId);
 		if (!object || object->GetType() != Object_Type::Player) continue;
 
-		auto player = static_pointer_cast<Player>(object);
+		auto player = std::static_pointer_cast<Player>(object);
 
 		float diffX = player->GetPosition().x - GetPosition().x;
 		float diffY = player->GetPosition().y - GetPosition().y;
 		float distSq = diffX * diffX + diffY * diffY;
 
-		if (distSq < currentMinDistSq)
+		// 추가: 플레이어가 살아있을 때만 추적 (Player 클래스에도 StatComponent 연동 필요)
+		if (distSq < currentMinDistSq && distSq <= traceRangeSq /* && !player->GetStat().IsDead() */)
 		{
 			currentMinDistSq = distSq;
 			closestPlayer = player;
 		}
 	}
 
-	if (closestPlayer && currentMinDistSq <= minEntryDistSq)
+	if (closestPlayer)
 	{
 		_targetPlayer = closestPlayer;
 		ChangeState(MonsterState::TRACE);
+		return;
 	}
 
-	
+	if (!_hasPath && _patrolTimer.IsReady())
+	{
+		PositionInfo randomDest = room->GetGameMap().GetRandomPosInCell(GetPosition());
+
+		std::vector<PositionInfo> newPath;
+		if (room->GetNavManager()->FindPath(GetPosition(), randomDest, newPath))
+		{
+			cout << "NPC[" << _objectInfo.id << "] : " << GetPosition().x << ", " << GetPosition().y << ", " << GetPosition().z
+				<< " -> " << randomDest.x << ", " << randomDest.y << "," << randomDest.z << endl;
+			SetPath(newPath);
+			long long waitTime = 1000;
+			_patrolTimer.Reset(waitTime);
+		}
+		else
+		{
+			_patrolTimer.Reset(500);
+		}
+	}	
 }
 
 void Monster::UpdateTrace()
 {
 	auto target = _targetPlayer.lock();
-	if (target == nullptr)
+	if (target == nullptr /* || target->GetStat().IsDead() */)
 	{
 		_targetPlayer.reset();
 		ChangeState(MonsterState::PATROL);
@@ -139,20 +210,15 @@ void Monster::UpdateTrace()
 		return;
 	}
 
-	// 공격 사거리 내 진입
 	if (distSq <= _attackRange * _attackRange)
 	{
 		ChangeState(MonsterState::ATTACK);
 		return;
 	}
 
-	// [길찾기 최적화] 타겟이 크게 이동했거나 시간이 경과했을 때만 연산
 	float targetMovedDistSq = pow(target->GetPosition().x - _lastTargetPos.x, 2) + pow(target->GetPosition().y - _lastTargetPos.y, 2);
 
-	auto now = chrono::steady_clock::now();
-	auto timeSinceLastSearch = chrono::duration_cast<chrono::milliseconds>(now - _lastPathSearchTick).count();
-
-	if (targetMovedDistSq > 10000.f || timeSinceLastSearch > 1000)
+	if (targetMovedDistSq > 10000.f || _pathSearchTimer.IsReady())
 	{
 		auto room = GetCurrentRoom();
 		if (room && room->GetNavManager())
@@ -162,8 +228,7 @@ void Monster::UpdateTrace()
 			{
 				SetPath(newPath);
 				_lastTargetPos = target->GetPosition();
-				_lastPathSearchTick = now;
-
+				_pathSearchTimer.Reset(1000);
 			}
 		}
 	}
@@ -172,7 +237,7 @@ void Monster::UpdateTrace()
 void Monster::UpdateAttack()
 {
 	auto target = _targetPlayer.lock();
-	if (target == nullptr)
+	if (target == nullptr /* || target->GetStat().IsDead() */)
 	{
 		ChangeState(MonsterState::PATROL);
 		return;
@@ -185,6 +250,29 @@ void Monster::UpdateAttack()
 	if (distSq > _attackRange * _attackRange)
 	{
 		ChangeState(MonsterState::TRACE);
+		return;
+	}
+
+	if (_attackTimer.IsReady())
+	{
+		// StatComponent에서 공격 속도를 가져와 쿨타임 계산
+		float attackSpeed = _statInfo.GetAttackSpeed();
+		long long nextAttackCooldown = static_cast<long long>(1000.f / (attackSpeed > 0.f ? attackSpeed : 1.f));
+		_attackTimer.Reset(nextAttackCooldown);
+
+		int damage = _statInfo.GetAttackDamage();
+
+		// 데미지 처리 (현재 스케줄링 모델 환경에서 Room의 싱글스레드 Update 순회 중이므로 직접 호출 안전함)
+		target->OnDamaged(damage, shared_from_this());
+
+		// 공격 패킷 전송 (애니메이션 동기화용)
+		// auto room = GetCurrentRoom();
+		// if (room) {
+		// 	shared_ptr<SendBuffer> attackBuffer = PacketSerializer::MAKE_SC_ATTACK(GetId(), target->GetId());
+		// 	room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), attackBuffer);
+		// }
+
+		std::cout << "NPC[" << GetId() << "] Attacked Player[" << target->GetId() << "] / Dmg: " << damage << std::endl;
 	}
 }
 
@@ -193,7 +281,7 @@ void Monster::SetPath(const std::vector<PositionInfo>& path)
 	_path = path;
 	_pathIndex = 0;
 	if (_path.empty()) {
-		Stop();
+		StopMove();
 	}
 	else {
 		_hasPath = true;
@@ -201,16 +289,18 @@ void Monster::SetPath(const std::vector<PositionInfo>& path)
 	}
 }
 
-void Monster::Stop()
+void Monster::StopMove()
 {
+	if (_objectInfo.position.state == Move_State::IDLE) return;
+
 	_hasPath = false;
-	_currentSpeed = 0.0f;
-	_velocity = { 0.f, 0.f, 0.f };
-	_moveDir = { 0.f, 0.f, 0.f };
-	_objectInfo.position.v_x = 0.f;
-	_objectInfo.position.v_y = 0.f;
-	_objectInfo.position.v_z = 0.f;
-	_objectInfo.position.state = Move_State::IDLE;
+	MovableObject::StopMove();
+
+	auto room = GetCurrentRoom();
+	if (room != nullptr) {
+		shared_ptr<SendBuffer> MoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(shared_from_this());
+		room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), MoveBuffer);
+	}
 }
 
 void Monster::FollowPath(float deltaTime)
@@ -218,31 +308,33 @@ void Monster::FollowPath(float deltaTime)
 	if (!_hasPath || _pathIndex >= _path.size()) return;
 
 	PositionInfo& pos = _objectInfo.position;
-	PositionInfo& targetPos = _path[_pathIndex];
 
-	XMVECTOR vCurr = XMVectorSet(pos.x, pos.y, 0.f, 0);
 	while (_pathIndex < _path.size())
 	{
 		PositionInfo& targetPos = _path[_pathIndex];
-		XMVECTOR vDest = XMVectorSet(targetPos.x, targetPos.y, 0.0f, 0.0f);
-		XMVECTOR vDir = XMVectorSubtract(vDest, vCurr);
-		float dist = XMVectorGetX(XMVector3Length(vDir));
+
+		XMVECTOR vCurr = XMVectorSet(pos.x, pos.y, pos.z, 0.0f);
+		XMVECTOR vDest = XMVectorSet(targetPos.x, targetPos.y, targetPos.z, 0.0f);
+		float dist = XMVectorGetX(XMVector3Length(XMVectorSubtract(vDest, vCurr)));
 
 		if (dist < 50.0f)
 		{
-			// 경유지에 도착했으면 인덱스를 늘리고 다시 while문 처음으로 돌아가 다음 경유지와의 거리를 잼
 			_pathIndex++;
 		}
 		else
 		{
-			// 아직 도착하지 않은 경유지를 찾았다면 방향/속도 세팅 후 탈출!
-			XMStoreFloat3(&_moveDir, XMVector3Normalize(vDir));
-			_currentSpeed = _maxSpeed;
-			pos.yaw = XMConvertToDegrees(atan2f(_moveDir.y, _moveDir.x));
-			return; // 정상적으로 이동할 방향을 찾았을 때만 return
+			XMFLOAT3 desPos = { targetPos.x, targetPos.y, targetPos.z };
+
+			if (Move(desPos))
+			{
+				auto room = GetCurrentRoom();
+				if (room != nullptr) {
+					shared_ptr<SendBuffer> MoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(shared_from_this());
+					room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), MoveBuffer);
+				}
+			}
+			return;
 		}
 	}
-
-	// while문을 빠져나왔다 == 모든 경로(_path)를 다 돌았다 == 최종 목적지 도착
-	Stop();
+	StopMove();
 }

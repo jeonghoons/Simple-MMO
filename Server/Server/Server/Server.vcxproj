@@ -168,6 +168,7 @@
     <ClInclude Include="SendBuffer.h" />
     <ClInclude Include="ServerService.h" />
     <ClInclude Include="Session.h" />
+    <ClInclude Include="StatComponent.h" />
     <ClInclude Include="TestProtocol.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Utils.h" />

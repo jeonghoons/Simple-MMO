@@ -122,7 +122,7 @@ bool NavmeshManager::CanMove(const PositionInfo& startPos, const PositionInfo& d
 	UeToDetour(startPos, dStart);
 	UeToDetour(destPos, dDest);
 
-	const float extents[3] = { 200.0f, 400.0f, 200.0f };
+	const float extents[3] = { 100.0f, 200.0f, 100.0f };
 	dtPolyRef startRef = 0;
 	float nearestStart[3];
 
@@ -131,22 +131,23 @@ bool NavmeshManager::CanMove(const PositionInfo& startPos, const PositionInfo& d
 		cout << "오브젝트 근처에 폴리곤이 없습니다. " << endl;
 		return false;
 	}
+
 	float t = 0; // 충돌 발생 지점 비율 (0.0 ~ 1.0)
 	float hitNormal[3];
 	dtPolyRef path[256];
 	int pathCount = 0;
 
 	// 레이캐스트를 쏴서 벽에 막히는지 검사 (t가 1.0 미만이면 중간에 막힌 것)
-	dtStatus status = _navQuery->raycast(startRef, dStart, dDest, &_filter, &t, hitNormal, path, &pathCount, 256);
+	dtStatus status = _navQuery->raycast(startRef, nearestStart, dDest, &_filter, &t, hitNormal, path, &pathCount, 256);
 
 	if (dtStatusSucceed(status)) {
 		if (t >= 1.0f) return true;
 
 		float hitPos[3];
-		dtVlerp(hitPos, dStart, dDest, t);
+		dtVlerp(hitPos, nearestStart, dDest, t);
 
 		// 허용할 오차 거리 (예: 15cm)
-		const float tolerance = 15.0f;
+		const float tolerance = 100.0f;
 
 		// dtVdist(루트 연산 포함) 대신 dtVdistSqr(단순 곱셈 합)을 사용
 		// 대신 비교하는 기준값(tolerance)을 제곱해서 비교합니다.
@@ -165,7 +166,7 @@ bool NavmeshManager::FindPath(const PositionInfo& startPos, const PositionInfo& 
 	UeToDetour(startPos, dStart);
 	UeToDetour(destPos, dDest);
 
-	const float extents[3] = { 400.0f, 400.0f, 400.0f };
+	const float extents[3] = { 100.0f, 200.0f, 100.0f };
 	dtPolyRef startRef, endRef;
 	float nearestStart[3], nearestEnd[3];
 

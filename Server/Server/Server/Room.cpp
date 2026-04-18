@@ -26,22 +26,10 @@ void Room::InitRoom()
 	}
 	else
 	{
-		for (const auto& sp : spawnPoints)
-		{
+		for (int i = 1; i < spawnPoints.size(); ++i) {
 			shared_ptr<Monster> monster = make_shared<Monster>();
 			monster->SetId(MonsterIdGenerator());
 
-			// 추출된 스폰 포인트 좌표를 고정적으로 주입
-			PositionInfo spawnPos = { sp.X, sp.Y, sp.Z, sp.Yaw };
-			monster->SetPosition(spawnPos);
-
-			NpcEnterRoom(monster);
-		}
-		for (int i = 1; i < spawnPoints.size()-1; ++i) {
-			shared_ptr<Monster> monster = make_shared<Monster>();
-			monster->SetId(MonsterIdGenerator());
-
-			// 추출된 스폰 포인트 좌표를 고정적으로 주입
 			PositionInfo spawnPos = { spawnPoints[i].X, spawnPoints[i].Y, spawnPoints[i].Z, spawnPoints[i].Yaw};
 			monster->SetPosition(spawnPos);
 
@@ -78,9 +66,6 @@ bool Room::AddObject(shared_ptr<GameObject> object)
 		return false;
 	}
 	object->SetOwnerRoom(shared_from_this());
-	/*PositionInfo spawnPos = {31350.0f, 15010.0f, 100.f, 0.f}; */
-	/*PositionInfo spawnPos = { Utils::GetRandom(0.f, MAP_WIDTH / 2.f),
-		Utils::GetRandom(0.f, MAP_WIDTH / 2.f), 100.f};*/
 
 	const auto& spawnPoints = _gameMap.GetSpawnPoints();
 	if (object->GetType() == Object_Type::Player) {
@@ -121,30 +106,14 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 		session->Send(objectAddBuffer);
 	}
 
+	if (auto session = player->GetSession()) {
+		session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(player));
+	}
+
+	// 맵 등록 및 시야 동기화
 	ViewUpdate result = _gameMap.EnterMap(player->GetId(), player->GetPosition());
-	for (const int target_id : result.entered) {
-		if (target_id == player->GetId()) continue;
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-		
-		player->_viewList.push_back(target_id);
-		if (auto player_session = player->GetSession()) {
-			player_session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_obj));
-		}
-
-		Object_Type targetType = target_obj->GetType();
-		if (targetType == Object_Type::Player || targetType == Object_Type::Monster) {
-			auto target_char = static_pointer_cast<Character>(target_obj);
-
-			target_char->_viewList.push_back(player->GetId());
-
-			if (targetType == Object_Type::Player) {
-				auto target_player = static_pointer_cast<Player>(target_char);
-				if (auto target_session = target_player->GetSession()) {
-					target_session->Send(objectAddBuffer);
-				}
-			}
-		}
+	if (!result.entered.empty()) {
+		UpdateView(player, result);
 	}
 }
 
@@ -154,28 +123,9 @@ void Room::PlayerLeaveRoom(shared_ptr<Player> player)
 
 	int playerId = player->GetId();
 
-	shared_ptr<SendBuffer> playerRemoveBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(playerId);
-
 	ViewUpdate result = _gameMap.LeaveMap(playerId);
-
-	for (const int target_id : result.leaved) {
-		if (target_id == playerId) continue;
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-
-		Object_Type target_type = target_obj->GetType();
-		if (target_type == Object_Type::Player || target_type == Object_Type::Monster) {
-
-			auto target_char = static_pointer_cast<Character>(target_obj);
-			target_char->RemoveView(playerId);
-
-			if (target_type == Object_Type::Player) {
-				auto target_player = static_pointer_cast<Player>(target_char);
-				if (shared_ptr<Session> target_session = target_player->GetSession()) {
-					target_session->Send(playerRemoveBuffer);
-				}
-			}
-		}
+	if (!result.leaved.empty()) {
+		UpdateView(player, result);
 	}
 
 
@@ -200,78 +150,23 @@ void Room::PlayerMove(shared_ptr<Player> player, PositionInfo position, bool for
 			shared_ptr<SendBuffer> correctionBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
 			session->Send(correctionBuffer);
 		}
-		cout << "비정상 이동 차단" << endl;
+		// cout << "비정상 이동 차단" << endl;
 
 		return;
 	}
-	
+
 	player->SetPosition(position);
 
 	shared_ptr<SendBuffer> playerMoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(player);
-	if (shared_ptr<Session> player_session = player->GetSession()) {
-		player_session->Send(playerMoveBuffer);
-	}
-
-	ViewUpdate result = _gameMap.UpdateMap(player->GetId(), position);
-
-	shared_ptr<SendBuffer> playerRemoveBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(player->GetId());
-	for (const int target_id : result.leaved) {
-		if (target_id == player->GetId()) continue;
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-
-		player->RemoveView(target_id);
-		Object_Type target_type = target_obj->GetType();
-		if (target_type == Object_Type::Player || target_type == Object_Type::Monster) {
-			shared_ptr<Character> target_char = static_pointer_cast<Character>(target_obj);
-			target_char->RemoveView(player->GetId());
-
-			if (target_type == Object_Type::Player) {
-				shared_ptr<Player> target_player = static_pointer_cast<Player>(target_char);
-				if (shared_ptr<Session> target_session = target_player->GetSession()) {
-					target_session->Send(playerRemoveBuffer);
-				}
-				if (shared_ptr<Session> player_session = player->GetSession()) {
-					player_session->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(target_id));
-				}
-			}
-		}
-	}
-
-	shared_ptr<SendBuffer> playerAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(player);
-	for (const int target_id : result.entered) {
-		if (target_id == player->GetId()) continue;
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-
-		player->_viewList.push_back(target_id);
-		Object_Type target_type = target_obj->GetType();
-		if (target_type == Object_Type::Player || target_type == Object_Type::Monster) {
-			shared_ptr<Character> target_char = static_pointer_cast<Character>(target_obj);
-			target_char->_viewList.push_back(player->GetId());
-
-			if (target_type == Object_Type::Player) {
-				shared_ptr<Player> target_player = static_pointer_cast<Player>(target_char);
-				if (shared_ptr<Session> target_session = target_player->GetSession()) {
-					target_session->Send(playerAddBuffer);
-				}
-				if (shared_ptr<Session> player_session = player->GetSession()) {
-					player_session->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(target_obj));
-				}
-			}
-		}
-	}
-
-	/*for (const int id : player->_viewList) {
-		shared_ptr<Player> target_player = Id2Player(id);
-		if (!target_player) continue;
-		if (shared_ptr<Session> target_session = target_player->GetSession()) {
-			target_session->Send(playerMoveBuffer);
-		}
-	}*/
-
 	BroadcastAOI(static_pointer_cast<Character>(player), playerMoveBuffer);
-	
+
+	ViewUpdate result = _gameMap.UpdateMap(player->GetId(), player->GetPosition());
+
+	// 3. 시야에 변화가 있을 경우에만 동기화 진행
+	if (!result.entered.empty() || !result.leaved.empty()) {
+		UpdateView(player, result);
+	}
+
 
 	// printf("Player[%d] - (%f, %f) Yaw: %f)\n", player->GetId(), position.x, position.y, position.yaw);
 }
@@ -288,6 +183,7 @@ void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 void Room::BroadcastAOI(shared_ptr<Character> viewableObj, shared_ptr<SendBuffer> sendBuffer)
 {
 	vector<int>& currentView = viewableObj->_viewList;
+
 	for (const int& id : currentView) {
 		shared_ptr<Player> target_player = Id2Player(id);
 		if (target_player == nullptr) continue;
@@ -306,31 +202,24 @@ void Room::NpcEnterRoom(shared_ptr<Monster> monster)
 	_monsters.emplace(monster->GetId(), monster);
 
 	ViewUpdate result = _gameMap.EnterMap(monster->GetId(), monster->GetPosition());
-	shared_ptr<SendBuffer> monsterAddBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(monster);
-	for (const int target_id : result.entered) {
-		if (target_id == monster->GetId()) continue;
-
-		shared_ptr<GameObject> target_obj = GetGameObject(target_id);
-		if (!target_obj) continue;
-
-		Object_Type target_type = target_obj->GetType();
-		if (target_type != Object_Type::Player) continue;
-	
-		monster->_viewList.push_back(target_id);
-
-		shared_ptr<Player> target_player = static_pointer_cast<Player>(target_obj);
-		target_player->_viewList.push_back(target_id);
-		if (shared_ptr<Session> target_session = target_player->GetSession()) {
-			target_session->Send(monsterAddBuffer);
-		}
+	if (!result.entered.empty()) {
+		UpdateView(monster, result);
 	}
-
 }
 
 void Room::NPCMove(shared_ptr<Monster> monster)
 {
 	if (GetGameObject(monster->GetId()) == nullptr)
 		return;
+
+	shared_ptr<SendBuffer> moveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(monster);
+	BroadcastAOI(monster, moveBuffer);
+
+	// 2. 맵 갱신 및 시야 동기화
+	ViewUpdate result = _gameMap.UpdateMap(monster->GetId(), monster->GetPosition());
+	if (!result.entered.empty() || !result.leaved.empty()) {
+		UpdateView(monster, result);
+	}
 }
 
 std::optional<PositionInfo> Room::GetObjectPosition(int objectId) const
@@ -340,6 +229,71 @@ std::optional<PositionInfo> Room::GetObjectPosition(int objectId) const
 	}
 
 	return nullopt;
+}
+
+void Room::UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& result)
+{
+	int subjectId = subjectChar->GetId();
+	bool isPlayer = (subjectChar->GetType() == Object_Type::Player);
+	shared_ptr<Player> subjectPlayer = isPlayer ? static_pointer_cast<Player>(subjectChar) : nullptr;
+
+	// 시야에서 나간 객체 처리
+	if (false == result.leaved.empty())
+	{
+		shared_ptr<SendBuffer> removeSubjectBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(subjectId);
+
+		for (int targetId : result.leaved) {
+			if (targetId == subjectId) continue;
+			shared_ptr<GameObject> targetObj = GetGameObject(targetId);
+			if (!targetObj) continue;
+
+			subjectChar->RemoveView(targetId);
+
+			Object_Type targetType = targetObj->GetType();
+			if (targetType == Object_Type::Player || targetType == Object_Type::Monster) {
+				shared_ptr<Character> targetChar = static_pointer_cast<Character>(targetObj);
+				targetChar->RemoveView(subjectId);
+				
+				if (targetType == Object_Type::Player) {
+					static_pointer_cast<Player>(targetChar)->GetSession()->Send(removeSubjectBuffer);
+				}
+			}
+
+			if (isPlayer) {
+				subjectPlayer->GetSession()->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(targetId));
+			}
+		}
+	}
+
+	// 새로 시야에 들어온 객체 처리
+	if (false == result.entered.empty())
+	{
+		shared_ptr<SendBuffer> addSubjectBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(subjectChar);
+
+		for (int targetId : result.entered) {
+			if (targetId == subjectId) continue;
+			shared_ptr<GameObject> targetObj = GetGameObject(targetId);
+			if (!targetObj) continue;
+
+			// 주체의 시야에 대상 추가
+			subjectChar->_viewList.push_back(targetId);
+
+			Object_Type targetType = targetObj->GetType();
+			if (targetType == Object_Type::Player || targetType == Object_Type::Monster) {
+				shared_ptr<Character> targetChar = static_pointer_cast<Character>(targetObj);
+				targetChar->_viewList.push_back(subjectId); // 대상의 시야에 주체를 추가
+
+				// 대상이 플레이어면 ADD 패킷 전송
+				if (targetType == Object_Type::Player) {
+					static_pointer_cast<Player>(targetChar)->GetSession()->Send(addSubjectBuffer);
+				}
+			}
+
+			if (isPlayer) {
+				subjectPlayer->GetSession()->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(targetObj));
+			}
+		}
+	}
 }
 
 shared_ptr<Player> Room::Id2Player(int pId)

@@ -8,6 +8,7 @@
 class Session;
 class SendBuffer;
 class GameObject;
+class Character;
 class Player;
 class Monster;
 
@@ -45,6 +46,7 @@ public:
 		return it->second;
 	}
 	optional<PositionInfo> GetObjectPosition(int objectId) const;
+	void UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& result);
 
 	// Player
 	void PlayerEnterRoom(shared_ptr<Player> player);	
@@ -62,6 +64,8 @@ public:
 		return ++_midGenerator;
 	}
 	NavmeshManager* GetNavManager() { return _gameMap.GetNavManager(); }
+	const GameMap& GetGameMap() const { return _gameMap; } 
+	
 	shared_ptr<Player> Id2Player(int pId);
 	shared_ptr<Monster> Id2Monster(int mId);
 

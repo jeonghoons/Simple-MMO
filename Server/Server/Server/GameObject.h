@@ -48,13 +48,12 @@ public:
 
 public:
 	virtual void Update(float deltaTime) override;
+	virtual bool Move(const XMFLOAT3& desPos);
+	virtual void StopMove();
 
 	void SetMaxSpeed(float maxSpeed) { _maxSpeed = maxSpeed; }
 	float GetCurrentSpeed() const { return _currentSpeed; }
 	XMFLOAT3 GetVelocity() const { return _velocity; }
-
-	void Move(PositionInfo& posInfo);
-	void Move(const XMFLOAT3& desPos);
 
 private:
 	void ApplyMovement(float deltaTime);
