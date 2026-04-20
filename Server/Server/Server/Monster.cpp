@@ -27,20 +27,12 @@ void Monster::Update(float deltaTime)
 {
 	if (_statInfo.IsDead()) return;
 
+	if (!_wakeUp) return;
+
 	if (_aiDecisionTimer.IsReady())
 	{
-		_aiDecisionTimer.Reset(500); // 0.5초 주기로 시야 및 타겟 갱신
-
-		bool hasView = !_viewList.empty();
-		if (_wakeUp != hasView)
-		{
-			_wakeUp = hasView;
-			if (!_wakeUp) ChangeState(MonsterState::NONE);
-		}
-
-		if (_wakeUp) {
-			UpdateAI();
-		}
+		_aiDecisionTimer.Reset(500);
+		UpdateAI();
 	}
 
 	if (_hasPath) {
@@ -61,15 +53,15 @@ void Monster::OnDamaged(int damage, std::shared_ptr<GameObject> attacker)
 {
 	if (_statInfo.IsDead()) return;
 
-	// StatComponent를 통해 HP 차감
+
 	int actualDamage = _statInfo.OnDamaged(damage);
 
-	// 피격 패킷 전송 로직
-	// auto room = GetCurrentRoom();
-	// if (room) {
-	// 	shared_ptr<SendBuffer> hitBuffer = PacketSerializer::MAKE_SC_HIT(GetId(), actualDamage);
-	// 	room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), hitBuffer);
-	// }
+
+	auto room = GetCurrentRoom();
+	if (room) {
+		shared_ptr<SendBuffer> damageBuffer = PacketSerializer::MAKE_SC_DAMAGE(GetId(), attacker->GetId(), actualDamage);
+		room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), damageBuffer);
+	}
 
 	if (_statInfo.IsDead())
 	{
@@ -77,7 +69,6 @@ void Monster::OnDamaged(int damage, std::shared_ptr<GameObject> attacker)
 	}
 	else
 	{
-		// 살아있고 현재 타겟이 없다면 반격
 		if (_targetPlayer.expired() && attacker->GetType() == Object_Type::Player) {
 			_targetPlayer = std::static_pointer_cast<Player>(attacker);
 			ChangeState(MonsterState::TRACE);
@@ -117,7 +108,7 @@ void Monster::ChangeState(MonsterState newState)
 	if (_monsterState == newState) return;
 
 	StopMove();
-	// std::cout << "NPC[" << GetId() << "] State Changed: " << _monsterState << " -> " << newState << std::endl;
+	std::cout << "NPC[" << GetId() << "] State Changed: " << _monsterState << " -> " << newState << std::endl;
 	_monsterState = newState;
 
 	if (_monsterState == MonsterState::TRACE) {
@@ -130,8 +121,7 @@ void Monster::ChangeState(MonsterState newState)
 
 void Monster::UpdateNone()
 {
-	if (false == _viewList.empty())
-		ChangeState(MonsterState::PATROL);
+
 }
 
 void Monster::UpdatePatrol()
@@ -186,7 +176,7 @@ void Monster::UpdatePatrol()
 		{
 			_patrolTimer.Reset(500);
 		}
-	}	
+	}
 }
 
 void Monster::UpdateTrace()
@@ -255,24 +245,25 @@ void Monster::UpdateAttack()
 
 	if (_attackTimer.IsReady())
 	{
-		// StatComponent에서 공격 속도를 가져와 쿨타임 계산
+		// 1. 공격 속도에 따른 쿨타임 재설정
 		float attackSpeed = _statInfo.GetAttackSpeed();
 		long long nextAttackCooldown = static_cast<long long>(1000.f / (attackSpeed > 0.f ? attackSpeed : 1.f));
 		_attackTimer.Reset(nextAttackCooldown);
 
-		int damage = _statInfo.GetAttackDamage();
+		// 2. 공격 시 타겟을 바라보도록 Yaw 갱신 (애니메이션 방향 동기화)
+		_objectInfo.position.yaw = XMConvertToDegrees(atan2f(diffY, diffX));
 
-		// 데미지 처리 (현재 스케줄링 모델 환경에서 Room의 싱글스레드 Update 순회 중이므로 직접 호출 안전함)
-		target->OnDamaged(damage, shared_from_this());
+		auto room = GetCurrentRoom();
+		if (room) {
 
-		// 공격 패킷 전송 (애니메이션 동기화용)
-		// auto room = GetCurrentRoom();
-		// if (room) {
-		// 	shared_ptr<SendBuffer> attackBuffer = PacketSerializer::MAKE_SC_ATTACK(GetId(), target->GetId());
-		// 	room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), attackBuffer);
-		// }
+			shared_ptr<SendBuffer> attackBuffer = PacketSerializer::MAKE_SC_ATTACK(static_pointer_cast<Character>(shared_from_this()), target);
+			room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), attackBuffer);
 
-		std::cout << "NPC[" << GetId() << "] Attacked Player[" << target->GetId() << "] / Dmg: " << damage << std::endl;
+			// 4. 선딜레이 적용: 애니메이션의 타격 타이밍(예: 400ms) 후에 실제 판정 함수가 불리도록 Job 예약
+			room->ReserveJob(400, &Room::ProcessHitCheck, GetId(), target->GetId());
+		}
+
+		std::cout << "NPC[" << GetId() << "] Started Attack Animation toward Player[" << target->GetId() << "]" << std::endl;
 	}
 }
 
@@ -300,6 +291,31 @@ void Monster::StopMove()
 	if (room != nullptr) {
 		shared_ptr<SendBuffer> MoveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(shared_from_this());
 		room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), MoveBuffer);
+	}
+}
+
+void Monster::WakeUpByPlayer(std::shared_ptr<Player> player)
+{
+	if (_statInfo.IsDead()) return;
+
+	if (!_wakeUp)
+	{
+		_wakeUp = true;
+		ChangeState(MonsterState::PATROL); // 깨어나면 패트롤(색적) 상태로 돌입
+		cout << "NPC[" << GetId() << "] Woke up by Player[" << player->GetId() << "]" << endl;
+	}
+}
+
+void Monster::SleepIfNoPlayer()
+{
+	if (_statInfo.IsDead()) return;
+
+	// Room 로직에 의해 _viewList에는 오직 플레이어만 남으므로, 비어있으면 유저가 없다는 뜻
+	if (_viewList.empty())
+	{
+		_wakeUp = false;
+		ChangeState(MonsterState::NONE);
+		cout << "NPC[" << GetId() << "] Goes to sleep." << endl;
 	}
 }
 

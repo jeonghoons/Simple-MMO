@@ -193,6 +193,24 @@ void Room::BroadcastAOI(shared_ptr<Character> viewableObj, shared_ptr<SendBuffer
 	}
 }
 
+void Room::PlayerChat(shared_ptr<Player> player, wstring msg)
+{
+	int chatLen = msg.length();
+	if (chatLen >= MAX_CHAT_LEN) chatLen = MAX_CHAT_LEN - 1;
+	unsigned short packetSize = sizeof(PacketHeader) + sizeof(int) + ((chatLen + 1) * sizeof(wchar_t));
+	
+	SC_CHAT_PACKET packet;
+	packet.header = { packetSize, SC_CHAT };
+	packet.senderId = player->GetId();
+
+	wcscpy_s(packet.message, MAX_CHAT_LEN, msg.c_str());
+
+	shared_ptr<SendBuffer> chatBuffer = make_shared<SendBuffer>(packetSize);
+	chatBuffer->CopyData(&packet, packetSize);
+	
+	Broadcast(chatBuffer);
+}
+
 void Room::NpcEnterRoom(shared_ptr<Monster> monster)
 {
 	if (false == AddObject(monster)) {
@@ -234,63 +252,91 @@ std::optional<PositionInfo> Room::GetObjectPosition(int objectId) const
 void Room::UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& result)
 {
 	int subjectId = subjectChar->GetId();
-	bool isPlayer = (subjectChar->GetType() == Object_Type::Player);
-	shared_ptr<Player> subjectPlayer = isPlayer ? static_pointer_cast<Player>(subjectChar) : nullptr;
 
+	bool isSubjectPlayer = (subjectChar->GetType() == Object_Type::Player);
+	bool isSubjectMonster = (subjectChar->GetType() == Object_Type::Monster);
+
+	shared_ptr<Player> subjectPlayer = isSubjectPlayer ? static_pointer_cast<Player>(subjectChar) : nullptr;
+	shared_ptr<Monster> subjectMonster = isSubjectMonster ? static_pointer_cast<Monster>(subjectChar) : nullptr;
+
+	shared_ptr<SendBuffer> removeSubjectBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(subjectId);
+	shared_ptr<SendBuffer> addSubjectBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(subjectChar);
+	
 	// 시야에서 나간 객체 처리
-	if (false == result.leaved.empty())
-	{
-		shared_ptr<SendBuffer> removeSubjectBuffer = PacketSerializer::MAKE_SC_REMOVE_OBJECT(subjectId);
+	for (int targetId : result.leaved) {
+		if (targetId == subjectId) continue;
+		shared_ptr<GameObject> targetObj = GetGameObject(targetId);
+		if (!targetObj) continue;
 
-		for (int targetId : result.leaved) {
-			if (targetId == subjectId) continue;
-			shared_ptr<GameObject> targetObj = GetGameObject(targetId);
-			if (!targetObj) continue;
+		Object_Type targetType = targetObj->GetType();
+		bool isTargetPlayer = (targetType == Object_Type::Player);
+		bool isTargetMonster = (targetType == Object_Type::Monster);
 
+		if (isSubjectPlayer || (isSubjectMonster && isTargetPlayer))
+		{
 			subjectChar->RemoveView(targetId);
 
-			Object_Type targetType = targetObj->GetType();
-			if (targetType == Object_Type::Player || targetType == Object_Type::Monster) {
-				shared_ptr<Character> targetChar = static_pointer_cast<Character>(targetObj);
-				targetChar->RemoveView(subjectId);
-				
-				if (targetType == Object_Type::Player) {
-					static_pointer_cast<Player>(targetChar)->GetSession()->Send(removeSubjectBuffer);
-				}
+			if (isSubjectMonster && isTargetPlayer) {
+				subjectMonster->SleepIfNoPlayer();
 			}
-
-			if (isPlayer) {
+			else if (isSubjectPlayer) {
 				subjectPlayer->GetSession()->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(targetId));
 			}
 		}
-	}
 
-	// 새로 시야에 들어온 객체 처리
-	if (false == result.entered.empty())
-	{
-		shared_ptr<SendBuffer> addSubjectBuffer = PacketSerializer::MAKE_SC_ADD_OBJECT(subjectChar);
+		if (isTargetPlayer || isTargetMonster)
+		{
+			shared_ptr<Character> targetChar = static_pointer_cast<Character>(targetObj);
 
-		for (int targetId : result.entered) {
-			if (targetId == subjectId) continue;
-			shared_ptr<GameObject> targetObj = GetGameObject(targetId);
-			if (!targetObj) continue;
+			if (isTargetPlayer || (isTargetMonster && isSubjectPlayer))
+			{
+				targetChar->RemoveView(subjectId);
 
-			// 주체의 시야에 대상 추가
-			subjectChar->_viewList.push_back(targetId);
-
-			Object_Type targetType = targetObj->GetType();
-			if (targetType == Object_Type::Player || targetType == Object_Type::Monster) {
-				shared_ptr<Character> targetChar = static_pointer_cast<Character>(targetObj);
-				targetChar->_viewList.push_back(subjectId); // 대상의 시야에 주체를 추가
-
-				// 대상이 플레이어면 ADD 패킷 전송
-				if (targetType == Object_Type::Player) {
-					static_pointer_cast<Player>(targetChar)->GetSession()->Send(addSubjectBuffer);
+				if (isTargetMonster && isSubjectPlayer) {
+					static_pointer_cast<Monster>(targetChar)->SleepIfNoPlayer(); 
+				}
+				else if (isTargetPlayer) {
+					static_pointer_cast<Player>(targetChar)->GetSession()->Send(removeSubjectBuffer);
 				}
 			}
+		}
+	}	
+	// 새로 시야에 들어온 객체 처리
+	for (int targetId : result.entered) {
+		if (targetId == subjectId) continue;
+		shared_ptr<GameObject> targetObj = GetGameObject(targetId);
+		if (!targetObj) continue;
 
-			if (isPlayer) {
+		Object_Type targetType = targetObj->GetType();
+		bool isTargetPlayer = (targetType == Object_Type::Player);
+		bool isTargetMonster = (targetType == Object_Type::Monster);
+
+		if (isSubjectPlayer || (isSubjectMonster && isTargetPlayer))
+		{
+			subjectChar->_viewList.push_back(targetId);
+
+			if (isSubjectMonster && isTargetPlayer) {
+				subjectMonster->WakeUpByPlayer(static_pointer_cast<Player>(targetObj));
+			}
+			else if (isSubjectPlayer) {
 				subjectPlayer->GetSession()->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(targetObj));
+			}
+		}
+
+		if (isTargetPlayer || isTargetMonster)
+		{
+			shared_ptr<Character> targetChar = static_pointer_cast<Character>(targetObj);
+
+			if (isTargetPlayer || (isTargetMonster && isSubjectPlayer))
+			{
+				targetChar->_viewList.push_back(subjectId);
+
+				if (isTargetMonster && isSubjectPlayer) {
+					static_pointer_cast<Monster>(targetChar)->WakeUpByPlayer(subjectPlayer); 
+				}
+				else if (isTargetPlayer) {
+					static_pointer_cast<Player>(targetChar)->GetSession()->Send(addSubjectBuffer); 	
+				}
 			}
 		}
 	}
@@ -312,6 +358,49 @@ shared_ptr<Monster> Room::Id2Monster(int mId)
 		return nullptr;
 
 	return it->second;
+}
+
+void Room::ProcessHitCheck(int attackerId, int targetId)
+{
+	auto attacker = Id2Monster(attackerId);
+	if (attacker == nullptr || attacker->GetStat().IsDead()) return;
+
+	// 2. 공격자의 전방 벡터 계산 (Yaw 기준)
+	float yawRad = XMConvertToRadians(attacker->GetPosition().yaw);
+	XMFLOAT3 forward = { cosf(yawRad), sinf(yawRad), 0.f };
+
+	// 3. 판정 스펙 (우선 하드코딩, 추후 Monster의 데이터로 교체)
+	float hitRadius = 150.f;  // 공격 사거리
+	float hitAngle = 90.f;    // 90도 부채꼴 판정
+
+	// 4. AOI(시야 리스트) 내의 모든 플레이어를 대상으로 다중 판정
+	for (int viewId : attacker->_viewList)
+	{
+		auto targetObj = GetGameObject(viewId);
+		if (!targetObj || targetObj->GetType() != Object_Type::Player) continue;
+
+		auto targetPlayer = static_pointer_cast<Player>(targetObj);
+
+		// 플레이어가 이미 죽었으면 제외 (필요시 활성화)
+		// if (targetPlayer->_statInfo.IsDead()) continue;
+
+		// 5. 부채꼴 판정 실행
+		if (Physics::CheckSector(attacker->GetPosition(), forward, targetPlayer->GetPosition(), hitRadius, hitAngle))
+		{
+			int damage = attacker->GetStat().GetAttackDamage();
+
+			// 6. 데미지 처리 (Player의 OnDamaged 내부에서 HP 차감 및 피격 패킷 전송을 처리하도록 위임)
+			targetPlayer->OnDamaged(damage, attacker);
+
+			// 피격 패킷이 OnDamaged에 없다면 여기서 직접 브로드캐스트 하셔도 됩니다.
+			/*
+			shared_ptr<SendBuffer> hitBuffer = PacketSerializer::MAKE_SC_HIT(attackerId, targetPlayer->GetId(), damage);
+			BroadcastAOI(targetPlayer, hitBuffer);
+			*/
+
+			std::cout << "NPC[" << attackerId << "] Hit Player[" << targetPlayer->GetId() << "] / Dmg: " << damage << std::endl;
+		}
+	}
 }
 
 shared_ptr<Room> RoomManager::CreateRoom()

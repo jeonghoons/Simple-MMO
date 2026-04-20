@@ -17,7 +17,8 @@ public:
 	void SetOwnerSession(shared_ptr<Session> session) { _ownerSession = session; }
 	shared_ptr<Session> GetSession() {return _ownerSession.lock();	}
 	
-	
+	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
+	virtual void OnDead(std::shared_ptr<GameObject> attacker) override;
 private:
 	weak_ptr<Session> _ownerSession;
 	

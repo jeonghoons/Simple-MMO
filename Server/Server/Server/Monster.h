@@ -32,11 +32,14 @@ public:
 
 public:
 	virtual void Update(float deltaTime) override;
+	virtual void StopMove() override;
 	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
 	virtual void OnDead(std::shared_ptr<GameObject> attacker) override;
-
 public:
-	virtual void StopMove() override;
+	
+	void WakeUpByPlayer(std::shared_ptr<Player> player);
+	void SleepIfNoPlayer();
+
 	// FSM
 	void UpdateAI();
 	void ChangeState(MonsterState newState);

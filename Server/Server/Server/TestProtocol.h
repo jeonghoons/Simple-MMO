@@ -1,6 +1,7 @@
 #pragma once
 #include "ProtocolSturct.h"
 
+
 // =======================
 #pragma pack (push, 1)
 struct CS_LOGIN_PACKET {
@@ -21,7 +22,7 @@ struct CS_LOGOUT_PACKET {
 
 struct CS_CHAT_PACKET {
 	PacketHeader header;
-	char message[1024];
+	wchar_t message[MAX_CHAT_LEN];
 };
 
 struct CS_ENTER_ROOM_PACKET {
@@ -63,13 +64,27 @@ struct SC_REMOVE_OBJECT_PACKET {
 
 struct SC_CHAT_PACKET {
 	PacketHeader header;
-	char message[1024];
+	int	senderId;
+	wchar_t message[MAX_CHAT_LEN];
 };
 
 struct SC_MOVE_PACKET {
 	PacketHeader header;
 	ObjectInfo objectInfo;
 	unsigned int move_time;
+};
+
+struct SC_ATTACK_PACKET {
+	PacketHeader header;
+	ObjectInfo attacker;
+	ObjectInfo target;
+};
+
+struct SC_DAMAGE_PACKET {
+	PacketHeader header;
+	int			attackerId;
+	int			targetId;
+	int			damage;
 };
 
 

@@ -55,6 +55,8 @@ public:
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
 	void BroadcastAOI(shared_ptr<class Character> viewableObj, shared_ptr<SendBuffer> sendBuffer);
 
+	void PlayerChat(shared_ptr<Player> player, wstring msg);
+
 	// Npc
 	void NpcEnterRoom(shared_ptr<Monster> monster);
 	void NPCMove(shared_ptr<Monster> monster);
@@ -70,6 +72,9 @@ public:
 	shared_ptr<Monster> Id2Monster(int mId);
 
 	int NumPlayers() { return static_cast<int>(_players.size()); }
+
+
+	void ProcessHitCheck(int attackerId, int targetId);
 
 private:
 

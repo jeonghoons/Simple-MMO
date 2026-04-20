@@ -4,6 +4,7 @@
 
 constexpr int MAX_ROOM_CAPACITY = 100;
 
+constexpr int MAX_CHAT_LEN = 100;
 // Packet Key
 enum SC_PACKET_LIST : unsigned char
 {
@@ -11,6 +12,7 @@ enum SC_PACKET_LIST : unsigned char
 	SC_ADD_OBJECT, SC_REMOVE_OBJECT,
 	SC_CHAT,
 	SC_MOVE_OBJECT, SC_CMOVE_OBJECT,
+	SC_ATTACK, SC_DAMAGE
 };
 
 enum CS_PACKET_LIST : unsigned char

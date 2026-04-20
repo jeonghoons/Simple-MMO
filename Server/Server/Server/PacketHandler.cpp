@@ -37,18 +37,19 @@ void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACK
 
 void PacketHandler::Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* packet)
 {
-	char message[1024] = { '\0', };
-	memcpy(message, packet->message, packet->header.size - sizeof(PacketHeader));
-	cout << "Client [" << session->GetId() << "] : " << message << endl;
+	shared_ptr<Player> player = session->_currPlayer;
+	if (player == nullptr) return;
 
-	SC_CHAT_PACKET cPacket;
-	strcpy_s(cPacket.message, message);
-	cPacket.header.size = packet->header.size;
-	cPacket.header.type = SC_PACKET_LIST::SC_CHAT;
+	shared_ptr<Room> room = player->GetCurrentRoom();
+	if (room == nullptr) return;
+	
+	packet->message[MAX_CHAT_LEN - 1] = L'\0';
+	wstring chatMsg = packet->message;
 
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(cPacket.header.size);
-	sendBuffer->CopyData(&cPacket, cPacket.header.size);
+	room->PushJob(&Room::PlayerChat, player, chatMsg);
 
+	cout << "Client [" << session->GetId() << "] : " << string(chatMsg.begin(), chatMsg.end()) << endl;
+	
 }
 
 void PacketHandler::Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* packet)
