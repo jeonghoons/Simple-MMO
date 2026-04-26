@@ -8,22 +8,26 @@
 Monster::Monster() : Character(Object_Type::Monster)
 {
 	_objectInfo.playerType = PlayerType::Monster;
-	StatInfo info;
-	info.hp = 100;
-	info.maxHp = 100;
-	info.attackDamage = 15;
-	info.attackSpeed = 1.0f;
-	info.moveSpeed = 400.0f;
-	_statInfo.Init(info);
 
-	int myBasicAttackId = (int)_objectInfo.playerType * 100 + 1; // 401
+	const CharacterData* statData = DataManager::GetCharacterData((int)_objectInfo.playerType);
+	if (statData) {
+		_statInfo.Init({
+			statData->hp,
+			statData->maxHp,
+			statData->attackDamage,
+			statData->attackSpeed,
+			statData->moveSpeed
+			});
+	}
+
+	// 3. 공격 사거리 세팅
+	int myBasicAttackId = (int)_objectInfo.playerType * 100 + 1;
 	if (const SkillData* skill = DataManager::GetSkillData(myBasicAttackId)) {
 		_attackRange = skill->radius;
 	}
-	else {
-		cout << "스킬 데이터 읽기 오류!" << endl;
-	}
-	
+
+	_maxSpeed = _statInfo.GetMoveSpeed();
+
 	_aiDecisionTimer.Reset(0);
 }
 
@@ -252,16 +256,16 @@ void Monster::UpdateAttack()
 
 	if (_attackTimer.IsReady())
 	{
-		// 1. 공격 속도에 따른 쿨타임 재설정
-		float attackSpeed = _statInfo.GetAttackSpeed();
-		long long nextAttackCooldown = static_cast<long long>(1000.f / (attackSpeed > 0.f ? attackSpeed : 1.f));
-		_attackTimer.Reset(nextAttackCooldown);
+		int myBasicAttackId = (int)_objectInfo.playerType * 100 + 1;
+		const SkillData* skill = DataManager::GetSkillData(myBasicAttackId);
+		long long baseCooldownMs = skill ? skill->cooldownMs : 1000;
+		float statAttackSpeed = _statInfo.GetAttackSpeed();
+		long long finalCooldownMs = static_cast<long long>(baseCooldownMs / (statAttackSpeed > 0.f ? statAttackSpeed : 1.f));
 
-		// 2. 공격 시 타겟을 바라보도록 Yaw 갱신 (애니메이션 방향 동기화)
+		_attackTimer.Reset(finalCooldownMs);
 		_objectInfo.position.yaw = XMConvertToDegrees(atan2f(diffY, diffX));
 
-		shared_ptr<Room> room = GetCurrentRoom();
-		if (room) {
+		if (shared_ptr<Room> room = GetCurrentRoom()) {
 			room->CharacterAttack(static_pointer_cast<Character>(shared_from_this()), 0, target->GetId());
 		}
 

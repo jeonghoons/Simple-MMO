@@ -21,6 +21,7 @@ public:
 
 	Object_Type GetType() const { return _objectInfo.objectType; }
 	ObjectInfo& GetInfo() { return _objectInfo; }
+	
 	const ObjectInfo& GetInfo() const { return _objectInfo; }
 	void SetInfo(const ObjectInfo& info) { _objectInfo = info; }
 

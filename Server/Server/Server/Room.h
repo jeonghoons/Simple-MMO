@@ -59,7 +59,7 @@ public:
 
 	void CharacterAttack(shared_ptr<Character> attacter, int skillId, int targetId);
 	void ExecuteSkillHit(int attackerId, int skillId, int targetId);
-	
+	void ApplyDelayedDamage(int targetId, int attackerId, int damage);
 	// Npc
 	void NpcEnterRoom(shared_ptr<Monster> monster);
 	void NPCMove(shared_ptr<Monster> monster);
@@ -99,7 +99,7 @@ public:
 	void Remove(shared_ptr<Room> room);
 
 	void EnterPlayer(shared_ptr<Player> player);
-
+	
 	int IdGenerator();
 
 public:

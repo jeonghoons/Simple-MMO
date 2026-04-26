@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "Character.h"
 
+Character::Character(Object_Type type) : MovableObject(type)
+{
+}
+
 void Character::Update(float deltaTime)
 {
 	MovableObject::Update(deltaTime);

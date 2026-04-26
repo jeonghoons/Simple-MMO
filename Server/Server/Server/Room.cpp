@@ -99,6 +99,7 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 	if (false == AddObject(player)) {
 		return;
 	}
+
 	_players.emplace(player->GetId(), player);
 	
 	cout << "Client[" << player->GetId() << "] Enter Room" << endl;
@@ -215,13 +216,11 @@ void Room::CharacterAttack(shared_ptr<Character> attacter, int skillId, int targ
 {
 	if (attacter == nullptr) return;
 
-	// 클라이언트 또는 AI가 스킬 번호를 안 보냈다면 객체 타입으로 기본 스킬 유추
 	if (attacter->Attack(skillId) == false) return;
 
 	const SkillData* skill = DataManager::GetSkillData(skillId);
 	if (!skill) return;
 
-	// 주변 유저들에게 공격 애니메이션 재생용 패킷 브로드캐스트
 	BroadcastAOI(attacter, PacketSerializer::MAKE_SC_ATTACK(attacter->GetId(), skillId, targetId));
 
 	ReserveJob(skill->hitDelayMs, &Room::ExecuteSkillHit, attacter->GetId(), skillId, targetId);
@@ -234,8 +233,23 @@ void Room::ExecuteSkillHit(int attackerId, int skillId, int targetId)
 
 	auto attackerChar = std::static_pointer_cast<Character>(attackerObj);
 
-	// CombatProcessor에 모든 연산 위임
 	CombatProcessor::ProcessSkillHit(shared_from_this(), attackerChar, skillId);
+}
+
+void Room::ApplyDelayedDamage(int targetId, int attackerId, int damage)
+{
+	auto targetObj = GetGameObject(targetId);
+	auto attackerObj = GetGameObject(attackerId);
+
+	if (targetObj == nullptr) return;
+
+	auto targetChar = std::static_pointer_cast<Character>(targetObj);
+
+	if (!targetChar->GetStat().IsDead())
+	{
+		targetChar->OnDamaged(damage, attackerObj);
+		std::cout << "[Room] Projectile Arrived! Target[" << targetId << "] Dmg: " << damage << std::endl;
+	}
 }
 
 void Room::NpcEnterRoom(shared_ptr<Monster> monster)
@@ -412,8 +426,6 @@ void RoomManager::Remove(shared_ptr<Room> room)
 void RoomManager::EnterPlayer(shared_ptr<Player> player)
 {
 	RWLock::WriteGuard lock(_lock);
-	
-
 	for (auto& [id, room] : _rooms) {
 		if (room->NumPlayers() < MAX_ROOM_CAPACITY) {
 			player->SetOwnerRoom(room);
@@ -421,11 +433,10 @@ void RoomManager::EnterPlayer(shared_ptr<Player> player)
 			return;
 		}
 	}
-
 	shared_ptr<Room> newRoom = CreateRoom();
 	newRoom->PushJob(&Room::PlayerEnterRoom, player);
-	
 }
+
 
 int RoomManager::IdGenerator()
 {

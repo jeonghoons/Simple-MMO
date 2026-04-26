@@ -209,8 +209,6 @@ PositionInfo GameMap::GetRandomPosInCell(const PositionInfo& pos) const
         // IsOutOfBounds가 false(즉, 정상적인 NavMesh 위)일 경우에만 반환
         if (CanMove(pos, randomDest))
         {
-            CellPos randPos = ToCellPos(randomDest);
-            cout << cellPos.x << ", " << cellPos.y << " -> " << randPos.x << ", " << randPos.y << endl;
             return randomDest;
         }
     }

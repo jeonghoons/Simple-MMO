@@ -1,55 +1,74 @@
 #pragma once
-
-#pragma once
 #include <unordered_map>
 
-// 타격 판정 도형 모양
 enum class HitShape
 {
-	Sector, // 부채꼴
-	Line    // 직선(선분)
+	Sector,     // 부채꼴 (근거리 즉시 타격)
+	Line,       // 직선 (원거리 관통/즉시 타격)
+	Projectile  // 투사체 (직선 + 단일 대상 + 비행 시간 지연 타격)
 };
 
-// 스킬/공격 데이터 구조체
 struct SkillData
 {
 	int skillId;
 	HitShape hitShape;
-	int hitDelayMs;     // 타격 판정 지연 시간 (애니메이션 선딜레이)
-	float radius;       // 부채꼴 반경 (또는 사거리)
+	int hitDelayMs;     // 발사 선딜레이 (손에서 이펙트가 떠나는 시간)
+	int cooldownMs;     // 애니메이션 전체 길이 (기본 쿨타임)
+	float radius;       // 부채꼴 반경
 	float angle;        // 부채꼴 각도
-	float range;        // 직선 판정 사거리
-	float width;        // 직선 판정 폭
-	int baseDamage;     // 기본 데미지
+	float range;        // 투사체/직선 사거리
+	float width;        // 투사체/직선 폭
+	int baseDamage;
+	float projSpeed;    // 투사체 이동 속도 (units/sec)
 };
 
-// 임시 인메모리 데이터 테이블
+struct CharacterData
+{
+	int typeId;
+	int hp;
+	int maxHp;
+	int attackDamage;
+	float attackSpeed;  // 기본 공격 속도 배율
+	float moveSpeed;
+};
+
 class DataManager
 {
 public:
 	static void Init()
 	{
-		// 101: 기디언 (Gideon) 기본 공격 - 에너지 투사체
-		_skillTable[101] = { 101, HitShape::Line, 400, 0.f, 0.f, 1500.f, 120.f, 40 };
-
-		// 201: 스패로우 (Sparrow) 기본 공격 - 화살
-		_skillTable[201] = { 201, HitShape::Line, 300, 0.f, 0.f, 1800.f, 80.f, 35 };
-
-		// 301: 그레이스톤 (Greystone) 기본 공격 - 검 휘두르기
-		_skillTable[301] = { 301, HitShape::Sector, 200, 250.f, 120.f, 0.f, 0.f, 50 };
-
-		// 401: 램페이지 (Monster/Rampage) 기본 공격 - 거대 팔 휘두르기
-		_skillTable[401] = { 401, HitShape::Sector, 500, 300.f, 150.f, 0.f, 0.f, 60 };
+		// 101: 기디언 - 투사체 마법
+		_skillTable[101] = { 101, HitShape::Projectile, 300, 1230, 0.f, 0.f, 1500.f, 120.f, 40, 1500.f };
+		// 201: 스패로우 - 빠른 투사체 화살
+		_skillTable[201] = { 201, HitShape::Projectile, 200, 1000, 0.f, 0.f, 1800.f, 80.f, 35, 3000.f };
+		// 301: 그레이스톤 - 부채꼴
+		_skillTable[301] = { 301, HitShape::Sector, 250, 1670, 200.f, 120.f, 0.f, 0.f, 50, 0.f };
+		// 401: 램페이지 - 부채꼴
+		_skillTable[401] = { 401, HitShape::Sector, 400, 1000, 170.f, 150.f, 0.f, 0.f, 60, 0.f };
+	
+	
+		_characterTable[1] = { 1, 500, 500, 40, 1.0f, 500.0f };
+		_characterTable[2] = { 2, 450, 450, 35, 1.1f, 550.0f };
+		_characterTable[3] = { 3, 800, 800, 30, 0.9f, 450.0f };
+		_characterTable[4] = { 4, 150, 150, 20, 1.0f, 400.0f };
+	
 	}
 
 	static const SkillData* GetSkillData(int skillId)
 	{
 		auto it = _skillTable.find(skillId);
-		if (it != _skillTable.end())
-			return &it->second;
+		if (it != _skillTable.end()) return &it->second;
+		return nullptr;
+	}
+
+	static const CharacterData* GetCharacterData(int typeId)
+	{
+		auto it = _characterTable.find(typeId);
+		if (it != _characterTable.end()) return &it->second;
 		return nullptr;
 	}
 
 private:
 	static inline std::unordered_map<int, SkillData> _skillTable;
+	static inline std::unordered_map<int, CharacterData> _characterTable;
 };

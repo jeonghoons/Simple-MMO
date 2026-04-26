@@ -1,9 +1,21 @@
 #include "pch.h"
 #include "Player.h"
+#include "ServerData.h"
 
 Player::Player(shared_ptr<Session> ownerSession) : Character(Object_Type::Player), _ownerSession(ownerSession)
 {
-	_objectInfo.playerType = PlayerType::Greystone;
+	const CharacterData* statData = DataManager::GetCharacterData((int)_objectInfo.playerType);
+	if (statData) {
+		_statInfo.Init({
+			statData->hp,
+			statData->maxHp,
+			statData->attackDamage,
+			statData->attackSpeed,
+			statData->moveSpeed
+			});
+	}
+
+	_maxSpeed = _statInfo.GetMoveSpeed();
 }
 
 Player::~Player()

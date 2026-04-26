@@ -14,6 +14,7 @@ struct CS_SIGNUP_PACKET {
 	PacketHeader header;
 	char accountID[20];
 	char accountPW[20];
+	PlayerType playerType;
 };
 
 struct CS_LOGOUT_PACKET {

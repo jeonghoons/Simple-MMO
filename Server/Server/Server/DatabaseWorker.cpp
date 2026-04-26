@@ -52,7 +52,6 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	SQLLEN nameLen = 0;
 	dbConn->BindParam(1, name, &nameLen);
 
-
 	int outId = 0;
 	SQLLEN outIdlen = 0;
 	dbConn->BindCol(1, &outId, &outIdlen);
@@ -61,12 +60,15 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	SQLLEN outNameLen = 0;
 	dbConn->BindCol(2, outName, static_cast<int>(sizeof(outName) / sizeof(outName[0])), &outNameLen);
 
-
 	WCHAR outpassword[20] = {};
 	SQLLEN outpasswordLen = 0;
 	dbConn->BindCol(3, outpassword, static_cast<int>(sizeof(outpassword) / sizeof(outpassword[0])), &outpasswordLen);
 
-	if (dbConn->Execute(L"SELECT id, account_id, password FROM [dbo].[User_Account] WHERE account_id = (?)"))
+	int outPlayerType = 0;
+	SQLLEN outPlayerTypeLen = 0;
+	dbConn->BindCol(4, &outPlayerType, &outPlayerTypeLen);
+
+	if (dbConn->Execute(L"SELECT id, account_id, password, playerType FROM [dbo].[User_Account] WHERE account_id = (?)"))
 	{
 		if (dbConn->Fetch())
 		{
@@ -76,9 +78,19 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 			{
 				cout << "로그인 성공" << std::endl;
 
+				// TODO : DBJobQueue처리
+				int playerId = session->GetId();
+				shared_ptr<Player> player = make_shared<Player>(session);
+				player->SetId(playerId);
+				player->SetPlayerType((PlayerType)outPlayerType);
+				session->_currPlayer = player;
 
-				PostQueuedCompletionStatus(_iocpHandle, 0, 0, new DBEvent(session));
-				// DBLoginResult
+				SC_LOGIN_INFO_PACKET logInPacket;
+				logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
+				logInPacket.objectInfo = player->GetInfo();
+				shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
+				loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
+				session->Send(loginInfoBuffer);
 			}
 			else
 			{
@@ -98,7 +110,7 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	
 }
 
-void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, string recvPw)
+void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, string recvPw, int playerType)
 {
 	DBConnection* dbConn = _dbConnectionPool->Pop();
 	dbConn->Unbind();
@@ -113,18 +125,20 @@ void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, strin
 	SQLLEN passwordLen = 0;
 	dbConn->BindParam(2, password, &passwordLen);
 
+	SQLLEN typeLen = 0;
+	dbConn->BindParam(3, &playerType, &typeLen);
+
 	/*TIMESTAMP_STRUCT ts = { 1998, 10, 01 };
 	SQLLEN tsLen = 0;
-	dbConn->BindParam(3, &ts, &tsLen);*/
+	dbConn->BindParam(4, &ts, &tsLen);*/
 
-	if (dbConn->Execute(L"INSERT INTO [dbo].[User_Account]([account_id], [password], [createDate]) VALUES(?, ?, GETDATE())"))
+	if (dbConn->Execute(L"INSERT INTO [dbo].[User_Account]([account_id], [password], [playerType], [createDate]) VALUES(?, ?, ?, GETDATE())"))
 	{
-		cout << "Sign Up 성공" << std::endl;
-		// 
+		cout << "[DB] Sign Up 성공 - ID : " << recvId << ", PW : " << recvPw << std::endl;
 	}
 	else
 	{
-		cout << "중복 아이디" << endl;
+		cout << "[DB] 중복 아이디" << endl;
 	}
 
 	_dbConnectionPool->Push(dbConn);

@@ -28,7 +28,7 @@ public:
 	}
 
 	void TryLogin(shared_ptr<Session> session, string recvId, string recvPw);
-	void TrySignUP(shared_ptr<Session> session, string recvId, string recvPw);
+	void TrySignUP(shared_ptr<Session> session, string recvId, string recvPw, int playerType);
 
 private:
 	ConcurrentQ<shared_ptr<Job>> _dbJobQueue;

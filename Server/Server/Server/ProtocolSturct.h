@@ -37,7 +37,7 @@ enum class Object_Type
 enum class PlayerType
 {
 	None,
-	Gideon, Sparrow, Greystone, Monster 
+	Sparrow, Greystone, Gideon, Monster
 };
 
 #pragma pack(push, 1)

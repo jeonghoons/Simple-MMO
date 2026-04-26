@@ -3,8 +3,7 @@
 
 // 전방 선언 (헤더 종속성 최소화)
 class Room;
-class Player;
-class Monster;
+class Character;
 
 class CombatProcessor
 {

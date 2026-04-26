@@ -5,7 +5,7 @@
 class Character : public MovableObject
 {
 public:
-	Character(Object_Type type) : MovableObject(type) {}
+	Character(Object_Type type);
 	virtual ~Character() = default;
 
 public:
@@ -16,8 +16,8 @@ public:
 	virtual bool Attack(int& skillId);
 
 public:
+	StatComponent& GetStat() { return _statInfo; }
 	const StatComponent& GetStat() const { return _statInfo; }
-
 
 	void RemoveView(int objectId);	
 	vector<int>	_viewList;

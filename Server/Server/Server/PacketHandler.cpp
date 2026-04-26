@@ -9,11 +9,11 @@ extern shared_ptr<DatabaseWorker> GDBWorker;
 void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
 	// DB ·Î±×ÀÎ
-	/*string id = packet->accountID;
+	string id = packet->accountID;
 	string pw = packet->accountPW;
-	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);*/
+	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);
 
-	int playerId = session->GetId();
+	/*int playerId = session->GetId();
 	shared_ptr<Player> player = make_shared<Player>(session);
 	player->SetId(playerId);
 	session->_currPlayer = player;
@@ -24,15 +24,16 @@ void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET
 	shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
 	loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
 
-	session->Send(loginInfoBuffer);
+	session->Send(loginInfoBuffer);*/
 }
 
 void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACKET* packet)
 {
 	string id = packet->accountID;
 	string pw = packet->accountPW;
+	int type = static_cast<int>(packet->playerType);
 
-	GDBWorker->PushDBJob(&DatabaseWorker::TrySignUP, session, id, pw);
+	GDBWorker->PushDBJob(&DatabaseWorker::TrySignUP, session, id, pw, type);
 }
 
 void PacketHandler::Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* packet)

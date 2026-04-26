@@ -6,7 +6,7 @@ struct StatInfo
 	int hp = 100;
 	int maxHp = 100;
 	int attackDamage = 10;
-	float attackSpeed = 1.5f; // 초당 공격 횟수
+	float attackSpeed = 1.0f;
 	float moveSpeed = 400.0f;
 };
 
@@ -23,7 +23,6 @@ public:
 
 	bool IsDead() const { return _statInfo.hp <= 0; }
 
-	// 실제 적용된 데미지 반환
 	int OnDamaged(int damage)
 	{
 		if (IsDead()) return 0;
