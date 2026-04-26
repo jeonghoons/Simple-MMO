@@ -142,7 +142,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ServerData.h" />
     <ClInclude Include="Character.h" />
+    <ClInclude Include="CombatProcessor.h" />
     <ClInclude Include="ConcurrentQueue.h" />
     <ClInclude Include="DatabaseWorker.h" />
     <ClInclude Include="DBConnection.h" />
@@ -196,6 +198,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="CombatProcessor.cpp" />
     <ClCompile Include="ConcurrentQueue.cpp" />
     <ClCompile Include="DatabaseWorker.cpp" />
     <ClCompile Include="DBConnection.cpp" />

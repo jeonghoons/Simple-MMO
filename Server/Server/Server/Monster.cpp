@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Room.h"
 #include "NavmeshManager.h"
+#include "ServerData.h"
 
 Monster::Monster() : Character(Object_Type::Monster)
 {
@@ -11,11 +12,18 @@ Monster::Monster() : Character(Object_Type::Monster)
 	info.hp = 100;
 	info.maxHp = 100;
 	info.attackDamage = 15;
-	info.attackSpeed = 1.0f; // 1초에 1번 공격
+	info.attackSpeed = 1.0f;
 	info.moveSpeed = 400.0f;
 	_statInfo.Init(info);
 
-	_maxSpeed = _statInfo.GetMoveSpeed(); // GameObject의 이동 속도와 연동
+	int myBasicAttackId = (int)_objectInfo.playerType * 100 + 1; // 401
+	if (const SkillData* skill = DataManager::GetSkillData(myBasicAttackId)) {
+		_attackRange = skill->radius;
+	}
+	else {
+		cout << "스킬 데이터 읽기 오류!" << endl;
+	}
+	
 	_aiDecisionTimer.Reset(0);
 }
 
@@ -56,7 +64,6 @@ void Monster::OnDamaged(int damage, std::shared_ptr<GameObject> attacker)
 
 	int actualDamage = _statInfo.OnDamaged(damage);
 
-
 	auto room = GetCurrentRoom();
 	if (room) {
 		shared_ptr<SendBuffer> damageBuffer = PacketSerializer::MAKE_SC_DAMAGE(GetId(), attacker->GetId(), actualDamage);
@@ -69,7 +76,7 @@ void Monster::OnDamaged(int damage, std::shared_ptr<GameObject> attacker)
 	}
 	else
 	{
-		if (_targetPlayer.expired() && attacker->GetType() == Object_Type::Player) {
+		if (attacker->GetType() == Object_Type::Player) {
 			_targetPlayer = std::static_pointer_cast<Player>(attacker);
 			ChangeState(MonsterState::TRACE);
 		}
@@ -166,8 +173,8 @@ void Monster::UpdatePatrol()
 		std::vector<PositionInfo> newPath;
 		if (room->GetNavManager()->FindPath(GetPosition(), randomDest, newPath))
 		{
-			cout << "NPC[" << _objectInfo.id << "] : " << GetPosition().x << ", " << GetPosition().y << ", " << GetPosition().z
-				<< " -> " << randomDest.x << ", " << randomDest.y << "," << randomDest.z << endl;
+			/*cout << "NPC[" << _objectInfo.id << "] : " << GetPosition().x << ", " << GetPosition().y << ", " << GetPosition().z
+				<< " -> " << randomDest.x << ", " << randomDest.y << "," << randomDest.z << endl;*/
 			SetPath(newPath);
 			long long waitTime = 1000;
 			_patrolTimer.Reset(waitTime);
@@ -182,7 +189,7 @@ void Monster::UpdatePatrol()
 void Monster::UpdateTrace()
 {
 	auto target = _targetPlayer.lock();
-	if (target == nullptr /* || target->GetStat().IsDead() */)
+	if (target == nullptr  || target->GetStat().IsDead() )
 	{
 		_targetPlayer.reset();
 		ChangeState(MonsterState::PATROL);
@@ -205,10 +212,9 @@ void Monster::UpdateTrace()
 		ChangeState(MonsterState::ATTACK);
 		return;
 	}
-
 	float targetMovedDistSq = pow(target->GetPosition().x - _lastTargetPos.x, 2) + pow(target->GetPosition().y - _lastTargetPos.y, 2);
 
-	if (targetMovedDistSq > 10000.f || _pathSearchTimer.IsReady())
+	if (!_hasPath || (targetMovedDistSq > 10000.f && _pathSearchTimer.IsReady()))
 	{
 		auto room = GetCurrentRoom();
 		if (room && room->GetNavManager())
@@ -227,7 +233,7 @@ void Monster::UpdateTrace()
 void Monster::UpdateAttack()
 {
 	auto target = _targetPlayer.lock();
-	if (target == nullptr /* || target->GetStat().IsDead() */)
+	if (target == nullptr  || target->GetStat().IsDead() )
 	{
 		ChangeState(MonsterState::PATROL);
 		return;
@@ -237,6 +243,7 @@ void Monster::UpdateAttack()
 	float diffY = target->GetPosition().y - _objectInfo.position.y;
 	float distSq = diffX * diffX + diffY * diffY;
 
+	// 거리가 멀어지면 다시 추적
 	if (distSq > _attackRange * _attackRange)
 	{
 		ChangeState(MonsterState::TRACE);
@@ -253,17 +260,12 @@ void Monster::UpdateAttack()
 		// 2. 공격 시 타겟을 바라보도록 Yaw 갱신 (애니메이션 방향 동기화)
 		_objectInfo.position.yaw = XMConvertToDegrees(atan2f(diffY, diffX));
 
-		auto room = GetCurrentRoom();
+		shared_ptr<Room> room = GetCurrentRoom();
 		if (room) {
-
-			shared_ptr<SendBuffer> attackBuffer = PacketSerializer::MAKE_SC_ATTACK(static_pointer_cast<Character>(shared_from_this()), target);
-			room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), attackBuffer);
-
-			// 4. 선딜레이 적용: 애니메이션의 타격 타이밍(예: 400ms) 후에 실제 판정 함수가 불리도록 Job 예약
-			room->ReserveJob(400, &Room::ProcessHitCheck, GetId(), target->GetId());
+			room->CharacterAttack(static_pointer_cast<Character>(shared_from_this()), 0, target->GetId());
 		}
 
-		std::cout << "NPC[" << GetId() << "] Started Attack Animation toward Player[" << target->GetId() << "]" << std::endl;
+		std::cout << "NPC[" << GetId() << "] Attack -> Player[" << target->GetId() << "]" << std::endl;
 	}
 }
 

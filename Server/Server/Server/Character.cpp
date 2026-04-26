@@ -6,6 +6,18 @@ void Character::Update(float deltaTime)
 	MovableObject::Update(deltaTime);
 }
 
+bool Character::Attack(int& skillId)
+{
+	if (_statInfo.IsDead()) return false;
+
+	if (skillId == 0)
+	{
+		skillId = (int)_objectInfo.playerType * 100 + 1; // 몬스터 기본 공격
+	}
+
+	return true;
+}
+
 void Character::RemoveView(int objectId)
 {
 	auto it = find(_viewList.begin(), _viewList.end(), objectId);

@@ -41,30 +41,57 @@ struct Cooldown
 	}
 };
 
-class Physics
+class MathUtils
 {
 public:
-	static bool CheckSector(const PositionInfo& origin, const XMFLOAT3& forward, const PositionInfo& target, float radius, float angleDegree)
+	static constexpr float PI = 3.14159265f;
+
+	// 부채꼴 충돌 판정 (근거리 무기, 몬스터 공격)
+	static bool CheckSector(const PositionInfo& origin, const PositionInfo& target, float radius, float angleDegree)
 	{
-		// 1. 거리 체크 (성능을 위해 제곱으로 비교)
-		float diffX = target.x - origin.x;
-		float diffY = target.y - origin.y;
-		float distSq = diffX * diffX + diffY * diffY;
+		float dx = target.x - origin.x;
+		float dy = target.y - origin.y;
 
-		if (distSq > radius * radius) return false;
+		float distSq = (dx * dx) + (dy * dy);
+		if (distSq > (radius * radius)) return false;
+		if (distSq == 0.0f) return true;
 
-		// 2. 각도 체크 (내적 이용)
-		XMVECTOR vForward = XMVector3Normalize(XMLoadFloat3(&forward));
-		XMVECTOR vToTarget = XMVector3Normalize(XMVectorSet(diffX, diffY, 0.0f, 0.0f));
+		float dist = std::sqrt(distSq);
+		float dirX = dx / dist;
+		float dirY = dy / dist;
 
-		// 두 벡터의 내적 (Cosθ)
-		float dot = XMVectorGetX(XMVector3Dot(vForward, vToTarget));
+		float yawRad = origin.yaw * (PI / 180.0f);
+		float forwardX = std::cos(yawRad);
+		float forwardY = std::sin(yawRad);
 
-		// 부채꼴의 절반 각도에 대한 Cos값보다 크면 범위 안
-		float halfAngleRad = XMConvertToRadians(angleDegree * 0.5f);
-		float cosHalf = cosf(halfAngleRad);
+		float dot = (forwardX * dirX) + (forwardY * dirY);
+		float cosHalf = std::cos((angleDegree * 0.5f) * (PI / 180.0f));
 
 		return dot >= cosHalf;
+	}
+
+	// 직선 충돌 판정 (궁수 등 원거리 논타겟 투사체)
+	static bool CheckLine(const PositionInfo& origin, const PositionInfo& target, float width, float range)
+	{
+		float dx = target.x - origin.x;
+		float dy = target.y - origin.y;
+		float distSq = (dx * dx) + (dy * dy);
+
+		if (distSq > (range * range)) return false;
+		if (distSq == 0.0f) return true;
+
+		float yawRad = origin.yaw * (PI / 180.0f);
+		float fwdX = std::cos(yawRad);
+		float fwdY = std::sin(yawRad);
+
+		float projDist = (dx * fwdX) + (dy * fwdY);
+
+		if (projDist < 0.0f || projDist > range) return false;
+
+		float perpDistSq = distSq - (projDist * projDist);
+		float halfWidth = width / 2.0f;
+
+		return perpDistSq <= (halfWidth * halfWidth);
 	}
 };
 

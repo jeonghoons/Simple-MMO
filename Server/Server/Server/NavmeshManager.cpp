@@ -195,3 +195,40 @@ bool NavmeshManager::FindPath(const PositionInfo& startPos, const PositionInfo& 
 	}
 	return false;
 }
+
+bool NavmeshManager::RayCast(const PositionInfo& startPos, const PositionInfo& destPos)
+{
+	if (!_navQuery) return false;
+
+	float dStart[3], dDest[3];
+	UeToDetour(startPos, dStart);
+	UeToDetour(destPos, dDest);
+
+	// 타격 판정은 오차를 최소화하기 위해 탐색 범위를 조금 더 좁게 줍니다.
+	const float extents[3] = { 50.0f, 100.0f, 50.0f };
+	dtPolyRef startRef = 0;
+	float nearestStart[3];
+
+	_navQuery->findNearestPoly(dStart, extents, &_filter, &startRef, nearestStart);
+
+	if (!startRef) {
+		return false;
+	}
+
+	float t = 0;
+	float hitNormal[3];
+	dtPolyRef path[256];
+	int pathCount = 0;
+
+	dtStatus status = _navQuery->raycast(startRef, nearestStart, dDest, &_filter, &t, hitNormal, path, &pathCount, 256);
+
+	if (dtStatusSucceed(status)) {
+		// t가 1.0f에 근접하다면 중간에 가로막는 장애물(벽)이 없다는 뜻입니다. (0.95f로 미세한 물리 오차 허용)
+		if (t >= 0.95f) {
+			return true;
+		}
+	}
+
+	// 벽에 막힘
+	return false;
+}

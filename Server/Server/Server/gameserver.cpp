@@ -29,6 +29,7 @@ int main()
 	else
 		cout << "Service Start" << endl;
 
+	
 	GRoomManager = make_unique<RoomManager>(service->GetIocpInstance()->GetHandle());
 	GRoomManager->CreateRoom();
 

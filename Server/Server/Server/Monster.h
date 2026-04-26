@@ -33,8 +33,11 @@ public:
 public:
 	virtual void Update(float deltaTime) override;
 	virtual void StopMove() override;
-	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
 	virtual void OnDead(std::shared_ptr<GameObject> attacker) override;
+	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
+
+
+
 public:
 	
 	void WakeUpByPlayer(std::shared_ptr<Player> player);
@@ -75,6 +78,6 @@ private:
 	PositionInfo _lastTargetPos;
 
 	float _traceRange = 800.f;
-	float _attackRange = 100.f;
+	float _attackRange;
 };
 

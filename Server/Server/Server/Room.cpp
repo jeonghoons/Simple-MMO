@@ -4,6 +4,8 @@
 #include "PacketHandler.h"
 #include "Player.h"
 #include "Monster.h"
+#include "CombatProcessor.h"
+#include "ServerData.h"
 
 const int NUM_MONSTER = 5;
 Room::Room(shared_ptr<Timer> timer, HANDLE iocpHandle) : _timer(timer), _jobQueue(make_shared<JobQueue>(iocpHandle))
@@ -162,11 +164,9 @@ void Room::PlayerMove(shared_ptr<Player> player, PositionInfo position, bool for
 
 	ViewUpdate result = _gameMap.UpdateMap(player->GetId(), player->GetPosition());
 
-	// 3. 시야에 변화가 있을 경우에만 동기화 진행
 	if (!result.entered.empty() || !result.leaved.empty()) {
 		UpdateView(player, result);
 	}
-
 
 	// printf("Player[%d] - (%f, %f) Yaw: %f)\n", player->GetId(), position.x, position.y, position.yaw);
 }
@@ -209,6 +209,33 @@ void Room::PlayerChat(shared_ptr<Player> player, wstring msg)
 	chatBuffer->CopyData(&packet, packetSize);
 	
 	Broadcast(chatBuffer);
+}
+
+void Room::CharacterAttack(shared_ptr<Character> attacter, int skillId, int targetId)
+{
+	if (attacter == nullptr) return;
+
+	// 클라이언트 또는 AI가 스킬 번호를 안 보냈다면 객체 타입으로 기본 스킬 유추
+	if (attacter->Attack(skillId) == false) return;
+
+	const SkillData* skill = DataManager::GetSkillData(skillId);
+	if (!skill) return;
+
+	// 주변 유저들에게 공격 애니메이션 재생용 패킷 브로드캐스트
+	BroadcastAOI(attacter, PacketSerializer::MAKE_SC_ATTACK(attacter->GetId(), skillId, targetId));
+
+	ReserveJob(skill->hitDelayMs, &Room::ExecuteSkillHit, attacter->GetId(), skillId, targetId);
+}
+
+void Room::ExecuteSkillHit(int attackerId, int skillId, int targetId)
+{
+	auto attackerObj = GetGameObject(attackerId);
+	if (attackerObj == nullptr) return;
+
+	auto attackerChar = std::static_pointer_cast<Character>(attackerObj);
+
+	// CombatProcessor에 모든 연산 위임
+	CombatProcessor::ProcessSkillHit(shared_from_this(), attackerChar, skillId);
 }
 
 void Room::NpcEnterRoom(shared_ptr<Monster> monster)
@@ -358,49 +385,6 @@ shared_ptr<Monster> Room::Id2Monster(int mId)
 		return nullptr;
 
 	return it->second;
-}
-
-void Room::ProcessHitCheck(int attackerId, int targetId)
-{
-	auto attacker = Id2Monster(attackerId);
-	if (attacker == nullptr || attacker->GetStat().IsDead()) return;
-
-	// 2. 공격자의 전방 벡터 계산 (Yaw 기준)
-	float yawRad = XMConvertToRadians(attacker->GetPosition().yaw);
-	XMFLOAT3 forward = { cosf(yawRad), sinf(yawRad), 0.f };
-
-	// 3. 판정 스펙 (우선 하드코딩, 추후 Monster의 데이터로 교체)
-	float hitRadius = 150.f;  // 공격 사거리
-	float hitAngle = 90.f;    // 90도 부채꼴 판정
-
-	// 4. AOI(시야 리스트) 내의 모든 플레이어를 대상으로 다중 판정
-	for (int viewId : attacker->_viewList)
-	{
-		auto targetObj = GetGameObject(viewId);
-		if (!targetObj || targetObj->GetType() != Object_Type::Player) continue;
-
-		auto targetPlayer = static_pointer_cast<Player>(targetObj);
-
-		// 플레이어가 이미 죽었으면 제외 (필요시 활성화)
-		// if (targetPlayer->_statInfo.IsDead()) continue;
-
-		// 5. 부채꼴 판정 실행
-		if (Physics::CheckSector(attacker->GetPosition(), forward, targetPlayer->GetPosition(), hitRadius, hitAngle))
-		{
-			int damage = attacker->GetStat().GetAttackDamage();
-
-			// 6. 데미지 처리 (Player의 OnDamaged 내부에서 HP 차감 및 피격 패킷 전송을 처리하도록 위임)
-			targetPlayer->OnDamaged(damage, attacker);
-
-			// 피격 패킷이 OnDamaged에 없다면 여기서 직접 브로드캐스트 하셔도 됩니다.
-			/*
-			shared_ptr<SendBuffer> hitBuffer = PacketSerializer::MAKE_SC_HIT(attackerId, targetPlayer->GetId(), damage);
-			BroadcastAOI(targetPlayer, hitBuffer);
-			*/
-
-			std::cout << "NPC[" << attackerId << "] Hit Player[" << targetPlayer->GetId() << "] / Dmg: " << damage << std::endl;
-		}
-	}
 }
 
 shared_ptr<Room> RoomManager::CreateRoom()

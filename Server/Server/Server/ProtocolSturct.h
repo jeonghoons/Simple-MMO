@@ -20,12 +20,13 @@ enum CS_PACKET_LIST : unsigned char
 	CS_LOGIN, CS_SIGNUP, CS_LOGOUT,
 	CS_CHAT,
 	CS_MOVE, CS_CMOVE,
-	CS_ENTER_ROOM, CS_LEAVE_ROOM
+	CS_ENTER_ROOM, CS_LEAVE_ROOM,
+	CS_ATTACK,
 };
 
 enum class Move_State
 {
-	NONE, IDLE, RUN, JUMP
+	NONE, IDLE, RUN, JUMP, ATTACK
 };
 
 enum class Object_Type
@@ -36,7 +37,7 @@ enum class Object_Type
 enum class PlayerType
 {
 	None,
-	Gideon, Sparrow, Monster
+	Gideon, Sparrow, Greystone, Monster 
 };
 
 #pragma pack(push, 1)

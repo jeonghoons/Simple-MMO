@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ServerService.h"
+#include "ServerData.h"
 
 ServerService::ServerService(NetAddress address, shared_ptr<IocpCore> iocpCore)
 	: _netAddress(address), _iocpCore(iocpCore)
@@ -9,6 +10,8 @@ ServerService::ServerService(NetAddress address, shared_ptr<IocpCore> iocpCore)
 		printf("WSAStartup failed with error: %d\n", WSAGetLastError());
 		exit(-1);
 	}
+
+	DataManager::Init();
 }
 
 ServerService::~ServerService()

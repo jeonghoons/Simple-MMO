@@ -32,7 +32,8 @@ public:
 
 	// 길 찾기 (A* 알고리즘)
 	bool FindPath(const PositionInfo& startPos, const PositionInfo& destPos, std::vector<PositionInfo>& outPath);
-
+	
+	bool RayCast(const PositionInfo& startPos, const PositionInfo& destPos);
 private:
 	// 언리얼(Z-up) <-> Detour(Y-up) 좌표 변환 유틸리티
 	void UeToDetour(const PositionInfo& uePos, float* detourPos);

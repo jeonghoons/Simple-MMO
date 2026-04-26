@@ -3,7 +3,7 @@
 
 Player::Player(shared_ptr<Session> ownerSession) : Character(Object_Type::Player), _ownerSession(ownerSession)
 {
-	_objectInfo.playerType = PlayerType::Gideon;
+	_objectInfo.playerType = PlayerType::Greystone;
 }
 
 Player::~Player()

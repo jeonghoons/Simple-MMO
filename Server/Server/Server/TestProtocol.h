@@ -41,6 +41,11 @@ struct CS_CMOVE_PACKET {
 	bool force = false;
 };
 
+struct CS_ATTACK_PACKET {
+	PacketHeader header;
+	int			targetId;
+};
+
 // ------------------------------------------
 struct SC_LOGIN_INFO_PACKET {
 	PacketHeader header;
@@ -76,8 +81,9 @@ struct SC_MOVE_PACKET {
 
 struct SC_ATTACK_PACKET {
 	PacketHeader header;
-	ObjectInfo attacker;
-	ObjectInfo target;
+	int attackerId;
+	int skillId;
+	int targetId;
 };
 
 struct SC_DAMAGE_PACKET {

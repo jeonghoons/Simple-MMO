@@ -141,6 +141,9 @@
     <ClCompile Include="Room.cpp">
       <Filter>Contents\GameRoom</Filter>
     </ClCompile>
+    <ClCompile Include="CombatProcessor.cpp">
+      <Filter>Contents\GameRoom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -232,6 +235,12 @@
     </ClInclude>
     <ClInclude Include="StatComponent.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CombatProcessor.h">
+      <Filter>Contents\GameRoom</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerData.h">
+      <Filter>DB</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

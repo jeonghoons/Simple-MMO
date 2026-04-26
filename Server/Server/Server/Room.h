@@ -57,6 +57,9 @@ public:
 
 	void PlayerChat(shared_ptr<Player> player, wstring msg);
 
+	void CharacterAttack(shared_ptr<Character> attacter, int skillId, int targetId);
+	void ExecuteSkillHit(int attackerId, int skillId, int targetId);
+	
 	// Npc
 	void NpcEnterRoom(shared_ptr<Monster> monster);
 	void NPCMove(shared_ptr<Monster> monster);
@@ -72,9 +75,6 @@ public:
 	shared_ptr<Monster> Id2Monster(int mId);
 
 	int NumPlayers() { return static_cast<int>(_players.size()); }
-
-
-	void ProcessHitCheck(int attackerId, int targetId);
 
 private:
 

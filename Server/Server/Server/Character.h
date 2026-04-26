@@ -13,6 +13,8 @@ public:
 	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) {}
 	virtual void OnDead(std::shared_ptr<GameObject> attacker) {}
 
+	virtual bool Attack(int& skillId);
+
 public:
 	const StatComponent& GetStat() const { return _statInfo; }
 

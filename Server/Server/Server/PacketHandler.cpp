@@ -54,25 +54,33 @@ void PacketHandler::Handle_CS_CHAT(shared_ptr<Session> session, CS_CHAT_PACKET* 
 
 void PacketHandler::Handle_CS_MOVE(shared_ptr<Session> session, CS_MOVE_PACKET* packet)
 {
-	if (auto room = session->_currPlayer->GetCurrentRoom())
-		room->PushJob(&Room::PlayerMove, session->_currPlayer, packet->posInfo, packet->force);
-
-}
-
-void PacketHandler::Handle_CS_CMOVE(shared_ptr<Session> session, CS_CMOVE_PACKET* packet)
-{
-
 	/*if (auto room = session->_currPlayer->GetCurrentRoom())
-		room->PushJob(&Room::PlayerCMove, session->_currPlayer, packet->pos, packet->force);
-	*/
+		room->PushJob(&Room::PlayerMove, session->_currPlayer, packet->posInfo, packet->force);*/
 
+	shared_ptr<Player> player = session->_currPlayer;
+	if (player == nullptr) return;
+
+	shared_ptr<Room> room = player->GetCurrentRoom();
+	if (room == nullptr) return;
+
+	room->PushJob(&Room::PlayerMove, player, packet->posInfo, packet->force);
 }
 
 void PacketHandler::Handle_CS_ENTER_ROOM(shared_ptr<Session> session, CS_ENTER_ROOM_PACKET* packet)
 {
-	
 	shared_ptr<Player> player = session->_currPlayer;
 	GRoomManager->EnterPlayer(player);
+}
+
+void PacketHandler::Handle_CS_ATTACK(shared_ptr<Session> session, CS_ATTACK_PACKET* packet)
+{
+	shared_ptr<Player> player = session->_currPlayer;
+	if (player == nullptr) return;
+
+	shared_ptr<Room> room = player->GetCurrentRoom();
+	if (room == nullptr) return;
+
+	room->PushJob(&Room::CharacterAttack, static_pointer_cast<Character>(player), 0, packet->targetId);
 }
 
 
@@ -95,11 +103,11 @@ void PacketHandler::ProcessPacket(shared_ptr<Session> session, BYTE* buffer, int
 	case CS_PACKET_LIST::CS_MOVE:
 		Handle_CS_MOVE(session, reinterpret_cast<CS_MOVE_PACKET*>(buffer));
 		break;
-	case CS_PACKET_LIST::CS_CMOVE:
-		Handle_CS_CMOVE(session, reinterpret_cast<CS_CMOVE_PACKET*>(buffer));
-		break;
 	case CS_PACKET_LIST::CS_ENTER_ROOM:
 		Handle_CS_ENTER_ROOM(session, reinterpret_cast<CS_ENTER_ROOM_PACKET*>(buffer));
+		break;
+	case CS_PACKET_LIST::CS_ATTACK:
+		Handle_CS_ATTACK(session, reinterpret_cast<CS_ATTACK_PACKET*>(buffer));
 		break;
 
 	case CS_PACKET_LIST::CS_LOGOUT:
