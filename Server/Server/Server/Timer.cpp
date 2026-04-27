@@ -24,7 +24,6 @@ void Timer::Run()
             return !_timerQueue.Is_empty();
             });
 
-
         vector<TimerItem> readyJobs;
 
         while (!_timerQueue.GetQueueUnsafe().empty())

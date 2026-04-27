@@ -28,6 +28,6 @@ void Character::RemoveView(int objectId)
 	if (it != _viewList.end()) {
 		*it = _viewList.back();
 		_viewList.pop_back();
-		cout << "Object[" << GetId() << "]에서 " << objectId << "제거" << endl;
+		// cout << "Object[" << GetId() << "]에서 " << objectId << "제거" << endl;
 	}
 }

@@ -19,12 +19,13 @@ public:
 	
 	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
 	virtual void OnDead(std::shared_ptr<GameObject> attacker) override;
-
 public:
 	void SetPlayerType(PlayerType type) { _objectInfo.playerType = type; }
+	bool isDummy = false;
 
 private:
 	weak_ptr<Session> _ownerSession;
+	
 	
 };
 

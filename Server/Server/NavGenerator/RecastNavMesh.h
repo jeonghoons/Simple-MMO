@@ -43,7 +43,7 @@ class RecastNavMesh
 public:
     RecastNavMesh();
     ~RecastNavMesh();
-
+    
 public:
     bool Build(const std::string& filePath);
     bool SaveNavMeshBinary(const std::string& path);

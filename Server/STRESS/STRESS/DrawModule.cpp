@@ -124,39 +124,85 @@ int InitGL(GLvoid)										// All Setup For OpenGL Goes Here
 	return TRUE;										// Initialization Went OK
 }
 
-int DrawGLScene(GLvoid)									// Here's Where We Do All The Drawing
+//int DrawGLScene(GLvoid)									// Here's Where We Do All The Drawing
+//{
+//	int size = 0;
+//	float* points = nullptr;
+//	GetPointCloud(&size, &points);
+//
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
+//	glLoadIdentity();									// Reset The Current Modelview Matrix
+//	glTranslatef(0.14f, -0.4f, -1.0f);						// Move One Unit Into The Screen
+//	// glTranslatef(0.0f, 0.0f, -2.0f);
+//	
+//	// Pulsing Colors Based On Text Position
+//	glColor3f(1, 1, 0);
+//	// Position The Text On The Screen
+//	glRasterPos2f(-1.5f, 1.0f);
+//	glPrint("STRESS TEST [%d]", (int)active_clients);	// Print GL Text To The Screen
+//	glRasterPos2f(0.0f, 0.05f);
+//	glPrint("Delay : %dms", global_delay);
+//
+//	glColor3f(1, 1, 1);
+//
+//	glPointSize(2.0);
+//	glBegin(GL_POINTS);
+//	for (int i = 0; i < size; i++)
+//	{
+//		float x, y, z;
+//
+//		/*x = points[i * 2] / 200.0f - 1.25f;
+//		y = 1.25f - points[i * 2 + 1] / 200.0f;
+//		z = -1.0f;*/
+//
+//		x = (points[i * 2] / 7500.0f) * 1.5f;
+//		y = (points[i * 2 + 1] / 7500.0f) * 1.5f;
+//		z = 0.0f;
+//
+//		glVertex3f(x, y, z);
+//	}
+//	glEnd();
+//
+//	return TRUE;										// Everything Went OK
+//}
+
+int DrawGLScene(GLvoid)
 {
 	int size = 0;
 	float* points = nullptr;
 	GetPointCloud(&size, &points);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
-	glLoadIdentity();									// Reset The Current Modelview Matrix
-	glTranslatef(0.14f, -0.4f, -1.0f);						// Move One Unit Into The Screen
-															// Pulsing Colors Based On Text Position
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+
+	// [수정됨] 맵을 조금 더 넓게(여유있게) 보기 위해 Z축을 -3.5f로 더 뺍니다.
+	glTranslatef(0.0f, 0.0f, -3.5f);
+
 	glColor3f(1, 1, 0);
-	// Position The Text On The Screen
-	glRasterPos2f(0.0f, 0.00f);
-	glPrint("STRESS TEST [%d]", (int)active_clients);	// Print GL Text To The Screen
-	glRasterPos2f(0.0f, 0.05f);
+
+	// [수정됨] 카메라가 뒤로 간 만큼 텍스트 위치도 약간 더 바깥으로 조정합니다.
+	glRasterPos2f(-1.8f, 1.2f);
+	glPrint("STRESS TEST [%d]", (int)active_clients);
+	glRasterPos2f(-1.8f, 1.05f);
 	glPrint("Delay : %dms", global_delay);
 
 	glColor3f(1, 1, 1);
 
-	glPointSize(2.0);
+	// [수정됨] 맵이 넓어진 만큼 점의 크기를 작게 줄입니다 (2.0 -> 1.0)
+	glPointSize(1.0f);
 	glBegin(GL_POINTS);
 	for (int i = 0; i < size; i++)
 	{
-		float x, y, z;
+		// 맵 크기(-7500 ~ 7500)를 화면 정규화 비율로 변환
+		float x = points[i * 2] / 7500.0f;
+		float y = points[i * 2 + 1] / 7500.0f;
 
-		x = points[i * 2] / 200.0f - 1.25f;
-		y = 1.25f - points[i * 2 + 1] / 200.0f;
-		z = -1.0f;
-		glVertex3f(x, y, z);
+		// 언리얼 등에서 Y축 하단이 커지는 좌표계라면 y 에 - 기호를 붙여주세요 ( y = -points[i * 2 + 1] / 7500.0f; )
+		glVertex3f(x, y, 0.0f);
 	}
 	glEnd();
 
-	return TRUE;										// Everything Went OK
+	return TRUE;
 }
 
 GLvoid KillGLWindow(GLvoid)								// Properly Kill The Window

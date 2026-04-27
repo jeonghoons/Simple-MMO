@@ -56,7 +56,7 @@ void CombatProcessor::ProcessSkillHit(std::shared_ptr<Room> room, std::shared_pt
 				{
 					int finalDamage = skillData->baseDamage;
 					targetChar->OnDamaged(finalDamage, attacker);
-					std::cout << "Hit Target[" << targetChar->GetId() << "] Dmg: " << finalDamage << std::endl;
+					// std::cout << "Hit Target[" << targetChar->GetId() << "] Dmg: " << finalDamage << std::endl;
 				}
 			}
 		}
@@ -77,7 +77,7 @@ void CombatProcessor::ProcessSkillHit(std::shared_ptr<Room> room, std::shared_pt
 		}
 		else {
 			room->ReserveJob(flightTimeMs, &Room::ApplyDelayedDamage, closestProjTarget->GetId(), attacker->GetId(), skillData->baseDamage);
-			std::cout << "Projectile Fired! Flight time: " << flightTimeMs << "ms" << std::endl;
+			// std::cout << "Projectile Fired! Flight time: " << flightTimeMs << "ms" << std::endl;
 		}
 	}
 }

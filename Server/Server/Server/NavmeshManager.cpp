@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "NavmeshManager.h"
 #include "DetourCommon.h"
+#include <cstdlib>
 
 static const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T';
 static const int NAVMESHSET_VERSION = 1;
@@ -128,7 +129,7 @@ bool NavmeshManager::CanMove(const PositionInfo& startPos, const PositionInfo& d
 
 	_navQuery->findNearestPoly(dStart, extents, &_filter, &startRef, nearestStart);
 	if (!startRef) {
-		cout << "오브젝트 근처에 폴리곤이 없습니다. " << endl;
+		// cout << "오브젝트 근처에 폴리곤이 없습니다. " << endl;
 		return false;
 	}
 
@@ -231,4 +232,32 @@ bool NavmeshManager::RayCast(const PositionInfo& startPos, const PositionInfo& d
 
 	// 벽에 막힘
 	return false;
+}
+
+PositionInfo NavmeshManager::GetRandomPosition()
+{
+	PositionInfo outPos{}; // 실패 시 기본값
+
+	if (!_navQuery || !_navMesh) return outPos;
+
+	dtPolyRef randomRef = 0;
+	float randomPt[3] = { 0.0f, 0.0f, 0.0f };
+
+	// 최대 10번 재시도하여 갈 수 있는 "정상적인 폴리곤"인지 검증
+	for (int i = 0; i < 10; ++i)
+	{
+		dtStatus status = _navQuery->findRandomPoint(&_filter, GetRandomFloat, &randomRef, randomPt);
+
+		if (dtStatusSucceed(status) && randomRef != 0)
+		{
+			unsigned char areaID = 0;
+			_navMesh->getPolyArea(randomRef, &areaID);
+
+			// 안전한 폴리곤을 찾았으므로 언리얼 좌표(XY평면)로 변환 후 반환
+			DetourToUe(randomPt, outPos);
+			return outPos;
+		}
+	}
+
+	return outPos;
 }

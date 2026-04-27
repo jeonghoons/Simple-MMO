@@ -8,6 +8,7 @@ struct CS_LOGIN_PACKET {
 	PacketHeader header;
 	char accountID[20];
 	char accountPW[20];
+	bool	isDummy = false;
 };
 
 struct CS_SIGNUP_PACKET {
@@ -36,10 +37,10 @@ struct CS_MOVE_PACKET {
 	bool force = false;
 };
 
-struct CS_CMOVE_PACKET {
+struct CS_DMOVE_PACKET {
 	PacketHeader header;
-	PositionInfo posInfo;
-	bool force = false;
+	float inputX;
+	float inputY;
 };
 
 struct CS_ATTACK_PACKET {

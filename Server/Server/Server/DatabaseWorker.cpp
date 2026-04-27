@@ -28,7 +28,6 @@ DatabaseWorker::~DatabaseWorker()
 
 void DatabaseWorker::Run()
 {
-	
 	while (true)
 	{
 		shared_ptr<Job> job = nullptr;

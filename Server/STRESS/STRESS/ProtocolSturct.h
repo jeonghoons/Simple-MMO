@@ -1,20 +1,43 @@
 #pragma once
-#include <DirectXMath.h>
-using namespace DirectX;
+
 #define PORT_NUM 8888
 
-constexpr int MAX_ROOM_CAPACITY = 20000;
+constexpr int MAX_ROOM_CAPACITY = 100;
 
+constexpr int MAX_CHAT_LEN = 100;
 // Packet Key
 enum SC_PACKET_LIST : unsigned char
 {
-	SC_LOGIN, SC_LOGOUT, SC_ADD_PLAYER, SC_REMOVE_PLAYER,
-	SC_CHAT, SC_MOVE_OBJECT, SC_ADD_OBJECT, SC_REMOVE_OBJECT
+	SC_LOGIN, SC_SIGNUP, SC_LOGOUT,
+	SC_ADD_OBJECT, SC_REMOVE_OBJECT,
+	SC_CHAT,
+	SC_MOVE_OBJECT, SC_CMOVE_OBJECT,
+	SC_ATTACK, SC_DAMAGE
 };
 
 enum CS_PACKET_LIST : unsigned char
 {
-	CS_LOGIN, CS_LOGOUT, CS_CHAT, CS_MOVE
+	CS_LOGIN, CS_SIGNUP, CS_LOGOUT,
+	CS_CHAT,
+	CS_MOVE, CS_CMOVE,
+	CS_ENTER_ROOM, CS_LEAVE_ROOM,
+	CS_ATTACK,
+};
+
+enum class Move_State
+{
+	NONE, IDLE, RUN, JUMP, ATTACK
+};
+
+enum class Object_Type
+{
+	NONE, Player, Monster, Npc, Item, ENVIRONMENT
+};
+
+enum class PlayerType
+{
+	None,
+	Sparrow, Greystone, Gideon, Monster
 };
 
 #pragma pack(push, 1)
@@ -26,30 +49,23 @@ struct PacketHeader
 
 struct PositionInfo
 {
-	float pos_x{};
-	float pos_y{};
-	float pos_z{};
-	float yaw{};
+	float x;
+	float y;
+	float z;
+	float yaw;
+	float v_x;
+	float v_y;
+	float v_z;
+	Move_State state;
 };
 
 struct ObjectInfo
 {
-	enum Object_Type : unsigned char
-	{
-
-	};
-
-	enum Object_State : unsigned char
-	{
-		NONE, IDLE, RUN, JUMP
-	};
-
 	int id{};
-	// std::pair<int, int> position;
-	Object_State state = Object_State::NONE;
+	Object_Type		objectType;
+	PlayerType       playerType;
 	PositionInfo			position{};
 
 };
-
 #pragma pack (pop)
 

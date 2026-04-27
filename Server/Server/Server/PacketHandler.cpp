@@ -8,23 +8,26 @@ extern shared_ptr<DatabaseWorker> GDBWorker;
 
 void PacketHandler::Handle_CS_LOGIN(shared_ptr<Session> session, CS_LOGIN_PACKET* packet)
 {
+	if (packet->isDummy) {
+		int playerId = session->GetId();
+		shared_ptr<Player> player = make_shared<Player>(session);
+		player->SetId(playerId);
+		player->isDummy = true;
+		session->_currPlayer = player;
+		SC_LOGIN_INFO_PACKET logInPacket;
+		logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
+		logInPacket.objectInfo = player->GetInfo();
+		shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
+		loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
+		session->Send(loginInfoBuffer);
+		return;
+	}
+
+
 	// DB ·Î±×ÀÎ
 	string id = packet->accountID;
 	string pw = packet->accountPW;
 	GDBWorker->PushDBJob(&DatabaseWorker::TryLogin, session, id, pw);
-
-	/*int playerId = session->GetId();
-	shared_ptr<Player> player = make_shared<Player>(session);
-	player->SetId(playerId);
-	session->_currPlayer = player;
-
-	SC_LOGIN_INFO_PACKET logInPacket;
-	logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
-	logInPacket.objectInfo = player->GetInfo();
-	shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
-	loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
-
-	session->Send(loginInfoBuffer);*/
 }
 
 void PacketHandler::Handle_CS_SIGNUP(shared_ptr<Session> session, CS_SIGNUP_PACKET* packet)

@@ -28,14 +28,16 @@ void Room::InitRoom()
 	}
 	else
 	{
-		for (int i = 1; i < spawnPoints.size(); ++i) {
-			shared_ptr<Monster> monster = make_shared<Monster>();
-			monster->SetId(MonsterIdGenerator());
+		for (int k = 0; k < 100; ++k) {
+			for (int i = 1; i < spawnPoints.size(); ++i) {
+				shared_ptr<Monster> monster = make_shared<Monster>();
+				monster->SetId(MonsterIdGenerator());
 
-			PositionInfo spawnPos = { spawnPoints[i].X, spawnPoints[i].Y, spawnPoints[i].Z, spawnPoints[i].Yaw};
-			monster->SetPosition(spawnPos);
+				PositionInfo spawnPos = { spawnPoints[i].X, spawnPoints[i].Y, spawnPoints[i].Z, spawnPoints[i].Yaw };
+				monster->SetPosition(spawnPos);
 
-			NpcEnterRoom(monster);
+				NpcEnterRoom(monster);
+			}
 		}
 		
 	}
@@ -72,7 +74,11 @@ bool Room::AddObject(shared_ptr<GameObject> object)
 	const auto& spawnPoints = _gameMap.GetSpawnPoints();
 	if (object->GetType() == Object_Type::Player) {
 		object->SetPosition({ spawnPoints[0].X, spawnPoints[0].Y, spawnPoints[0].Z});
-		// object->SetPosition({ 0.0, 0.0, 0.0 });
+		
+		shared_ptr<Player> dummyPlayer = static_pointer_cast<Player>(object);
+		if (dummyPlayer->isDummy) {
+			dummyPlayer->SetPosition(_gameMap.GetNavManager()->GetRandomPosition());
+		}
 	}
 
 	PositionInfo currentPos = object->GetPosition();
@@ -122,7 +128,7 @@ void Room::PlayerEnterRoom(shared_ptr<Player> player)
 
 void Room::PlayerLeaveRoom(shared_ptr<Player> player)
 {
-	cout << "PLayer[" << player->GetId() << "] Leave" << endl;
+	cout << "Player[" << player->GetId() << "] Leave" << endl;
 
 	int playerId = player->GetId();
 
@@ -154,7 +160,6 @@ void Room::PlayerMove(shared_ptr<Player> player, PositionInfo position, bool for
 			session->Send(correctionBuffer);
 		}
 		// cout << "비정상 이동 차단" << endl;
-
 		return;
 	}
 
@@ -321,7 +326,9 @@ void Room::UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& resul
 				subjectMonster->SleepIfNoPlayer();
 			}
 			else if (isSubjectPlayer) {
-				subjectPlayer->GetSession()->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(targetId));
+				if (shared_ptr<Session> subjectSession = subjectPlayer->GetSession()) {
+					subjectSession->Send(PacketSerializer::MAKE_SC_REMOVE_OBJECT(targetId));
+				}
 			}
 		}
 
@@ -337,7 +344,9 @@ void Room::UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& resul
 					static_pointer_cast<Monster>(targetChar)->SleepIfNoPlayer(); 
 				}
 				else if (isTargetPlayer) {
-					static_pointer_cast<Player>(targetChar)->GetSession()->Send(removeSubjectBuffer);
+					if (shared_ptr<Session> targetSession = static_pointer_cast<Player>(targetChar)->GetSession()) {
+						targetSession->Send(removeSubjectBuffer);
+					}
 				}
 			}
 		}
@@ -360,7 +369,9 @@ void Room::UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& resul
 				subjectMonster->WakeUpByPlayer(static_pointer_cast<Player>(targetObj));
 			}
 			else if (isSubjectPlayer) {
-				subjectPlayer->GetSession()->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(targetObj));
+				if (shared_ptr<Session> subjectSession = subjectPlayer->GetSession()) {
+					subjectSession->Send(PacketSerializer::MAKE_SC_ADD_OBJECT(targetObj));
+				}
 			}
 		}
 
@@ -376,7 +387,9 @@ void Room::UpdateView(shared_ptr<Character> subjectChar, const ViewUpdate& resul
 					static_pointer_cast<Monster>(targetChar)->WakeUpByPlayer(subjectPlayer); 
 				}
 				else if (isTargetPlayer) {
-					static_pointer_cast<Player>(targetChar)->GetSession()->Send(addSubjectBuffer); 	
+					if (shared_ptr<Session> targetSession = static_pointer_cast<Player>(targetChar)->GetSession()) {
+						targetSession->Send(addSubjectBuffer);
+					}
 				}
 			}
 		}

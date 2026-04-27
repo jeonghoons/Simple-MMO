@@ -49,7 +49,6 @@ ViewUpdate GameMap::UpdateMap(int objectId, const PositionInfo& pos)
     vector<CellPos> new_view = GetNeighborCells(newPos);
 
     for (const auto& cell : new_view) {
-        
         if (find(old_view.begin(), old_view.end(), cell) == old_view.end()) {
             CollectObject(cell, result.entered);
         }
