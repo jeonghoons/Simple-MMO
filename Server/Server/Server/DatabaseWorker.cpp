@@ -75,38 +75,19 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 			MultiByteToWideChar(CP_ACP, 0, recvPw.c_str(), -1, clpassword, _countof(clpassword));
 			if (lstrcmpW(clpassword, outpassword) == 0)
 			{
-				cout << "로그인 성공" << std::endl;
-
-				// TODO : DBJobQueue처리
-				int playerId = session->GetId();
-				shared_ptr<Player> player = make_shared<Player>(session);
-				player->SetId(playerId);
-				player->SetPlayerType((PlayerType)outPlayerType);
-				session->_currPlayer = player;
-
-				SC_LOGIN_INFO_PACKET logInPacket;
-				logInPacket.header = { sizeof(SC_LOGIN_INFO_PACKET), SC_LOGIN };
-				logInPacket.objectInfo = player->GetInfo();
-				shared_ptr<SendBuffer> loginInfoBuffer = make_shared<SendBuffer>(sizeof(logInPacket));
-				loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
-				session->Send(loginInfoBuffer);
+				GLobby->PushJob(&AuthLobby::OnLoginSuccess, session, outPlayerType);
 			}
 			else
 			{
-				cout << "비밀번호가 다릅니다." << std::endl;
+				GLobby->PushJob(&AuthLobby::OnLoginFailed, session, (string)"비밀 번호 오류");
 			}
 		}
 		else
 		{
-			cout << "없는 아이디" << std::endl;
+			GLobby->PushJob(&AuthLobby::OnLoginFailed, session, (string)"DB에 존재하지 않는 ID");
 		}
 	}
-	
-
 	_dbConnectionPool->Push(dbConn);
-
-
-	
 }
 
 void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, string recvPw, int playerType)
@@ -126,10 +107,6 @@ void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, strin
 
 	SQLLEN typeLen = 0;
 	dbConn->BindParam(3, &playerType, &typeLen);
-
-	/*TIMESTAMP_STRUCT ts = { 1998, 10, 01 };
-	SQLLEN tsLen = 0;
-	dbConn->BindParam(4, &ts, &tsLen);*/
 
 	if (dbConn->Execute(L"INSERT INTO [dbo].[User_Account]([account_id], [password], [playerType], [createDate]) VALUES(?, ?, ?, GETDATE())"))
 	{

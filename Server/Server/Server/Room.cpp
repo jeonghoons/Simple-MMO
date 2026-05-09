@@ -28,16 +28,14 @@ void Room::InitRoom()
 	}
 	else
 	{
-		for (int k = 0; k < 100; ++k) {
-			for (int i = 1; i < spawnPoints.size(); ++i) {
-				shared_ptr<Monster> monster = make_shared<Monster>();
-				monster->SetId(MonsterIdGenerator());
+		for (int i = 1; i < spawnPoints.size(); ++i) {
+			shared_ptr<Monster> monster = make_shared<Monster>();
+			monster->SetId(MonsterIdGenerator());
 
-				PositionInfo spawnPos = { spawnPoints[i].X, spawnPoints[i].Y, spawnPoints[i].Z, spawnPoints[i].Yaw };
-				monster->SetPosition(spawnPos);
+			PositionInfo spawnPos = { spawnPoints[i].X, spawnPoints[i].Y, spawnPoints[i].Z, spawnPoints[i].Yaw };
+			monster->SetPosition(spawnPos);
 
-				NpcEnterRoom(monster);
-			}
+			NpcEnterRoom(monster);
 		}
 		
 	}

@@ -4,8 +4,10 @@
 #include "IocpCore.h"
 #include "Room.h"
 
+shared_ptr<Timer> GTimer = nullptr;
 shared_ptr<DatabaseWorker> GDBWorker = nullptr;
 unique_ptr<RoomManager> GRoomManager = nullptr;
+shared_ptr<AuthLobby> GLobby = nullptr;
 
 void worker_thread(shared_ptr<ServerService> service)
 {
@@ -30,11 +32,12 @@ int main()
 		cout << "Service Start" << endl;
 
 	
+	GTimer = make_shared<Timer>();
 	GRoomManager = make_unique<RoomManager>(service->GetIocpInstance()->GetHandle());
 	GRoomManager->CreateRoom();
-
 	GDBWorker = make_shared<DatabaseWorker>(service->GetIocpInstance()->GetHandle(), 6);
-
+	GLobby = make_shared<AuthLobby>(service->GetIocpInstance()->GetHandle());
+	
 	vector<thread> threads;
 	int num_threads = thread::hardware_concurrency();
 	// int num_threads = 1;

@@ -135,6 +135,7 @@ void Session::RegisterRecv()
 		if (errorCode != WSA_IO_PENDING)
 		{
 			_recvEvent._owner = nullptr; // RELEASE_REF
+			Disconnect(L"RegisterRecv Fail");
 		}
 	}
 
@@ -202,6 +203,7 @@ void Session::RegisterSend()
 			_sendEvent._owner = nullptr; // Release REF
 			_sendEvent.sendBuffers.clear();
 			_sendRegistered.store(false);
+			Disconnect(L"RegisterSend Fail");
 		}
 	}
 }

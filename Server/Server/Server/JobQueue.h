@@ -45,13 +45,16 @@ private:
 	{
 		bool expected = false;
 		if (_isProcessing.compare_exchange_strong(expected, true)){
-			PostQueuedCompletionStatus(_iocpHandle, 0, 0, new JobEvent(shared_from_this()));
+			_jobEvent.Init();
+			_jobEvent._owner = shared_from_this();
+			PostQueuedCompletionStatus(_iocpHandle, 0, 0, &_jobEvent);
 		}
 				
 	}
 
 private:
 	HANDLE						_iocpHandle;
+	JobEvent						_jobEvent;
 	concurrency::concurrent_queue<shared_ptr<Job>> _jobQueue;
 	atomic<bool> _isProcessing = false;
 };

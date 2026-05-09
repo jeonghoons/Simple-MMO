@@ -144,6 +144,9 @@
     <ClCompile Include="CombatProcessor.cpp">
       <Filter>Contents\GameRoom</Filter>
     </ClCompile>
+    <ClCompile Include="AuthLobby.cpp">
+      <Filter>Contents</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -241,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="ServerData.h">
       <Filter>DB</Filter>
+    </ClInclude>
+    <ClInclude Include="AuthLobby.h">
+      <Filter>Contents</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -41,11 +41,13 @@ extern thread_local unsigned int Lthreadid;
 #include "Timer.h"
 #include "DatabaseWorker.h"
 #include "PacketSerializer.h"
+#include "AuthLobby.h"
 #include "Utils.h"
 
 extern unique_ptr<RoomManager> GRoomManager;
 extern shared_ptr<Timer> GTimer;
 extern shared_ptr<DatabaseWorker> GDBWorker;
+extern shared_ptr<AuthLobby> GLobby;
 
 
 

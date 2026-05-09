@@ -53,7 +53,7 @@ public:
 class JobEvent : public IocpEvent
 {
 public:
-	JobEvent(shared_ptr<IocpObject> owner) : IocpEvent(EventType::Job, owner) {}
+	JobEvent() : IocpEvent(EventType::Job) {}
 };
 
 class DBEvent : public IocpEvent

@@ -8,10 +8,8 @@ HANDLE JobQueue::GetHandle()
 
 void JobQueue::Dispatch(IocpEvent* iocpEvent, int numBytes)
 {
+	iocpEvent->_owner = nullptr;
+
 	if (iocpEvent->_type == EventType::Job)
 		ExecuteJobs();
-
-	iocpEvent->_owner = nullptr;
-	delete iocpEvent;
-	
 }
