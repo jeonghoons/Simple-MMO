@@ -14,10 +14,8 @@ public:
 		_jobQueue->Push(shared_from_this(), memFunc, std::forward<Arguments>(args)...);
 	}
 
-	void LoginRequest(shared_ptr<Session> session, string accountId, string password);
-
 public:
-	void OnLoginSuccess(shared_ptr<Session> session, int playerType);
+	void OnLoginSuccess(shared_ptr<Session> session, wstring userId, int playerType);
 	void OnLoginFailed(shared_ptr<Session> session, string errorMsg);
 
 private:

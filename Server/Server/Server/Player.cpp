@@ -4,10 +4,6 @@
 
 Player::Player(shared_ptr<Session> ownerSession) : Character(Object_Type::Player), _ownerSession(ownerSession)
 {
-	if (isDummy) {
-		_objectInfo.playerType = PlayerType::Gideon;
-	}
-
 	const CharacterData* statData = DataManager::GetCharacterData((int)_objectInfo.playerType);
 	if (statData) {
 		_statInfo.Init({

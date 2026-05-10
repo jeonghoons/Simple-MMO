@@ -75,7 +75,7 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 			MultiByteToWideChar(CP_ACP, 0, recvPw.c_str(), -1, clpassword, _countof(clpassword));
 			if (lstrcmpW(clpassword, outpassword) == 0)
 			{
-				GLobby->PushJob(&AuthLobby::OnLoginSuccess, session, outPlayerType);
+				GLobby->PushJob(&AuthLobby::OnLoginSuccess, session, wstring(outName), outPlayerType);
 			}
 			else
 			{
