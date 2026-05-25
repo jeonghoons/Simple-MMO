@@ -93,6 +93,12 @@ struct SC_DAMAGE_PACKET {
 	int			attackerId;
 	int			targetId;
 	int			damage;
+	int			remainHp;
+};
+
+struct SC_DEAD_PACKET {
+	PacketHeader header;
+	int			objectId;
 };
 
 

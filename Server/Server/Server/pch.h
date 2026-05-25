@@ -43,6 +43,8 @@ extern thread_local unsigned int Lthreadid;
 #include "PacketSerializer.h"
 #include "AuthLobby.h"
 #include "Utils.h"
+#include "ServerData.h"
+
 
 extern unique_ptr<RoomManager> GRoomManager;
 extern shared_ptr<Timer> GTimer;

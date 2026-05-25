@@ -136,7 +136,6 @@ void ProcessPacket(int ci, unsigned char packet[])
 			g_clients[index].x = (int)info.position.x;
 			g_clients[index].y = (int)info.position.y;
 			if (ci == index) {
-				// [수정됨] 서버 패킷 시간이 아닌, 내가 보낸 시간(last_move_time)을 기준으로 핑(RTT) 계산
 				auto now = high_resolution_clock::now();
 				auto d_ms = duration_cast<milliseconds>(now - g_clients[index].last_move_time).count();
 				cout << global_delay << ", " << d_ms << endl;
@@ -154,16 +153,14 @@ void ProcessPacket(int ci, unsigned char packet[])
 		ObjectInfo info = add_packet->objectInfo;
 		int cl_id = info.id;
 
-		// 1. 서버 ID(cl_id)가 배열 크기를 초과하지 않는지 확인
 		if (cl_id >= 0 && cl_id < MAX_CLIENTS) {
 			int target_ci = client_map[cl_id];
 
-			// 2. 다른 몬스터나 타 유저가 아닌 '나 자신(더미 클라이언트)'인지 확인 (target_ci != -1)
+			
 			if (target_ci != -1 && target_ci < MAX_CLIENTS) {
 
-				// 3. 내 패킷을 내가 받은 것이 맞다면 입장 완료 처리
 				if (ci == target_ci) {
-					// 중복 카운트 방지
+				
 					if (g_clients[ci].connected == false) {
 						g_clients[ci].connected = true;
 						active_clients++;
@@ -182,21 +179,6 @@ void ProcessPacket(int ci, unsigned char packet[])
 
 	case SC_LOGIN:
 	{
-		/*g_clients[ci].connected = true;
-		active_clients++;
-		SC_LOGIN_INFO_PACKET* login_packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(packet);
-		int my_id = ci;
-		client_map[login_packet->objectInfo.id] = my_id;
-		g_clients[my_id].id = login_packet->objectInfo.id;
-		g_clients[my_id].x = (int)login_packet->objectInfo.position.x;
-		g_clients[my_id].y = (int)login_packet->objectInfo.position.y;
-
-		CS_ENTER_ROOM_PACKET enter_packet;
-		enter_packet.header = { sizeof(enter_packet), CS_ENTER_ROOM };
-		SendPacket(my_id, &enter_packet);*/
-
-		// g_clients[ci].connected = true;
-		// active_clients++;
 		SC_LOGIN_INFO_PACKET* login_packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(packet);
 		ObjectInfo info = login_packet->objectInfo;
 		int cl_id = info.id;
@@ -213,8 +195,6 @@ void ProcessPacket(int ci, unsigned char packet[])
 	}
 	break;
 	default:
-		// 추가된 패킷 타입들을 무시하거나 여기서 처리 (경고창 잠시 비활성화 추천)
-		// MessageBox(hWnd, L"Unknown Packet Type", L"ERROR", 0);
 		break;
 	}
 }
@@ -402,20 +382,37 @@ void Test_Thread()
 			
 			my_packet.posInfo.x = static_cast<float>(g_clients[i].x);
 			my_packet.posInfo.y = static_cast<float>(g_clients[i].y);
+			my_packet.posInfo.z = 100.f;
 			my_packet.posInfo.state = Move_State::RUN;
 			my_packet.force = false;
 
-			// 랜덤 이동 (XY 평면 사용)
-			switch (rand() % 4) {
-			case 0: my_packet.posInfo.x -= 100.0f;  break;     // 상
-			case 1: my_packet.posInfo.x += 100.0f; break;  // 하
-			case 2: my_packet.posInfo.y -= 100.0f; break;  // 좌
-			case 3: my_packet.posInfo.y += 100.0f; break;    // 우
-			}
+			float speed = 300.0f;
+			my_packet.posInfo.v_x = 0.0f;
+			my_packet.posInfo.v_y = 0.0f;
+			my_packet.posInfo.v_z = 0.0f;
 
-			// [수정됨] 클라이언트 측 바운더리 체크 (-7500 ~ 7500 반영)
-			/*if (g_clients[i].x < -7500 || g_clients[i].y < -7500 || g_clients[i].x > 7500 || g_clients[i].y > 7500)
-				continue;*/
+			switch (rand() % 4) {
+			case 0: // 상
+				my_packet.posInfo.x -= speed; 
+				my_packet.posInfo.v_x = -speed;
+				my_packet.posInfo.yaw = 180.0f;
+				break;     
+			case 1: // 하
+				my_packet.posInfo.x += speed;
+				my_packet.posInfo.v_x = speed;
+				my_packet.posInfo.yaw = 0.0f;
+				break;  
+			case 2: // 좌
+				my_packet.posInfo.y -= speed; 
+				my_packet.posInfo.v_y = -speed;
+				my_packet.posInfo.yaw = -90.0f;
+				break;  
+			case 3:  // 우
+				my_packet.posInfo.y += speed; 
+				my_packet.posInfo.v_y = speed;
+				my_packet.posInfo.yaw = 90.0f;
+				break;   
+			}
 
 			SendPacket(i, &my_packet);
 		}

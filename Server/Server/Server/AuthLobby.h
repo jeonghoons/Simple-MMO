@@ -1,6 +1,6 @@
 #pragma once
+#include "ServerData.h"
 #include "JobQueue.h"
-
 
 class AuthLobby : public enable_shared_from_this<AuthLobby>
 {
@@ -15,7 +15,7 @@ public:
 	}
 
 public:
-	void OnLoginSuccess(shared_ptr<Session> session, wstring userId, int playerType);
+	void OnLoginSuccess(shared_ptr<Session> session, DB_PlayerInfo info, DB_PlayerData data);
 	void OnLoginFailed(shared_ptr<Session> session, string errorMsg);
 
 private:

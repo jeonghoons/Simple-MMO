@@ -47,13 +47,24 @@ shared_ptr<SendBuffer> PacketSerializer::MAKE_SC_ATTACK(int attackerId, int skil
 	return sendBuffer;
 }
 
-shared_ptr<SendBuffer> PacketSerializer::MAKE_SC_DAMAGE(int attackerId, int targetId, int damage)
+shared_ptr<SendBuffer> PacketSerializer::MAKE_SC_DAMAGE(int attackerId, int targetId, int damage, int remainHp)
 {
 	SC_DAMAGE_PACKET packet;
 	packet.header = { sizeof(packet), SC_DAMAGE };
 	packet.attackerId = attackerId;
 	packet.targetId = targetId;
 	packet.damage = damage;
+	packet.remainHp = remainHp;
+	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(sizeof(packet));
+	sendBuffer->CopyData(&packet, packet.header.size);
+	return sendBuffer;
+}
+
+shared_ptr<SendBuffer> PacketSerializer::MAKE_SC_DEAD(int objectId)
+{
+	SC_DEAD_PACKET packet;
+	packet.header = { sizeof(packet), SC_DEAD };
+	packet.objectId = objectId;
 	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(sizeof(packet));
 	sendBuffer->CopyData(&packet, packet.header.size);
 	return sendBuffer;

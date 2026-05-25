@@ -53,7 +53,7 @@ public:
 	void PlayerLeaveRoom(shared_ptr<Player> player);
 	void PlayerMove(shared_ptr<Player> player, PositionInfo position, bool force);
 	void Broadcast(shared_ptr<SendBuffer> sendBuffer);
-	void BroadcastAOI(shared_ptr<class Character> viewableObj, shared_ptr<SendBuffer> sendBuffer);
+	void BroadcastAOI(shared_ptr<class Character> viewableObj, shared_ptr<SendBuffer> sendBuffer, bool sendToSelf = false);
 
 	void PlayerChat(shared_ptr<Player> player, wstring msg);
 

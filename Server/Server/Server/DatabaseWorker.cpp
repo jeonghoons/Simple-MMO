@@ -5,7 +5,7 @@
 DatabaseWorker::DatabaseWorker(HANDLE iocpHandle, int num_connections) : _iocpHandle(iocpHandle)
 {
 	// const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
-	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-0I9E8CG\\SQLEXPRESS;Database=SimpleMMO;Trusted_Connection=Yes;";
+	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-0I9E8CG\\SQLEXPRESS;Database=GameServer;Trusted_Connection=Yes;";
 	_dbConnectionPool = make_unique<DBConnectionPool>();
 	if (false == _dbConnectionPool->Connect(num_connections, connectionPath))
 	{
@@ -46,36 +46,50 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	DBConnection* dbConn = _dbConnectionPool->Pop();
 	dbConn->Unbind();
 
-	WCHAR name[20] = {};
-	MultiByteToWideChar(CP_ACP, 0, recvId.c_str(), -1, name, _countof(name));
-	SQLLEN nameLen = 0;
-	dbConn->BindParam(1, name, &nameLen);
+	WCHAR loginId[20] = {};
+	MultiByteToWideChar(CP_ACP, 0, recvId.c_str(), -1, loginId, _countof(loginId));
+	SQLLEN loginIdLen = 0;
+	dbConn->BindParam(1, loginId, &loginIdLen);
 
-	int outId = 0;
-	SQLLEN outIdlen = 0;
-	dbConn->BindCol(1, &outId, &outIdlen);
+	// 1. 데이터를 받을 구조체 및 버퍼 준비
+	WCHAR outPassword[20] = {};
+	DB_PlayerInfo outPlayerInfo = {};
+	DB_PlayerData outPlayerData = {};
+	SQLLEN len[12] = { 0 };
 
-	WCHAR outName[20] = {};
-	SQLLEN outNameLen = 0;
-	dbConn->BindCol(2, outName, static_cast<int>(sizeof(outName) / sizeof(outName[0])), &outNameLen);
+	// 바인딩 (순서가 SELECT 문의 컬럼 순서와 정확히 일치해야 합니다)
+	dbConn->BindCol(1, outPassword, sizeof(outPassword), &len[0]);
+	dbConn->BindCol(2, &outPlayerInfo.playerUID, &len[1]);
+	dbConn->BindCol(3, &outPlayerInfo.accountUID, &len[2]);
+	dbConn->BindCol(4, outPlayerInfo.playerName, sizeof(outPlayerInfo.playerName), &len[3]);
+	dbConn->BindCol(5, &outPlayerInfo.classType, &len[4]);
 
-	WCHAR outpassword[20] = {};
-	SQLLEN outpasswordLen = 0;
-	dbConn->BindCol(3, outpassword, static_cast<int>(sizeof(outpassword) / sizeof(outpassword[0])), &outpasswordLen);
+	dbConn->BindCol(6, &outPlayerData.level, &len[5]);
+	dbConn->BindCol(7, &outPlayerData.exp, &len[6]);
+	dbConn->BindCol(8, &outPlayerData.hp, &len[7]);
+	dbConn->BindCol(9, &outPlayerData.mp, &len[8]);
+	dbConn->BindCol(10, &outPlayerData.posX, &len[9]);
+	dbConn->BindCol(11, &outPlayerData.posY, &len[10]);
+	dbConn->BindCol(12, &outPlayerData.posZ, &len[11]);
 
-	int outPlayerType = 0;
-	SQLLEN outPlayerTypeLen = 0;
-	dbConn->BindCol(4, &outPlayerType, &outPlayerTypeLen);
+	const WCHAR* query = L" \
+        SELECT A.Password, P.PlayerUID, P.AccountUID, P.PlayerName, P.ClassType, \
+               D.[Level], D.Exp, D.Hp, D.Mp, D.PosX, D.PosY, D.PosZ \
+        FROM [User_Account] A \
+        INNER JOIN [Player_Info] P ON A.AccountUID = P.AccountUID \
+        INNER JOIN [Player_Data] D ON P.PlayerUID = D.PlayerUID \
+        WHERE A.LoginId = ?";
 
-	if (dbConn->Execute(L"SELECT id, account_id, password, playerType FROM [dbo].[User_Account] WHERE account_id = (?)"))
+	if (dbConn->Execute(query))
 	{
 		if (dbConn->Fetch())
 		{
 			WCHAR clpassword[20] = {};
 			MultiByteToWideChar(CP_ACP, 0, recvPw.c_str(), -1, clpassword, _countof(clpassword));
-			if (lstrcmpW(clpassword, outpassword) == 0)
+			if (lstrcmpW(clpassword, outPassword) == 0)
 			{
-				GLobby->PushJob(&AuthLobby::OnLoginSuccess, session, wstring(outName), outPlayerType);
+				outPlayerData.playerUID = outPlayerInfo.playerUID;
+				GLobby->PushJob(&AuthLobby::OnLoginSuccess, session, outPlayerInfo, outPlayerData);
 			}
 			else
 			{
@@ -95,26 +109,64 @@ void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, strin
 	DBConnection* dbConn = _dbConnectionPool->Pop();
 	dbConn->Unbind();
 
-	WCHAR name[20] = {};
-	MultiByteToWideChar(CP_ACP, 0, recvId.c_str(), -1, name, _countof(name));
-	SQLLEN nameLen = 0;
-	dbConn->BindParam(1, name, &nameLen);
+	WCHAR loginId[50] = {};
+	MultiByteToWideChar(CP_ACP, 0, recvId.c_str(), -1, loginId, _countof(loginId));
+	SQLLEN idLen = 0;
+	dbConn->BindParam(1, loginId, &idLen);
 
-	WCHAR password[20] = {};
+	WCHAR password[256] = {};
 	MultiByteToWideChar(CP_ACP, 0, recvPw.c_str(), -1, password, _countof(password));
-	SQLLEN passwordLen = 0;
-	dbConn->BindParam(2, password, &passwordLen);
+	SQLLEN pwLen = 0;
+	dbConn->BindParam(2, password, &pwLen);
 
+	dbConn->BindParam(3, loginId, &idLen); // 닉네임을 ID와 동일하게 설정
+
+	// playerType을 위한 버퍼 (TINYINT 바인딩용)
+	int32_t cType = (int32_t)playerType;
 	SQLLEN typeLen = 0;
-	dbConn->BindParam(3, &playerType, &typeLen);
+	dbConn->BindParam(4, &cType, &typeLen);
 
-	if (dbConn->Execute(L"INSERT INTO [dbo].[User_Account]([account_id], [password], [playerType], [createDate]) VALUES(?, ?, ?, GETDATE())"))
+	// 트랜잭션으로 테이블 4곳에 데이터 일괄 삽입
+	const WCHAR* query = L" \
+        BEGIN TRAN; \
+        DECLARE @AccID BIGINT, @PlayerID BIGINT; \
+        INSERT INTO [User_Account] (LoginId, Password) VALUES (?, ?); \
+        SET @AccID = SCOPE_IDENTITY(); \
+        INSERT INTO [User_Info] (AccountUID) VALUES (@AccID); \
+        INSERT INTO [Player_Info] (AccountUID, PlayerName, ClassType) VALUES (@AccID, ?, ?); \
+        SET @PlayerID = SCOPE_IDENTITY(); \
+        INSERT INTO [Player_Data] (PlayerUID, Hp, Mp) VALUES (@PlayerID, 500, 100); \
+        COMMIT TRAN;";
+
+	if (dbConn->Execute(query))
 	{
-		cout << "[DB] Sign Up 성공 - ID : " << recvId << ", PW : " << recvPw << std::endl;
+		cout << "[DB] 회원가입 및 캐릭터 자동생성 성공 - ID : " << recvId << endl;
 	}
 	else
 	{
-		cout << "[DB] 중복 아이디" << endl;
+		cout << "[DB] 중복 아이디 또는 가입 오류" << endl;
+	}
+
+	_dbConnectionPool->Push(dbConn);
+}
+
+
+void DatabaseWorker::SavePlayerData(DB_PlayerData data)
+{
+	DBConnection* dbConn = _dbConnectionPool->Pop();
+	dbConn->Unbind();
+
+	SQLLEN lenList[6] = { 0 };
+	dbConn->BindParam(1, &data.hp, &lenList[0]);
+	dbConn->BindParam(2, &data.mp, &lenList[1]);
+	dbConn->BindParam(3, &data.posX, &lenList[2]);
+	dbConn->BindParam(4, &data.posY, &lenList[3]);
+	dbConn->BindParam(5, &data.posZ, &lenList[4]);
+	dbConn->BindParam(6, &data.playerUID, &lenList[5]);
+
+	if (dbConn->Execute(L"UPDATE [dbo].[Player_Data] SET Hp=?, Mp=?, PosX=?, PosY=?, PosZ=? WHERE PlayerUID=?"))
+	{
+		// 업데이트 성공
 	}
 
 	_dbConnectionPool->Push(dbConn);

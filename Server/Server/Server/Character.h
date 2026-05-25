@@ -10,11 +10,12 @@ public:
 
 public:
 	virtual void Update(float deltaTime) override;
-	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) {}
-	virtual void OnDead(std::shared_ptr<GameObject> attacker) {}
+	virtual void OnDamaged(int damage, std::shared_ptr<Character> attacker);
+
+	virtual void OnDead(std::shared_ptr<Character> attacker);
 
 	virtual bool Attack(int& skillId);
-
+	bool IsHit() const { return !_hitTimer.IsReady(); }
 public:
 	StatComponent& GetStat() { return _statInfo; }
 	const StatComponent& GetStat() const { return _statInfo; }
@@ -23,5 +24,6 @@ public:
 	vector<int>	_viewList;
 protected:
 	StatComponent _statInfo;
+	Cooldown _hitTimer;
 };
 

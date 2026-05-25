@@ -12,7 +12,7 @@ enum SC_PACKET_LIST : unsigned char
 	SC_ADD_OBJECT, SC_REMOVE_OBJECT,
 	SC_CHAT,
 	SC_MOVE_OBJECT, SC_CMOVE_OBJECT,
-	SC_ATTACK, SC_DAMAGE
+	SC_ATTACK, SC_DAMAGE, SC_DEAD
 };
 
 enum CS_PACKET_LIST : unsigned char
@@ -37,7 +37,7 @@ enum class Object_Type
 enum class PlayerType
 {
 	None,
-	Sparrow, Greystone, Gideon, Monster
+	Greystone, Sparrow, Gideon, Monster
 };
 
 #pragma pack(push, 1)
@@ -59,13 +59,22 @@ struct PositionInfo
 	Move_State state;
 };
 
+struct StatInfo
+{
+	int maxHp;
+	int hp;
+	int attackDamage;
+	float attackSpeed;
+	float moveSpeed;
+};
+
 struct ObjectInfo
 {
 	int id{};
 	Object_Type		objectType;
 	PlayerType       playerType;
-	PositionInfo			position{};
-
+	PositionInfo		position;
+	StatInfo			stat;
 };
 #pragma pack (pop)
 

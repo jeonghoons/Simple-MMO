@@ -1,6 +1,31 @@
 #pragma once
 #include <unordered_map>
 
+struct DB_PlayerInfo {
+	int64_t playerUID;
+	int64_t accountUID;
+	WCHAR playerName[20];
+	int32_t classType;
+};
+
+struct DB_PlayerData {
+	int64_t playerUID;
+	int16_t level;
+	int64_t exp;
+	int32_t hp;
+	int32_t mp;
+	float posX;
+	float posY;
+	float posZ;
+};
+
+struct DB_InventoryData {
+	int64_t inventoryUID;
+	int32_t itemCode;
+	int16_t stackCount;
+	int16_t slotIndex;
+};
+
 enum class HitShape
 {
 	Sector,     // 부채꼴 (근거리 즉시 타격)
@@ -44,13 +69,13 @@ public:
 		// 301: 그레이스톤 - 부채꼴
 		_skillTable[301] = { 301, HitShape::Sector, 250, 1670, 200.f, 120.f, 0.f, 0.f, 50, 0.f };
 		// 401: 램페이지 - 부채꼴
-		_skillTable[401] = { 401, HitShape::Sector, 400, 1000, 170.f, 150.f, 0.f, 0.f, 60, 0.f };
+		_skillTable[401] = { 401, HitShape::Sector, 400, 2000, 170.f, 150.f, 0.f, 0.f, 60, 0.f };
 	
 	
 		_characterTable[1] = { 1, 500, 500, 40, 1.0f, 500.0f };
 		_characterTable[2] = { 2, 450, 450, 35, 1.1f, 550.0f };
 		_characterTable[3] = { 3, 800, 800, 30, 0.9f, 450.0f };
-		_characterTable[4] = { 4, 150, 150, 20, 1.0f, 400.0f };
+		_characterTable[4] = { 4, 150, 150, 20, 2.0f, 400.0f };
 	
 	}
 

@@ -8,19 +8,14 @@
 Monster::Monster() : Character(Object_Type::Monster)
 {
 	_objectInfo.playerType = PlayerType::Monster;
-
+	
 	const CharacterData* statData = DataManager::GetCharacterData((int)_objectInfo.playerType);
 	if (statData) {
-		_statInfo.Init({
-			statData->hp,
-			statData->maxHp,
-			statData->attackDamage,
-			statData->attackSpeed,
-			statData->moveSpeed
-			});
+		_objectInfo.stat = { statData->maxHp, statData->hp, statData->attackDamage, statData->attackSpeed, statData->moveSpeed };
 	}
 
-	// 3. 공격 사거리 세팅
+	_statInfo.Init(&_objectInfo.stat);
+	
 	int myBasicAttackId = (int)_objectInfo.playerType * 100 + 1;
 	if (const SkillData* skill = DataManager::GetSkillData(myBasicAttackId)) {
 		_attackRange = skill->radius;
@@ -61,46 +56,23 @@ void Monster::Update(float deltaTime)
 	Character::Update(deltaTime);
 }
 
-void Monster::OnDamaged(int damage, std::shared_ptr<GameObject> attacker)
+void Monster::OnDamaged(int damage, std::shared_ptr<Character> attacker)
 {
-	if (_statInfo.IsDead()) return;
+	Character::OnDamaged(damage, attacker);
 
+	ChangeState(MonsterState::HIT);
 
-	int actualDamage = _statInfo.OnDamaged(damage);
-
-	auto room = GetCurrentRoom();
-	if (room) {
-		shared_ptr<SendBuffer> damageBuffer = PacketSerializer::MAKE_SC_DAMAGE(GetId(), attacker->GetId(), actualDamage);
-		room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), damageBuffer);
-	}
-
-	if (_statInfo.IsDead())
-	{
-		OnDead(attacker);
-	}
-	else
-	{
-		if (attacker->GetType() == Object_Type::Player) {
-			_targetPlayer = std::static_pointer_cast<Player>(attacker);
-			ChangeState(MonsterState::TRACE);
-		}
+	if (attacker->GetType() == Object_Type::Player) {
+		_targetPlayer = std::static_pointer_cast<Player>(attacker);
+		ChangeState(MonsterState::TRACE);
 	}
 }
 
-void Monster::OnDead(std::shared_ptr<GameObject> attacker)
+void Monster::OnDead(std::shared_ptr<Character> attacker)
 {
+	Character::OnDead(attacker);
 	StopMove();
 	ChangeState(MonsterState::NONE);
-
-	auto room = GetCurrentRoom();
-	if (room) {
-		// 사망 패킷
-		// shared_ptr<SendBuffer> deadBuffer = PacketSerializer::MAKE_SC_DEAD(GetId(), attacker->GetId());
-		// room->BroadcastAOI(static_pointer_cast<Character>(shared_from_this()), deadBuffer);
-
-		// Room 관리 목록에서 안전하게 제거하기 위해 JobQueue 활용
-		// room->PushJob(&Room::RemoveObject, GetId());
-	}
 }
 
 void Monster::UpdateAI()
@@ -111,6 +83,7 @@ void Monster::UpdateAI()
 	case MonsterState::PATROL: UpdatePatrol(); break;
 	case MonsterState::TRACE:  UpdateTrace();  break;
 	case MonsterState::ATTACK: UpdateAttack(); break;
+	case MonsterState::HIT:    UpdateHit();    break;
 	}
 }
 
@@ -155,8 +128,7 @@ void Monster::UpdatePatrol()
 		float diffY = player->GetPosition().y - GetPosition().y;
 		float distSq = diffX * diffX + diffY * diffY;
 
-		// 추가: 플레이어가 살아있을 때만 추적 (Player 클래스에도 StatComponent 연동 필요)
-		if (distSq < currentMinDistSq && distSq <= traceRangeSq /* && !player->GetStat().IsDead() */)
+		if (distSq < currentMinDistSq && distSq <= traceRangeSq && !player->GetStat().IsDead())
 		{
 			currentMinDistSq = distSq;
 			closestPlayer = player;
@@ -193,7 +165,7 @@ void Monster::UpdatePatrol()
 void Monster::UpdateTrace()
 {
 	auto target = _targetPlayer.lock();
-	if (target == nullptr  || target->GetStat().IsDead() )
+	if (target == nullptr || target->GetStat().IsDead())
 	{
 		_targetPlayer.reset();
 		ChangeState(MonsterState::PATROL);
@@ -218,7 +190,7 @@ void Monster::UpdateTrace()
 	}
 	float targetMovedDistSq = pow(target->GetPosition().x - _lastTargetPos.x, 2) + pow(target->GetPosition().y - _lastTargetPos.y, 2);
 
-	if (!_hasPath || (targetMovedDistSq > 10000.f && _pathSearchTimer.IsReady()))
+	if ((!_hasPath || targetMovedDistSq > 10000.f) && _pathSearchTimer.IsReady())
 	{
 		auto room = GetCurrentRoom();
 		if (room && room->GetNavManager())
@@ -228,7 +200,11 @@ void Monster::UpdateTrace()
 			{
 				SetPath(newPath);
 				_lastTargetPos = target->GetPosition();
-				_pathSearchTimer.Reset(1000);
+				_pathSearchTimer.Reset(1000); 
+			}
+			else
+			{
+				_pathSearchTimer.Reset(500);
 			}
 		}
 	}
@@ -237,7 +213,7 @@ void Monster::UpdateTrace()
 void Monster::UpdateAttack()
 {
 	auto target = _targetPlayer.lock();
-	if (target == nullptr  || target->GetStat().IsDead() )
+	if (target == nullptr || target->GetStat().IsDead())
 	{
 		ChangeState(MonsterState::PATROL);
 		return;
@@ -271,6 +247,13 @@ void Monster::UpdateAttack()
 
 		// std::cout << "NPC[" << GetId() << "] Attack -> Player[" << target->GetId() << "]" << std::endl;
 	}
+}
+
+void Monster::UpdateHit()
+{
+	if (IsHit()) return;
+
+	ChangeState(MonsterState::NONE);
 }
 
 void Monster::SetPath(const std::vector<PositionInfo>& path)

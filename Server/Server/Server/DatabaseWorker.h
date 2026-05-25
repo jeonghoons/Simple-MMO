@@ -1,4 +1,5 @@
 #pragma once
+#include "ServerData.h"
 #include "DBConnectionPool.h"
 #include <concurrent_queue.h>
 #include "ConcurrentQueue.h"
@@ -29,6 +30,8 @@ public:
 
 	void TryLogin(shared_ptr<Session> session, string recvId, string recvPw);
 	void TrySignUP(shared_ptr<Session> session, string recvId, string recvPw, int playerType);
+
+	void SavePlayerData(DB_PlayerData data);
 
 private:
 	ConcurrentQ<shared_ptr<Job>> _dbJobQueue;

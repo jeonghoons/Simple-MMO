@@ -80,14 +80,34 @@ bool DBConnection::BindParam(int paramIndex, int* value, SQLLEN* index)
 	return BindParam(paramIndex, SQL_C_LONG, SQL_INTEGER, sizeof(int), value, index);
 }
 
+bool DBConnection::BindParam(int paramIndex, int8_t* value, SQLLEN* index)
+{
+	return BindParam(paramIndex, SQL_C_CHAR, SQL_TINYINT, sizeof(int8_t), value, index);
+}
+
+bool DBConnection::BindParam(int paramIndex, int16_t* value, SQLLEN* index)
+{
+	return BindParam(paramIndex, SQL_C_SHORT, SQL_SMALLINT, sizeof(int16_t), value, index);
+}
+
+bool DBConnection::BindParam(int paramIndex, int64_t* value, SQLLEN* index)
+{
+	return BindParam(paramIndex, SQL_C_SBIGINT, SQL_BIGINT, sizeof(int64_t), value, index);
+}
+
 bool DBConnection::BindParam(int paramIndex, float* value, SQLLEN* index)
 {
-	return BindParam(paramIndex, SQL_C_FLOAT, SQL_REAL, 0, value, index);
+	return BindParam(paramIndex, SQL_C_FLOAT, SQL_REAL, sizeof(float), value, index);
+}
+
+bool DBConnection::BindParam(int paramIndex, double* value, SQLLEN* index)
+{
+	return BindParam(paramIndex, SQL_C_DOUBLE, SQL_DOUBLE, sizeof(double), value, index);
 }
 
 bool DBConnection::BindParam(int paramIndex, const WCHAR* str, SQLLEN* index)
 {
-	SQLULEN size = static_cast<SQLULEN>((::wcslen(str) + 1) * 2);
+	SQLULEN size = static_cast<SQLULEN>((::wcslen(str) + 1) * sizeof(WCHAR));
 	*index = SQL_NTSL;
 
 	if (size > 4000)
@@ -106,9 +126,29 @@ bool DBConnection::BindCol(int columnIndex, int* value, SQLLEN* index)
 	return BindCol(columnIndex, SQL_C_LONG, sizeof(int), value, index);
 }
 
+bool DBConnection::BindCol(int columnIndex, int8_t* value, SQLLEN* index)
+{
+	return BindCol(columnIndex, SQL_C_CHAR, sizeof(int8_t), value, index);
+}
+
+bool DBConnection::BindCol(int columnIndex, int16_t* value, SQLLEN* index)
+{
+	return BindCol(columnIndex, SQL_C_SHORT, sizeof(int16_t), value, index);
+}
+
+bool DBConnection::BindCol(int columnIndex, int64_t* value, SQLLEN* index)
+{
+	return BindCol(columnIndex, SQL_C_SBIGINT, sizeof(int64_t), value, index);
+}
+
 bool DBConnection::BindCol(int columnIndex, float* value, SQLLEN* index)
 {
 	return BindCol(columnIndex, SQL_C_FLOAT, sizeof(float), value, index);
+}
+
+bool DBConnection::BindCol(int columnIndex, double* value, SQLLEN* index)
+{
+	return BindCol(columnIndex, SQL_DOUBLE, sizeof(double), value, index);
 }
 
 bool DBConnection::BindCol(int columnIndex, WCHAR* str, int size, SQLLEN* index)

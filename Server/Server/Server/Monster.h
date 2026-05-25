@@ -9,7 +9,8 @@ enum class MonsterState
 	NONE,   
 	PATROL,
 	TRACE,  
-	ATTACK  
+	ATTACK ,
+	HIT
 };
 ostream& operator<<(ostream& os, MonsterState state);
 class Monster : public Character
@@ -26,6 +27,7 @@ public:
 		case MonsterState::PATROL: return os << "PATROL";
 		case MonsterState::TRACE:  return os << "TRACE";
 		case MonsterState::ATTACK: return os << "ATTACK";
+		case MonsterState::HIT:    return os << "HIT";
 		default: return os << "UNKNOWN";
 		}
 	}
@@ -33,8 +35,8 @@ public:
 public:
 	virtual void Update(float deltaTime) override;
 	virtual void StopMove() override;
-	virtual void OnDead(std::shared_ptr<GameObject> attacker) override;
-	virtual void OnDamaged(int damage, std::shared_ptr<GameObject> attacker) override;
+	virtual void OnDead(std::shared_ptr<Character> attacker) override;
+	virtual void OnDamaged(int damage, std::shared_ptr<Character> attacker) override;
 
 
 
@@ -51,6 +53,7 @@ public:
 	void UpdatePatrol();
 	void UpdateTrace();
 	void UpdateAttack();
+	void UpdateHit();
 	
 	void SetPath(const std::vector<PositionInfo>& path);
 	

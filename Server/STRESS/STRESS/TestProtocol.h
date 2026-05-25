@@ -37,10 +37,10 @@ struct CS_MOVE_PACKET {
 	bool force = false;
 };
 
-struct CS_CMOVE_PACKET {
+struct CS_DMOVE_PACKET {
 	PacketHeader header;
-	PositionInfo posInfo;
-	bool force = false;
+	float inputX;
+	float inputY;
 };
 
 struct CS_ATTACK_PACKET {
@@ -52,7 +52,6 @@ struct CS_ATTACK_PACKET {
 struct SC_LOGIN_INFO_PACKET {
 	PacketHeader header;
 	ObjectInfo			objectInfo;
-	
 };
 
 struct SC_SIGNUP_PACKET {
@@ -94,6 +93,12 @@ struct SC_DAMAGE_PACKET {
 	int			attackerId;
 	int			targetId;
 	int			damage;
+	int			remainHp;
+};
+
+struct SC_DEAD_PACKET {
+	PacketHeader header;
+	int			objectId;
 };
 
 

@@ -7,7 +7,6 @@
 #include "CombatProcessor.h"
 #include "ServerData.h"
 
-const int NUM_MONSTER = 5;
 Room::Room(shared_ptr<Timer> timer, HANDLE iocpHandle) : _timer(timer), _jobQueue(make_shared<JobQueue>(iocpHandle))
 {
 }
@@ -28,13 +27,13 @@ void Room::InitRoom()
 	}
 	else
 	{
+		// for(int k = 0; k < 100; ++k){
 		for (int i = 1; i < spawnPoints.size(); ++i) {
 			shared_ptr<Monster> monster = make_shared<Monster>();
 			monster->SetId(MonsterIdGenerator());
 
 			PositionInfo spawnPos = { spawnPoints[i].X, spawnPoints[i].Y, spawnPoints[i].Z, spawnPoints[i].Yaw };
 			monster->SetPosition(spawnPos);
-
 			NpcEnterRoom(monster);
 		}
 		
@@ -151,6 +150,10 @@ void Room::PlayerMove(shared_ptr<Player> player, PositionInfo position, bool for
 
 	PositionInfo currentPos = player->GetPosition();
 
+	if (player->isDummy) {
+		player->Move({ currentPos.x, currentPos.y, currentPos.z });
+	}
+
 	if (!_gameMap.CanMove(currentPos, position))
 	{
 		if (shared_ptr<Session> session = player->GetSession()) {
@@ -184,8 +187,15 @@ void Room::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 	}
 }
 
-void Room::BroadcastAOI(shared_ptr<Character> viewableObj, shared_ptr<SendBuffer> sendBuffer)
+void Room::BroadcastAOI(shared_ptr<Character> viewableObj, shared_ptr<SendBuffer> sendBuffer, bool sendToSelf)
 {
+	if (sendToSelf && viewableObj->GetType() == Object_Type::Player) {
+		shared_ptr<Player> player = static_pointer_cast<Player>(viewableObj);
+		if (shared_ptr<Session> session = player->GetSession())
+			session->Send(sendBuffer);
+	}
+
+
 	vector<int>& currentView = viewableObj->_viewList;
 
 	for (const int& id : currentView) {
@@ -221,6 +231,8 @@ void Room::CharacterAttack(shared_ptr<Character> attacter, int skillId, int targ
 
 	if (attacter->Attack(skillId) == false) return;
 
+	if (attacter->IsHit()) return;
+
 	const SkillData* skill = DataManager::GetSkillData(skillId);
 	if (!skill) return;
 
@@ -250,8 +262,8 @@ void Room::ApplyDelayedDamage(int targetId, int attackerId, int damage)
 
 	if (!targetChar->GetStat().IsDead())
 	{
-		targetChar->OnDamaged(damage, attackerObj);
-		std::cout << "[Room] Projectile Arrived! Target[" << targetId << "] Dmg: " << damage << std::endl;
+		std::cout << "[Room] Target[" << targetId << "] Dmg: " << damage <<  std::endl;
+		targetChar->OnDamaged(damage, static_pointer_cast<Character>(attackerObj));
 	}
 }
 
@@ -274,10 +286,6 @@ void Room::NPCMove(shared_ptr<Monster> monster)
 	if (GetGameObject(monster->GetId()) == nullptr)
 		return;
 
-	shared_ptr<SendBuffer> moveBuffer = PacketSerializer::MAKE_SC_MOVE_OBJECT(monster);
-	BroadcastAOI(monster, moveBuffer);
-
-	// 2. 맵 갱신 및 시야 동기화
 	ViewUpdate result = _gameMap.UpdateMap(monster->GetId(), monster->GetPosition());
 	if (!result.entered.empty() || !result.leaved.empty()) {
 		UpdateView(monster, result);
