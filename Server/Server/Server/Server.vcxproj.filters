@@ -147,9 +147,6 @@
     <ClCompile Include="AuthLobby.cpp">
       <Filter>Contents</Filter>
     </ClCompile>
-    <ClCompile Include="Item.cpp">
-      <Filter>Contents\Object</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -250,9 +247,6 @@
     </ClInclude>
     <ClInclude Include="AuthLobby.h">
       <Filter>Contents</Filter>
-    </ClInclude>
-    <ClInclude Include="Item.h">
-      <Filter>Contents\Object</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

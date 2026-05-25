@@ -144,7 +144,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AuthLobby.h" />
-    <ClInclude Include="Item.h" />
     <ClInclude Include="ServerData.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="CombatProcessor.h" />
@@ -218,7 +217,6 @@
     <ClCompile Include="gameserver.cpp" />
     <ClCompile Include="IocpCore.cpp" />
     <ClCompile Include="IocpEvent.h.cpp" />
-    <ClCompile Include="Item.cpp" />
     <ClCompile Include="Job.cpp" />
     <ClCompile Include="JobQueue.cpp" />
     <ClCompile Include="Listener.cpp" />

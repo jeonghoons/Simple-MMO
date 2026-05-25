@@ -46,7 +46,7 @@ class MathUtils
 public:
 	static constexpr float PI = 3.14159265f;
 
-	// 부채꼴 충돌 판정 (근거리 무기, 몬스터 공격)
+	// 부채꼴 충돌 판정 
 	static bool CheckSector(const PositionInfo& origin, const PositionInfo& target, float radius, float angleDegree)
 	{
 		float dx = target.x - origin.x;
@@ -70,7 +70,7 @@ public:
 		return dot >= cosHalf;
 	}
 
-	// 직선 충돌 판정 (궁수 등 원거리 논타겟 투사체)
+	// 직선 충돌 판정 
 	static bool CheckLine(const PositionInfo& origin, const PositionInfo& target, float width, float range)
 	{
 		float dx = target.x - origin.x;

@@ -30,7 +30,7 @@ void Character::OnDamaged(int damage, shared_ptr<Character> attacker)
 	if (_statInfo.IsDead()) return;
 
 	int actualDamage = _statInfo.OnDamaged(damage);
-	cout << "Object[" << GetId() << "] Hp - " << GetStat().GetHp() << " / " << GetStat().GetMaxHp() << endl;
+	// cout << "Object[" << GetId() << "] Hp - " << GetStat().GetHp() << " / " << GetStat().GetMaxHp() << endl;
 
 	_hitTimer.Reset(300);
 

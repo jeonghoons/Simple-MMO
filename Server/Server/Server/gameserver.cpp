@@ -33,9 +33,9 @@ int main()
 
 	
 	GTimer = make_shared<Timer>();
+	GDBWorker = make_shared<DatabaseWorker>(service->GetIocpInstance()->GetHandle(), 6);
 	GRoomManager = make_unique<RoomManager>(service->GetIocpInstance()->GetHandle());
 	GRoomManager->CreateRoom();
-	GDBWorker = make_shared<DatabaseWorker>(service->GetIocpInstance()->GetHandle(), 6);
 	GLobby = make_shared<AuthLobby>(service->GetIocpInstance()->GetHandle());
 	
 	vector<thread> threads;

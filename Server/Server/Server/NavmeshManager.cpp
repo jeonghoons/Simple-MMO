@@ -80,7 +80,7 @@ bool NavmeshManager::LoadNavMesh(const std::string& path, float& outMinX, float&
 	outMinX = -dMaxZ;
 	outMaxX = -dMinZ;
 
-	std::cout << "[Navmesh] 로드 성공. 타일 수: " << header.numTiles << std::endl;
+	std::cout << "[Navmesh] 로드 성공. " << std::endl;
 	return true;
 }
 

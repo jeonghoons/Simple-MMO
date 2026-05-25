@@ -5,8 +5,6 @@ VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameServer", "Server\Server.vcxproj", "{608CACF7-11EC-4FA8-82EE-13E61EB2F7EE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DummyClient", "DummyClient\DummyClient.vcxproj", "{47601BAD-CC6E-4059-9277-B22EBD02D8AD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NavGenerator", "NavGenerator\NavGenerator.vcxproj", "{3B173681-D77B-4091-9C8A-168EA76AF58F}"
 EndProject
 Global
@@ -25,14 +23,6 @@ Global
 		{608CACF7-11EC-4FA8-82EE-13E61EB2F7EE}.Release|x64.Build.0 = Release|x64
 		{608CACF7-11EC-4FA8-82EE-13E61EB2F7EE}.Release|x86.ActiveCfg = Release|Win32
 		{608CACF7-11EC-4FA8-82EE-13E61EB2F7EE}.Release|x86.Build.0 = Release|Win32
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Debug|x64.ActiveCfg = Debug|x64
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Debug|x64.Build.0 = Debug|x64
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Debug|x86.ActiveCfg = Debug|Win32
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Debug|x86.Build.0 = Debug|Win32
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Release|x64.ActiveCfg = Release|x64
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Release|x64.Build.0 = Release|x64
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Release|x86.ActiveCfg = Release|Win32
-		{47601BAD-CC6E-4059-9277-B22EBD02D8AD}.Release|x86.Build.0 = Release|Win32
 		{3B173681-D77B-4091-9C8A-168EA76AF58F}.Debug|x64.ActiveCfg = Debug|x64
 		{3B173681-D77B-4091-9C8A-168EA76AF58F}.Debug|x64.Build.0 = Debug|x64
 		{3B173681-D77B-4091-9C8A-168EA76AF58F}.Debug|x86.ActiveCfg = Debug|Win32

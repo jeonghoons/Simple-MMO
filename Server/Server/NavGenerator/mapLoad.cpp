@@ -3,7 +3,7 @@
 int main()
 {
 	RecastNavMesh navMesh;
-	std::string binPath = "C:/Users/user/Desktop/UnrealProjectss/SimpleUCl/Export/ParagonSample/Geometry/ParagonSample_Geo.bin";
+	std::string binPath = "../MapResource/ParagonSample/Geometry/ParagonSample_Geo.bin";
 
 	std::string navPath = "../ParagonSample_Geo.nav";
 	if (navMesh.Build(binPath)) {

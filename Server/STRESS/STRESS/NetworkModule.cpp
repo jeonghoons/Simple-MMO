@@ -138,7 +138,7 @@ void ProcessPacket(int ci, unsigned char packet[])
 			if (ci == index) {
 				auto now = high_resolution_clock::now();
 				auto d_ms = duration_cast<milliseconds>(now - g_clients[index].last_move_time).count();
-				cout << global_delay << ", " << d_ms << endl;
+				// cout << global_delay << ", " << d_ms << endl;
 				if (global_delay < d_ms) global_delay++;
 				else if (global_delay > d_ms) global_delay--;
 			}

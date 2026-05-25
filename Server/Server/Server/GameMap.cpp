@@ -7,9 +7,6 @@ CellPos GameMap::ToCellPos(const PositionInfo& pos) const
     int x_index = static_cast<int>((pos.x - _minX) / CELL_SIZE);
     int y_index = static_cast<int>((pos.y - _minY) / CELL_SIZE);
 
-    /*x_index = clamp(x_index, 0, _gridWidth - 1);
-    y_index = clamp(y_index, 0, _gridHeight - 1);*/
-
     return { x_index, y_index };
 }
 
@@ -126,26 +123,23 @@ bool GameMap::LoadMapData(const string& fileName)
         isSuccess = false;
     }
     else {
-        // 배열 오버플로우 방지를 위해 외곽에 여유 타일 추가
         _minX -= CELL_SIZE;
         _maxX += CELL_SIZE;
         _minY -= CELL_SIZE;
         _maxY += CELL_SIZE;
 
-        // 실제 맵 크기에 맞춰 그리드 가로/세로 칸 수 계산
         _gridWidth = static_cast<int>((_maxX - _minX) / CELL_SIZE) + 1;
         _gridHeight = static_cast<int>((_maxY - _minY) / CELL_SIZE) + 1;
 
-        // 2차원 Grid 메모리 동적 할당
+        
         _grid.assign(_gridHeight, vector<Cell>(_gridWidth));
 
-        cout << "[GameMap] NavMesh 기반 동적 Grid 생성 완료!" << endl;
+        /*cout << "[GameMap] NavMesh 기반 동적 Grid 생성 완료!" << endl;
         cout << " - Bounds X: " << _minX << " ~ " << _maxX << ", Y: " << _minY << " ~ " << _maxY << endl;
-        cout << " - Grid Size: " << _gridWidth << " x " << _gridHeight << " cells" << endl;
+        cout << " - Grid Size: " << _gridWidth << " x " << _gridHeight << " cells" << endl;*/
     }
 
-    // 2. 로직 데이터 (SpawnPoint) 로드
-    string logicPath = "C:/Users/user/Desktop/UnrealProjectss/SimpleUCl/Export/ParagonSample/Logic/ParagonSample_Logic.bin";
+    string logicPath = "../MapResource/ParagonSample/Logic/ParagonSample_Logic.bin";
     std::ifstream file(logicPath, std::ios::binary);
     if (!file.is_open())
     {
@@ -164,7 +158,7 @@ bool GameMap::LoadMapData(const string& fileName)
         }
 
         file.close();
-        cout << "[GameMap] 로직 데이터 로드 완료! 스폰 포인트: " << spawnCount << "개" << endl;
+        cout << "[GameMap] 로직 데이터 로드 완료! " << endl;
     }
 
     return isSuccess;
