@@ -44,7 +44,7 @@ void Player::InitFromDb(const DB_PlayerInfo& info, const DB_PlayerData& data)
 	SetPosition({ data.posX, data.posY, data.posZ, 0.0f });
 
 	// 스탯 초기화 (기존 DataManager와 결합)
-	const CharacterData* statData = DataManager::GetCharacterData(info.classType);
+	const CharacterData* statData = DataManager::GetCharacterData(info.playerType);
 	if (statData) {
 		_objectInfo.stat = { statData->maxHp, data.hp, statData->attackDamage, statData->attackSpeed, statData->moveSpeed };
 	}

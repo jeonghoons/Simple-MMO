@@ -14,7 +14,7 @@ void AuthLobby::OnLoginSuccess(shared_ptr<Session> session, DB_PlayerInfo info, 
     if (session->IsConnected() == false) return;
 
     int objectId = session->GetId();
-    shared_ptr<Player> player = make_shared<Player>(session, (PlayerType)info.classType);
+    shared_ptr<Player> player = make_shared<Player>(session, (PlayerType)info.playerType);
 
     player->SetId(objectId);
 
@@ -32,7 +32,7 @@ void AuthLobby::OnLoginSuccess(shared_ptr<Session> session, DB_PlayerInfo info, 
     loginInfoBuffer->CopyData(&logInPacket, sizeof(logInPacket));
     session->Send(loginInfoBuffer);
 
-    // wcout << L"[" << playerName << L"] - 로그인 성공 및 객체 생성 완료" << std::endl;
+    wcout << L"[" << playerName << L"] - 로그인 성공 및 객체 생성 완료" << std::endl;
 }
 
 void AuthLobby::OnLoginFailed(shared_ptr<Session> session, string errorMsg)

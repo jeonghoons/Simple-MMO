@@ -58,3 +58,6 @@ bin/
 
 # 👉 Git 무시 설정 파일 자체는 추적
 !.gitignore
+
+
+*.bin

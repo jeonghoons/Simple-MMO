@@ -5,7 +5,7 @@ struct DB_PlayerInfo {
 	int64_t playerUID;
 	int64_t accountUID;
 	WCHAR playerName[20];
-	int32_t classType;
+	int32_t playerType;
 };
 
 struct DB_PlayerData {

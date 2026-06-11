@@ -60,8 +60,9 @@ void Session::Disconnect(const WCHAR* cause)
 	if (_connected.exchange(false) == false)
 		return;
 	
-	
-	_currPlayer->GetCurrentRoom()->PushJob(&Room::PlayerLeaveRoom, _currPlayer);
+	if (shared_ptr<Room> room = _currPlayer->GetCurrentRoom()) {
+		room->PushJob(&Room::PlayerLeaveRoom, _currPlayer);
+	}
 	GetService()->ReleaseSession(static_pointer_cast<Session>(shared_from_this()));
 	
 	wcout << "DisConnect :" << cause << endl;

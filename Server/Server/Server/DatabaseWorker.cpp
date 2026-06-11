@@ -4,8 +4,8 @@
 
 DatabaseWorker::DatabaseWorker(HANDLE iocpHandle, int num_connections) : _iocpHandle(iocpHandle)
 {
-	// const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=SimpleMMO;Trusted_Connection=Yes;";
-	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-0I9E8CG\\SQLEXPRESS;Database=GameServer;Trusted_Connection=Yes;";
+	// const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-0I9E8CG\\SQLEXPRESS;Database=GameServer;Trusted_Connection=Yes;";
+	const WCHAR* connectionPath = L"Driver={ODBC Driver 17 for SQL Server};Server=.\\SQLEXPRESS;Database=GameServer;Trusted_Connection=Yes;";
 	_dbConnectionPool = make_unique<DBConnectionPool>();
 	if (false == _dbConnectionPool->Connect(num_connections, connectionPath))
 	{
@@ -62,7 +62,7 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	dbConn->BindCol(2, &outPlayerInfo.playerUID, &len[1]);
 	dbConn->BindCol(3, &outPlayerInfo.accountUID, &len[2]);
 	dbConn->BindCol(4, outPlayerInfo.playerName, sizeof(outPlayerInfo.playerName), &len[3]);
-	dbConn->BindCol(5, &outPlayerInfo.classType, &len[4]);
+	dbConn->BindCol(5, &outPlayerInfo.playerType, &len[4]);
 
 	dbConn->BindCol(6, &outPlayerData.level, &len[5]);
 	dbConn->BindCol(7, &outPlayerData.exp, &len[6]);
@@ -73,11 +73,10 @@ void DatabaseWorker::TryLogin(shared_ptr<Session> session, string recvId, string
 	dbConn->BindCol(12, &outPlayerData.posZ, &len[11]);
 
 	const WCHAR* query = L" \
-        SELECT A.Password, P.PlayerUID, P.AccountUID, P.PlayerName, P.ClassType, \
-               D.[Level], D.Exp, D.Hp, D.Mp, D.PosX, D.PosY, D.PosZ \
+        SELECT A.LoginPassword, P.PlayerId, P.AccountId, P.Name, P.playerType, \
+               P.[Level], P.Exp, P.Hp, P.Mp, P.PosX, P.PosY, P.PosZ \
         FROM [User_Account] A \
-        INNER JOIN [Player_Info] P ON A.AccountUID = P.AccountUID \
-        INNER JOIN [Player_Data] D ON P.PlayerUID = D.PlayerUID \
+        INNER JOIN [Player_Info] P ON A.AccountId = P.AccountId \
         WHERE A.LoginId = ?";
 
 	if (dbConn->Execute(query))
@@ -130,12 +129,10 @@ void DatabaseWorker::TrySignUP(shared_ptr<Session> session, string recvId, strin
 	const WCHAR* query = L" \
         BEGIN TRAN; \
         DECLARE @AccID BIGINT, @PlayerID BIGINT; \
-        INSERT INTO [User_Account] (LoginId, Password) VALUES (?, ?); \
+        INSERT INTO [User_Account] (LoginId, LoginPassword) VALUES (?, ?); \
         SET @AccID = SCOPE_IDENTITY(); \
-        INSERT INTO [User_Info] (AccountUID) VALUES (@AccID); \
-        INSERT INTO [Player_Info] (AccountUID, PlayerName, ClassType) VALUES (@AccID, ?, ?); \
-        SET @PlayerID = SCOPE_IDENTITY(); \
-        INSERT INTO [Player_Data] (PlayerUID, Hp, Mp) VALUES (@PlayerID, 500, 100); \
+        INSERT INTO [User_Info] (AccountId) VALUES (@AccID); \
+        INSERT INTO [Player_Info] (AccountId, Name, PlayerType, Hp, Mp) VALUES (@AccID, ?, ?, 500, 100); \
         COMMIT TRAN;";
 
 	if (dbConn->Execute(query))
