@@ -32,6 +32,7 @@ Makefile
 *.old
 *.cache
 *.db
+*.bin
 
 # 👉 OS에서 생성하는 불필요한 파일
 Thumbs.db
